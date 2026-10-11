@@ -6,23 +6,32 @@
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #081626; color: #fff; text-align: center; margin: 0; padding: 20px; }
         
-        /* હેડર સ્ટાઇલ (તમારી ઇમેજ મુજબ) */
         .branding { background: #081626; padding: 20px; border-radius: 16px; border: 1.5px solid #172a3e; box-shadow: 0 8px 24px rgba(0,0,0,0.6); margin-bottom: 30px; }
         .logo-box { display: flex; align-items: center; justify-content: center; gap: 12px; }
         .main-title { font-size: 2.5em; font-weight: 900; color: #ffffff; line-height: 0.95; margin: 0; }
         .sub-title { font-size: 1.1em; font-weight: 800; color: #a8c5db; letter-spacing: 3.5px; margin-top: 3px; }
         .contact { font-size: 1.1em; font-weight: bold; margin-top: 15px; color: #ffd600; }
 
-        /* મેનુ કાર્ડ્સ */
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; max-width: 900px; margin: auto; }
-        .card { background: #1c2541; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 1px solid #30363d; transition: 0.3s; }
-        .card:hover { border-color: #007bff; transform: translateY(-5px); }
-        .btn { display: block; margin-top: 15px; padding: 12px; background: #007bff; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 30px; max-width: 900px; margin: auto; padding: 20px; }
+        
+        .card { 
+            background: linear-gradient(145deg, #1c2541, #0b132b); 
+            padding: 30px; 
+            border-radius: 25px; 
+            box-shadow: 10px 10px 20px #050a12, -10px -10px 20px #2a3556; 
+            transition: 0.4s;
+        }
+        .card:hover { transform: translateY(-10px); box-shadow: 15px 15px 30px #050a12; border: 1px solid #007bff; }
+        
+        .btn { 
+            display: block; margin-top: 20px; padding: 14px; background: #007bff; 
+            color: white; text-decoration: none; border-radius: 12px; font-weight: bold; 
+            box-shadow: 0 4px 10px rgba(0,123,255,0.3);
+        }
     </style>
 </head>
 <body>
 
-    <!-- પ્રોફેશનલ હેડર (ઇમેજ મુજબ) -->
     <div class="branding">
         <div class="logo-box">
             <svg width="40" height="52" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 10px #ff6600);">
@@ -38,7 +47,7 @@
         </div>
     </div>
 
-    <!-- મેનુ બટનો -->
+    <!-- મેનુ બટનો - બધા કાર્ડ આ ગ્રીડની અંદર રહેશે -->
     <div class="menu-grid">
         <div class="card">
             <h3>AC Starter Controller</h3>
@@ -51,6 +60,10 @@
         <div class="card">
             <h3>Generator Monitor</h3>
             <a href="genset.html" class="btn">Open Genset</a>
+        </div>
+        <div class="card">
+            <h3 style="color: #00d4ff;">System Settings</h3>
+            <a href="settings.html" class="btn" style="background: linear-gradient(145deg, #00d4ff, #0088aa); color: #081626;">Configure</a>
         </div>
     </div>
 
