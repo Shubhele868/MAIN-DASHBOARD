@@ -1,0 +1,1519 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Firebase Realtime Database SDK (GitHub Hosting માટે) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <title>SPGT Power Controller</title>
+    <style>
+        :root { 
+            --primary-blue: #007bff; 
+            --dark-blue: #0056b3; 
+            --light-blue: #f8f9fa; 
+            --white: #ffffff; 
+            --gray: #e9ecef; 
+            --dark-gray: #6c757d; 
+            --red: #dc3545; 
+            --green: #28a745; 
+            --orange: #fd7e14; 
+            --black: #212529; 
+        }
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+        }
+        body { 
+            background-color: var(--light-blue); 
+            margin: 0; 
+            padding: 15px; 
+            background-image: linear-gradient(to top, var(--primary-blue) 0%, var(--light-blue) 0%); 
+            transition: background-image 1s ease-in-out; 
+            font-size: 16px; 
+        }
+        .container { 
+            max-width: 1300px; 
+            margin: 0 auto; 
+            perspective: 1500px;
+        }
+        .header { 
+            background-color: #0f1218; 
+            padding: 35px 20px; 
+            text-align: center; 
+            border-radius: 12px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .logo-container { text-align: center; width: 100%; margin-bottom: 10px; }
+        /* Montserrat ની જગ્યાએ standard Arial Black વાપર્યું છે જે AP Mode માં કામ કરશે */
+        .main-text { font-family: "Arial Black", "Arial Bold", Gadget, sans-serif; font-weight: 900; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 5px; font-size: 38px; }
+        @media (min-width: 768px) { .main-text { font-size: 60px; } }
+        .shakti { color: #ffffff; }
+        .prime { background: linear-gradient(to bottom, #ffe580 0%, #e2b04a 45%, #c68a1e 55%, #f7d47a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .reg-mark { font-size: 0.35em; vertical-align: super; -webkit-text-fill-color: #ffffff; margin-left: 2px; font-family: Arial, sans-serif; }
+        .subtitle-wrapper { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 5px; }
+        .line { height: 1.5px; flex-grow: 1; max-width: 60px; background: linear-gradient(to right, transparent, #c68a1e, transparent); }
+        .subtitle-logo { color: #8da9c4; text-transform: uppercase; font-weight: bold; letter-spacing: 3px; font-size: 11px; font-family: Arial, sans-serif; }
+        @media (min-width: 768px) { .subtitle-logo { font-size: 18px; letter-spacing: 5px; } .line { max-width: 110px; } }
+        .model-info { font-size: 1.1rem; color: #ffffff; margin-top: 25px; font-weight: 600; letter-spacing: 0.5px; font-family: Arial, sans-serif; }
+        .content { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); 
+            gap: 20px; 
+        }
+        .card { 
+            background-color: var(--white); 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+            padding: 25px; 
+        }
+        .card-title { 
+            font-size: 1.4rem; 
+            font-weight: 600; 
+            color: var(--primary-blue); 
+            margin-top: 0; 
+            margin-bottom: 20px; 
+            border-bottom: 1px solid var(--gray); 
+            padding-bottom: 10px; 
+        }
+        .status-item, .form-group { 
+            margin-bottom: 15px; 
+        }
+        .form-group label {
+            display: block;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+        .status-label { 
+            font-weight: 600; 
+            color: var(--dark-gray); 
+        }
+        .status-value { 
+            font-weight: 700; 
+            float: right; 
+            font-size: 1.1rem; 
+        }
+        .indicator { 
+            width: 14px; 
+            height: 14px; 
+            border-radius: 50%; 
+            display: inline-block; 
+            margin-right: 8px; 
+            vertical-align: middle; 
+        }
+        .high { background-color: var(--red); } 
+        .low { background-color: var(--green); }
+        .btn, button { 
+            background-color: var(--primary-blue); 
+            color: white; 
+            border: none; 
+            padding: 12px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            width: 100%; 
+            margin-top: 10px; 
+        }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 8px; font-size: 1rem; }
+        .protection-msg { padding: 12px; border-radius: 8px; text-align: center; font-weight: 700; font-size: 1.1rem; margin-top: 15px; }
+        .normal { background-color: #d4edda; color: #155724; }
+        .alert { background-color: #f8d7da; color: #721c24; }
+        .starting { background-color: #fff3cd; color: #856404; animation: pulse-yellow 1.5s infinite; }
+        @keyframes pulse-yellow { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        .footer { margin-top: 30px; text-align: center; }
+        .visiting-card { background: var(--white); border-radius: 12px; padding: 25px; max-width: 400px; margin: 20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid var(--primary-blue); }
+        .visiting-card p { margin: 8px 0; color: var(--dark-gray); font-size: 1.1rem; }
+        .visiting-card .email { color: var(--primary-blue); text-decoration: none; font-weight: 600; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-blue); }
+        input:checked + .slider:before { transform: translateX(26px); }
+        .protection-value { font-weight: 700; font-size: 1.1rem; color: var(--black); }
+        .protection-value.triggered { color: var(--red); animation: blink 1s infinite; }
+        .full-page-alert { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(220, 53, 69, 0.9); color: white; z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; font-size: 2rem; font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { background-color: rgba(220, 53, 69, 0.9); } 50% { background-color: rgba(220, 53, 69, 0.7); } 100% { background-color: rgba(220, 53, 69, 0.9); } }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        .protection-item { padding: 10px; border-radius: 8px; margin-bottom: 10px; transition: all 0.3s ease; }
+        .protection-active { background-color: #f8d7da; border-left: 5px solid var(--red); animation: blink 1s infinite; }
+        .ets-logo { font-family: 'Arial Black', sans-serif; letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+
+        .warranty-3d-card-on-main {
+            background-color: #e9ecef; color: #212529; box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.2);
+            border-radius: 18px; border: 1px solid rgba(0, 0, 0, 0.1); width: 100%; margin-top: 20px;
+            padding: 20px; text-align: left; transform: rotateY(-10deg) rotateX(10deg);
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s;
+            position: relative; overflow: hidden; display: none;
+        }
+        .warranty-3d-card-on-main:hover {
+            transform: rotateY(0) rotateX(0) translateY(-5px);
+            box-shadow: 0px 20px 35px rgba(0, 0, 0, 0.3);
+        }
+        .warranty-3d-card-on-main::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 50%; height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg) translateX(-150%); transition: transform 0.8s;
+        }
+        .warranty-3d-card-on-main:hover::after { transform: skewX(-25deg) translateX(350%); }
+        .warranty-3d-card-on-main .w-card-header h4 { font-size: 1.2rem; color: var(--primary-blue); margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); }
+        .warranty-3d-card-on-main .w-card-body .info-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.9rem; }
+        .warranty-3d-card-on-main .info-row .info-label { font-weight: bold; color: var(--dark-gray); }
+        .warranty-3d-card-on-main .info-row .info-value { font-weight: 600; color: var(--black); }
+        .warranty-3d-card-on-main .w-card-footer { margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(0, 0, 0, 0.1); }
+        .warranty-3d-card-on-main .info-value.expired-text { color: var(--red);  font-weight: bold;}
+        .warranty-3d-card-on-main .expired-banner { color: var(--red); font-weight: bold; font-size: 1rem; text-align: center; }
+         .warranty-3d-card-on-main .info-value.warning-pink { 
+            color: #ff69b4; /* Hot Pink */ 
+            font-weight: 700; 
+            animation: pulse-pink 1.5s infinite; 
+            font-size: 1.1rem; 
+            font-weight: bold; 
+        }
+        .warranty-3d-card-on-main .info-value.critical-red { 
+            color: var(--red); 
+            font-weight: 700; 
+            animation: blink 1s infinite; 
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        @keyframes pulse-pink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        #warranty-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%; animation: gradient 15s ease infinite;
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000; perspective: 1500px; overflow-y: auto; padding: 20px;
+        }
+        @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.2); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 30px; width: 90%; max-width: 450px;
+            text-align: center; color: #fff; display: none;
+        }
+        .glass-card h2 { color: #fff; margin-top: 0; }
+        .main-card-3d {
+            background: rgba(255, 255, 255, 0.2); box-shadow: 0px 15px 35px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.18);
+            width: 90%; max-width: 480px; display: none; color: #001a33;
+            transform: rotateY(-20deg) rotateX(15deg);
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s;
+            position: relative; overflow: hidden;
+        }
+        .main-card-3d:hover { transform: rotateY(0) rotateX(0) translateY(-10px); box-shadow: 0px 25px 45px rgba(0, 0, 0, 0.4); }
+        #details { padding: 30px 40px; }
+        .card-header h3 { font-size: 26px; color: #1c2e42; margin: 0 0 20px 0; padding-bottom: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.4); text-align: left; }
+        .card-body .info-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 17px; }
+        .info-row .info-label { font-weight: 500; color: #333; }
+        .info-row .info-value { font-weight: 600; color: #000; }
+        .card-footer { margin-top: 25px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.4); }
+        .info-value.expired-text { color: #D32F2F; }
+        .expired-banner { color: #D32F2F; font-weight: bold; font-size: 18px; background-color: rgba(255, 218, 218, 0.8); padding: 10px; border-radius: 8px; text-align: center; }
+        .input-group { margin: 15px 0; text-align: left; }
+        .glass-card input, .glass-card select, .glass-card button { width: 100%; padding: 12px; margin-top: 5px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.5); background-color: rgba(255,255,255,0.3); color: #000; font-size: 16px; box-sizing: border-box; }
+        ::placeholder { color: #333; }
+        .btn-warranty { background: linear-gradient(90deg, #16a085, #1abc9c); color: white; border: none; cursor: pointer; font-weight: bold; }
+        .btn-warranty-secondary { background: linear-gradient(90deg, #8e44ad, #9b59b6); }
+        .btn-warranty-danger { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+        .button-group { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 40px 20px; }
+        .button-group button {flex-grow: 1;}
+    </style>
+</head>
+<body>
+<div style="background:#0f1218; padding:15px; text-align:center;">
+        <a href="index.html" style="background:#007bff; color:white; padding:10px 20px; text-decoration:none; border-radius:8px; font-weight:bold; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">⬅ (BACK TO MAIN MENU) મેઈન મેનુ પર પાછા જાઓ</a>
+    </div>
+    <div id="fullPageAlert" class="full-page-alert">
+        <h1>⚠️ PROTECTION TRIGGERED!</h1>
+        <p id="alertMessage">System has detected a critical condition</p>
+        <button onclick="document.getElementById('fullPageAlert').style.display = 'none';">Acknowledge</button>
+    </div>
+    <div class="container">
+        <header class="header">
+            <div class="logo-container">
+                <div class="main-text">
+                    <span class="shakti">Shakti</span><span class="prime">Prime</span><span class="reg-mark">®</span>
+                </div>
+                <div class="subtitle-wrapper">
+                    <div class="line"></div>
+                    <div class="subtitle-logo">Global Technologies</div>
+                    <div class="line"></div>
+                </div>
+              </div>
+              <p class="model-info">SPGT Power Controller</p> 
+                <div style="background:#0f1218; padding:15px; border-radius:10px; margin-top:20px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(0,0,0,0.4);">
+            <span style="color:#00ffcc; font-weight:bold;">Select Device:</span>
+            <select id="deviceSelector" onchange="switchDevice()" style="padding:8px 12px; border-radius:6px; background:#1c2541; color:#fff; border:1px solid #007bff; font-weight:bold; min-width:160px;"></select>
+            
+            <input type="text" id="newSerialInput" placeholder="Serial No (SPGT-...)" style="width:170px; padding:8px 10px; border-radius:6px; border:1px solid #ced4da;">
+            <input type="text" id="newDeviceNameInput" placeholder="Device Name (e.g. Bedroom)" style="width:170px; padding:8px 10px; border-radius:6px; border:1px solid #ced4da;">
+            
+            <button onclick="addNewDeviceSerial()" style="width:auto; margin:0; padding:8px 15px; background:var(--green); font-weight:bold;">+ Add Device</button> 
+            <button onclick="removeCurrentDevice()" style="width:auto; margin:0; padding:8px 12px; background:var(--red); font-weight:bold;">Delete Active</button>
+        </div>
+         <div style="background:#0f1218; border:2px solid #007bff; padding:15px; border-radius:10px; margin-top:15px; margin-bottom:10px; box-shadow:0 4px 15px rgba(0,123,255,0.3); text-align:center;">
+            <h3 style="color:#ffcc00; font-size:1rem; margin-top:0; margin-bottom:12px; text-transform:uppercase; letter-spacing:1.5px;">
+                📡 DEVICE SERIAL & CONNECTED WI-FI IP
+            </h3>
+            <div style="display:flex; flex-wrap:wrap; justify-content:space-around; align-items:center; gap:15px;">
+                <div style="background:#161b22; padding:10px 20px; border-radius:8px; border:1px solid #30363d; min-width:200px;">
+                    <span style="color:#8da9c4; font-size:0.8rem; font-weight:bold; display:block; margin-bottom:4px;">SERIAL NUMBER:</span>
+                    <span id="liveDeviceSerial" style="color:#00ffcc; font-size:1.15rem; font-weight:bold; font-family:monospace;">SPGT-Loading...</span>
+                </div>
+                <div style="background:#161b22; padding:10px 20px; border-radius:8px; border:1px solid #30363d; min-width:200px;">
+                    <span style="color:#8da9c4; font-size:0.8rem; font-weight:bold; display:block; margin-bottom:4px;">CONNECTED WI-FI IP:</span>
+                    <span id="liveDeviceIP" style="color:#28a745; font-size:1.15rem; font-weight:bold; font-family:monospace;">0.0.0.0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- નીચે એડ કરેલા તમામ ડિવાઇસની યાદી (નામ અને સિરિયલ નંબર સાથે) બતાવવા માટે -->
+        <div id="addedDevicesContainer" style="background:#0f1218; padding:15px; border-radius:10px; margin-top:10px; margin-bottom:20px; box-shadow:0 4px 15px rgba(0,0,0,0.4); display:none;">
+            <h3 style="color:#ffcc00; font-size:0.95rem; margin-top:0; margin-bottom:10px; text-align:center; text-transform:uppercase; letter-spacing:1px;">📋 Added Devices List (All Devices)</h3>
+            <div id="devicesListContent" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+        </header>
+        <main class="content">
+            <div class="card">
+                <h2 class="card-title">System Status</h2>
+                <div class="status-item"><span class="status-label">Auto Refresh</span>
+                    <label class="switch"><input type="checkbox" id="autoRefreshCheckbox" onclick="toggleAutoRefresh()"><span class="slider"></span></label>
+                </div>
+                <div class="status-grid">
+                    <div class="status-item"><span class="status-label">AC:</span><span class="status-value" id="pumpStatus">--</span></div>
+                    <div class="status-item"><span class="status-label">Uptime:</span><span class="status-value" id="uptime">--</span></div>
+                    <div class="status-item"><span class="status-label">Voltage:</span><span class="status-value" id="voltage">-- V</span></div>
+                    <div class="status-item"><span class="status-label">Current:</span><span class="status-value" id="current">-- A</span></div>
+                    <div class="status-item"><span class="status-label">AC Runtime:</span><span class="status-value" id="acRuntime">--</span></div>
+                    <div class="status-item"><span class="status-label">Approx Energy:</span><span class="status-value" id="energy">-- kWh</span></div>
+                    <div class="status-item"><span class="status-label">Cost(Approx):</span><span class="status-value" id="cost">-- Rs.</span></div>
+                </div>
+                <button onclick="resetEnergyCost()" style="background-color: var(--orange); margin-top: 15px;">Reset Energy Cost</button>
+                <div style="color: #dc3545; text-align: center; margin-top: 15px; font-weight: bold; line-height: 1.6;">
+                    <p style="margin: 5px 0; font-size: 1.1rem;">
+                        <span style="font-size: 2.5rem; vertical-align: middle;">*</span> 
+                        નોંધ: "અંદાજિત વપરાશ" અને "અંદાજિત ખર્ચ" આ આંકડા માત્ર જાણકારી માટે છે, સરકારી મીટર સાથે થોડો તફાવત હોઈ શકે છે.
+                    </p>
+                    <p style="margin: 5px 0; font-size: 1rem; border-top: 1px solid rgba(220, 53, 69, 0.2); padding-top: 5px;">
+                        Note: "Approx Energy" and "Approx Cost" values are for informational purposes only; they may vary slightly from the official government meter.
+                    </p>
+                </div>
+                <div id="protection-box" class="protection-msg normal">System Operating Normally</div>
+                <button onclick="resetAcRuntime()" style="background-color: var(--orange);">Reset AC Runtime</button>
+            </div>
+            <div class="card">
+                <h2 class="card-title">Control Panel</h2>
+                <div class="btn-grid">
+                    <button id="pumpOnBtn" onclick="controlRelay(1)" style="background-color: var(--green);">AC ON</button>
+                    <button id="pumpOffBtn" onclick="controlRelay(0)" style="background-color: var(--red);">AC OFF</button>
+                </div>
+                <div style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 15px;">
+                    <div class="status-item">
+                        <span class="status-label">Control Permission (Allow All):</span>
+                        <label class="switch">
+                            <input type="checkbox" id="ctrlPermCheckbox" onclick="toggleControlPermission()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div id="secureControlDiv" style="margin-top: 10px;">
+                        <div class="form-group">
+                            <label>Control Password:</label>
+                            <input type="password" id="ctrlPasswordInput" placeholder="Password required if permission is OFF">
+                        </div>
+                        <button type="button" onclick="toggleCtrlPassFields()" style="background-color: var(--dark-blue); margin-top:10px;">Set New Password</button>
+                        <div id="ctrlPassChangeFields" style="display:none; margin-top: 10px; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background-color: #f1f3f5;">
+                            <div class="form-group">
+                                <label style="font-size: 0.9rem; color: var(--black);">Old Password:</label>
+                                <input type="password" id="oldCtrlPassInput" placeholder="Enter Old Control Password">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 0.9rem; color: var(--black);">New Password:</label>
+                                <input type="password" id="newCtrlPassInput" placeholder="Enter New Control Password (Min 4)">
+                            </div>
+                            <button type="button" onclick="changeControlPassword()" style="background-color: var(--green); padding: 8px; font-size: 0.9rem;">Save New Password</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="status-item" style="margin-top: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 8px; background-color: #f9f9f9;">
+                <span class="status-label" style="display:block; margin-bottom:8px; color:var(--primary-blue);">Device Custom Name:</span>
+                <input type="text" id="deviceNameInput" placeholder="Enter New Name (e.g. My AC)" style="width: 100%; margin-bottom: 10px; border: 1px solid #ccc;">
+                <button onclick="saveDeviceName()" style="background-color: var(--green); padding: 10px; width: 100%; font-weight: bold;">Save & Update Name</button>
+                </div>
+ 
+              <!-- VOICE CONTROL BUTTON CARD (GITHUB) -->
+                <div style="margin-top: 15px; border: 1px solid #007bff; padding: 15px; border-radius: 8px; background-color: #eef7ff; text-align: center;">
+                    <span class="status-label" style="display:block; margin-bottom:8px; color:var(--primary-blue); font-weight:bold;">🎤 Voice Control Command:</span>
+                    <button id="micBtn" onclick="toggleVoiceRecognition()" style="background-color: var(--primary-blue); color: white; padding: 12px; border-radius: 50px; border: none; font-weight: bold; width: 100%; font-size: 1.1rem; cursor: pointer; transition: 0.3s;">
+                        🎙️ Click to Speak (AC ON/OFF)
+                    </button>
+                    <p id="voiceStatusText" style="margin-top: 8px; font-size: 0.9rem; color: #333; font-style: italic;">Press mic & say: "AC ON" or "AC OFF"</p>
+                </div>
+
+                <div class="btn-grid">
+                    <button onclick="restartSystem()" style="background-color: var(--orange);">Restart System</button>
+                    <button onclick="openUptimeReset()" style="background-color: var(--dark-gray);">Reset Uptime</button>
+                </div>
+                <button onclick="wifiReset()" style="background-color: var(--dark-gray); margin-top: 10px;">Wi-Fi Reset (QR Code)</button>
+                <button onclick="openWarranty()" style="background-color: var(--dark-blue);">Warranty</button>
+                <div id="warranty-display-area" class="warranty-3d-card-on-main"></div>
+            </div>
+             <!-- REAL TIME MONITORING & ANALYTICS CARD -->
+            <style>
+                .analytics-card {
+                    background: #060e1a;
+                    border: 2px solid #0056b3;
+                    border-radius: 12px;
+                    padding: 15px;
+                    margin-bottom: 20px;
+                    color: #fff;
+                    box-shadow: 0 0 15px rgba(0, 123, 255, 0.3);
+                }
+                .analytics-title {
+                    text-align: center;
+                    color: #ffcc00;
+                    font-weight: bold;
+                    font-size: 1.2rem;
+                    letter-spacing: 1.5px;
+                    margin-bottom: 15px;
+                    text-transform: uppercase;
+                }
+                .analytics-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                    gap: 10px;
+                }
+                .analytics-box {
+                    border: 1px solid #00a8ff;
+                    border-radius: 8px;
+                    padding: 10px;
+                    background: rgba(0, 30, 60, 0.6);
+                    text-align: center;
+                }
+                .analytics-box .label {
+                    font-size: 0.75rem;
+                    color: #8da9c4;
+                    font-weight: bold;
+                    display: block;
+                    margin-bottom: 5px;
+                }
+                .analytics-box .val {
+                    font-size: 1.3rem;
+                    font-weight: bold;
+                    color: #ffcc00;
+                }
+                .analytics-box .val-cyan { color: #00ffcc; }
+                .analytics-box .unit { font-size: 0.7rem; color: #aaa; }
+                .date-config-box {
+                    margin-top: 15px;
+                    background: rgba(255,255,255,0.05);
+                    padding: 10px;
+                    border-radius: 8px;
+                }
+            </style>
+
+            <div class="analytics-card">
+                <div class="analytics-title">REAL TIME MONITORING & ANALYTICS</div>
+                <div class="analytics-grid">
+                    <div class="analytics-box">
+                        <span class="label">🕒 DEVICE ON TIME THIS MONTH</span>
+                         <span class="val val-cyan" id="mOnTime">00:00:00</span> <span class="unit">(HH:MM:SS)</span>
+                    </div>
+                    <div class="analytics-box">
+                        <span class="label">⚡ TOTAL UNITS CONSUMED</span>
+                        <span class="val" id="mUnits">0.00</span> <span class="unit">kWh</span>
+                    </div>
+                    <div class="analytics-box">
+                        <span class="label">₹ ESTIMATED BILL THIS MONTH</span>
+                        <span class="val" id="mBill">₹ 0.00</span> <span class="unit">INR</span>
+                    </div>
+                    <div class="analytics-box">
+                        <span class="label">📊 POWER USAGE TODAY</span>
+                        <span class="val" id="dUsage">0.00</span> <span class="unit">kWh</span>
+                    </div>
+                    <div class="analytics-box">
+                        <span class="label">📅 LAST BILL AMOUNT</span>
+                        <span class="val" id="lBill">₹ 0.00</span> <span class="unit">INR</span>
+                    </div>
+                </div>
+
+                <div class="date-config-box">
+                    <h4 style="margin: 0 0 10px 0; color: #00ffcc; font-size: 0.9rem;">Billing Cycle Dates Configuration</h4> 
+                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                      <div>
+                            <label style="font-size: 0.75rem; color:#ccc;">Start Date:</label>
+                            <input type="date" id="billStartDate">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; color:#ccc;">End Date & Time:</label>
+                            <input type="date" id="billEndDate">
+                            <div style="display: flex; gap: 5px; margin-top: 5px;">
+                                <input type="time" id="billEndTime" value="09:00" style="padding: 5px;">
+                                <select id="billEndAmpm" style="width: 70px; padding: 5px;"><option value="AM">AM</option><option value="PM">PM</option></select>
+                            </div>
+                            </div>
+                        </div>
+                        <button onclick="saveBillingCycle()" style="background-color: var(--green); margin-top: 8px; padding: 8px; font-size: 0.9rem;">Save Billing Dates</button> 
+                    <button onclick="resetAnalytics()" style="background-color: var(--red); margin-top: 8px; padding: 8px; font-size: 0.9rem;">Reset All Analytics to 0</button>
+                    <button onclick="saveBillNow()" style="background-color: var(--primary-blue); margin-top: 8px; padding: 8px; font-size: 0.9rem; font-weight: bold;">⚡ Save Current Bill & Start New Month Now</button>
+                </div>
+            </div>
+             <div class="card">
+                <h2 class="card-title">Protection Status</h2>
+                <div id="ovItem" class="protection-item">
+                    <span class="status-label"><span class="indicator low" id="ovLed"></span>Over Voltage</span>
+                    <span class="status-value"><span id="ovValue" class="protection-value">-- V</span></span>
+                </div>
+                <div id="uvItem" class="protection-item">
+                    <span class="status-label"><span class="indicator low" id="uvLed"></span>Under Voltage</span>
+                    <span class="status-value"><span id="uvValue" class="protection-value">-- V</span></span>
+                </div>
+                <div id="ocItem" class="protection-item">
+                    <span class="status-label"><span class="indicator low" id="ocLed"></span>Over Current</span>
+                    <span class="status-value"><span id="ocValue" class="protection-value">-- A</span></span>
+                </div>
+            </div>
+            <div class="card">
+                <h2 class="card-title">WiFi Settings</h2>
+                <div class="status-item"><span class="status-label">IP Address:</span><span class="status-value" id="ipAddress">--</span></div>
+                <form action="/savewifi" method="POST">
+                    <div class="form-group"><label>SSID:</label><input type="text" name="ssid" required></div>
+                    <div class="form-group"><label>Password:</label><input type="password" name="password"></div>
+                    <button type="submit" class="btn">Save & Restart</button>
+                </form>
+            </div>
+
+            <!-- NEW CARD: Quick Settings (Unprotected) -->
+            <div class="card">
+                <h2 class="card-title">Quick Settings (Unprotected)</h2>
+                <form action="/savequicksettings" method="POST">
+                    <div class="form-group">
+                        <label>Unit Price (Rs./kWh):</label>
+                        <input type="number" step="0.01" name="price" id="quickPrice" placeholder="Enter Unit Price">
+                    </div>
+                    <div class="form-group">
+                        <label>Over Current Threshold (A):</label>
+                        <input type="number" step="0.1" name="oc" id="quickOc" placeholder="Enter Over Current Limit">
+                    </div>
+                    <p style="font-size: 0.9em; color: var(--dark-gray); margin-top: 5px;">Max Limit Allowed: <span id="maxOcDisplay" style="font-weight:bold; color:var(--red);">--</span> A</p>
+                    <button type="submit" class="btn">Save Quick Settings</button>
+                </form>
+            </div>
+            <!-- END NEW CARD -->
+
+            <!-- NEW CARD: Protected Settings Login -->
+            <div class="card" id="settingsLockCard">
+                <h2 class="card-title" style="color: var(--red);">Settings Locked</h2>
+                <div class="form-group"><label>Settings Password:</label><input type="password" id="unlockSettingsPass" required></div>
+                <button class="btn" onclick="unlockSettingsCard()" style="background-color: var(--dark-blue);">Unlock Settings</button>
+            </div>
+            <!-- END NEW CARD -->
+
+
+            <!-- MODIFIED: Settings & Calibration (Now hidden by default) -->
+            <div class="card" id="settingsCard" style="display: none;">
+                <h2 class="card-title">Settings & Calibration</h2>
+                <form action="/savesettings" method="POST">
+                    <!-- Hidden field to pass the password upon saving -->
+                    <input type="hidden" name="settingsPass" id="settingsCardPassField"> 
+                    <p style="font-size: 0.9em; color: var(--green); font-weight: bold;">Settings Unlocked. Save to apply.</p><hr>
+                    
+                    <!-- Moved Unit Price & OC out, kept OV/UV -->
+                    <div class="form-group"><label>Over Voltage (V):</label><input type="number" step="1" name="ov" id="ov"></div>
+                    <div class="form-group"><label>Under Voltage (V):</label><input type="number" step="1" name="uv" id="uv"></div>
+                    
+                    <!-- NEW FIELD: Max Over Current Limit -->
+                    <div class="form-group"><label>Max Over Current (A):</label><input type="number" step="1" name="maxoc" id="maxoc"></div><hr>
+                    <!-- END NEW FIELD -->
+                    <div class="form-group"><label>Control Password (AC ON/OFF):</label><input type="password" name="ctrlpass" id="ctrlpass"></div><hr>
+                    <div class="form-group"><label>Voltage Cal:</label><input type="number" step="0.1" name="vcal" id="vcal"></div>
+                    <div class="form-group"><label>Current Cal:</label><input type="number" step="0.1" name="ccal" id="ccal"></div>
+                    <button type="submit" class="btn">Save All Protected Settings</button>
+                </form>
+                
+                <!-- NEW: Settings Password Change Form (Password field kept for server-side verification) -->
+                <hr style="margin: 20px 0;">
+                <h3 class="card-title" style="font-size: 1.2rem; margin-bottom: 15px;">Change Settings Password</h3>
+                <form action="/changesettingspass" method="POST" onsubmit="return confirm('Change Settings Password?');">
+                    <div class="form-group"><label>Current Password:</label><input type="password" name="oldSettingsPass" required></div>
+                    <div class="form-group"><label>New Password (Min 4):</label><input type="password" name="newSettingsPass" required minlength="4"></div>
+                    <button type="submit" class="btn" style="background-color: var(--dark-blue); margin-top: 5px;">Change Password</button>
+                </form>
+                <!-- END NEW -->
+            </div>
+            <!-- END MODIFIED CARD -->
+        </main>
+        <footer class="footer">
+            <div class="visiting-card">
+                <p>© 2025 SPGT Power Controller</p>
+                <p><b>SHUBH ELECTRONICS</b></p>
+                <p>Email: <a href="mailto:info.shaktiprime@gmail.com" class="email">info.shaktiprime@gmail.com</a></p>
+            </div>
+        </footer>
+    </div>
+
+    <div id="warranty-overlay">
+        <div class="glass-card" id="passwordCard">
+            <h2>Enter Warranty Password</h2>
+            <div class="input-group"><input type="password" id="passwordInput" placeholder="Enter password"></div>
+            <button class="btn-warranty" onclick="checkPassword()">Submit</button>
+            <button class="btn-warranty-danger" onclick="closeOverlays()" style="margin-top: 10px;">Back</button>
+        </div>
+
+        <div class="glass-card" id="uptimePasswordCard">
+            <h2>Enter Uptime Reset Password</h2>
+            <div class="input-group"><input type="password" id="uptimePasswordInput" placeholder="Enter password"></div>
+            <button class="btn-warranty" onclick="submitUptimeReset()">Reset Uptime</button>
+            <button class="btn-warranty-danger" onclick="closeOverlays()" style="margin-top: 10px;">Cancel</button>
+        </div>
+
+        <div class="main-card-3d" id="mainCard">
+            <div id="details"></div>
+            <div class="button-group">
+                <button class="btn-warranty" onclick="showAddEditForm()">Add / Edit Details</button>
+                <button id="toggleBtn" class="btn-warranty-secondary" onclick="toggleMainPageVisibility()"></button>
+            </div>
+            <div class="button-group">
+                <button class="btn-warranty-secondary" onclick="showChangePasswordForm()">Change Password</button>
+                <button class="btn-warranty-danger" onclick="clearWarrantyData()">Clear All Data</button>
+            </div>
+            <button class="btn" onclick="closeOverlays()" style="margin: 0 40px 20px 40px;">Close</button>
+        </div>
+        <div class="glass-card" id="formCard">
+            <h2 id="formTitle">Add / Edit Warranty</h2>
+            <div class="input-group"><label>Purchase Date:</label><input type="date" id="purchaseDate"></div>
+            <div class="input-group"><label>Duration:</label><input type="number" id="duration" placeholder="Enter duration"></div>
+            <!-- NEW: CORRECTED DURATION TYPE SELECT TAG -->
+            <div class="input-group"><label>Duration Type:</label><select id="durationType">
+                <option value="days">Days</option>
+                <option value="months">Months</option>
+                <option value="years">Years</option>
+            </select></div>
+            <!-- END NEW -->
+            <div class="input-group"><label>Type:</label><select id="warrantyType"><option value="Warranty">Warranty</option><option value="Guarantee">Guarantee</option></select></div>
+            <button class="btn-warranty" onclick="saveData()">Save Details</button>
+            <button class="btn-warranty-danger" onclick="cancelForm()" style="margin-top: 10px;">Cancel</button>
+            </div>
+        <div class="glass-card" id="changePasswordCard">
+            <h2>Change Warranty Password</h2>
+            <div class="input-group"><label>Old Password:</label><input type="password" id="oldPassword" placeholder="Enter current password"></div>
+            <div class="input-group"><label>New Password:</label><input type="password" id="newPassword" placeholder="Enter new password"></div>
+            <button class="btn-warranty" onclick="changePassword()">Update Password</button>
+            <button class="btn-warranty-danger" onclick="cancelForm()" style="margin-top: 10px;">Cancel</button>
+       </div>
+    </div>
+
+    <script>
+        // Firebase કન્ફિગરેશન (તમારો Database URL અહીં મૂકવો)
+        const firebaseConfig = {
+            databaseURL: "https://motor-starter-425de-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const rtdb = firebase.database();  
+
+        // ૫ ડિવાઇસ કંટ્રોલ મેનેજમેન્ટ લોજિક
+        let myDeviceList = JSON.parse(localStorage.getItem('spgt_devices') || '[]');
+        let activeSerial = localStorage.getItem('spgt_active_serial') || '';
+        let deviceAliases = JSON.parse(localStorage.getItem('spgt_device_aliases') || '{}');
+
+        function updateDeviceDropdown() {
+            const sel = document.getElementById('deviceSelector');
+            if(!sel) return;
+            sel.innerHTML = '';
+            if(myDeviceList.length === 0) {
+                sel.innerHTML = '<option value="">-- No Device Added --</option>';
+                return;
+            }
+            myDeviceList.forEach(sn => {
+                let opt = document.createElement('option');
+                opt.value = sn;
+                let customName = deviceAliases[sn] ? deviceAliases[sn] : "AC";
+                opt.textContent = `${customName} (${sn})`;
+                if(sn === activeSerial) opt.selected = true;
+                sel.appendChild(opt);
+            });
+            updateAddedDevicesUI();   
+        }
+
+        function addNewDeviceSerial() {
+            const serialInput = document.getElementById('newSerialInput');
+            const nameInput = document.getElementById('newDeviceNameInput');
+            
+            const sn = serialInput.value.trim().toUpperCase();
+            const devName = nameInput.value.trim();
+            
+            if(!sn) { alert('કૃપા કરીને Serial Number દાખલ કરો!'); return; }
+            if(!devName) { alert('કૃપા કરીને Device નું નામ દાખલ કરો (દા.ત. Bedroom)!'); return; }
+            
+            if(!myDeviceList.includes(sn)) {
+                myDeviceList.push(sn);
+                localStorage.setItem('spgt_devices', JSON.stringify(myDeviceList));
+            }
+            
+            deviceAliases[sn] = devName;
+            localStorage.setItem('spgt_device_aliases', JSON.stringify(deviceAliases));
+            
+            activeSerial = sn;
+            localStorage.setItem('spgt_active_serial', activeSerial);
+            
+            serialInput.value = '';
+            nameInput.value = '';
+            
+            updateDeviceDropdown();
+            listenToActiveDevice();
+            alert('ડિવાઇસ અને નામ સફળતાપૂર્વક ઉમેરાઈ ગયું!');
+        }
+
+        function removeCurrentDevice() {
+            if(!activeSerial) return;
+            if(confirm('શું તમે આ એક્ટિવ ડિવાઇસ (' + activeSerial + ') ને કાયમ માટે કાઢી નાખવા માંગો છો?')) {
+                // Firebase માંથી આ ડિવાઇસનો ડેટા કાયમ માટે ડિલીટ કરો
+                rtdb.ref('/devices/' + activeSerial).remove().catch(err => console.log(err));
+
+                myDeviceList = myDeviceList.filter(d => d !== activeSerial);
+                localStorage.setItem('spgt_devices', JSON.stringify(myDeviceList));
+                delete deviceAliases[activeSerial];
+                localStorage.setItem('spgt_device_aliases', JSON.stringify(deviceAliases));
+                
+                activeSerial = myDeviceList.length > 0 ? myDeviceList[0] : '';
+                localStorage.setItem('spgt_active_serial', activeSerial);
+                updateDeviceDropdown();
+                updateAddedDevicesUI();
+                listenToActiveDevice();
+            }
+        }
+
+        function switchDevice() {
+            activeSerial = document.getElementById('deviceSelector').value;
+            localStorage.setItem('spgt_active_serial', activeSerial);
+            listenToActiveDevice();
+        }
+       function updateAddedDevicesUI() {
+            const container = document.getElementById('addedDevicesContainer');
+            const content = document.getElementById('devicesListContent');
+            if(!container || !content) return;
+
+            if(myDeviceList.length === 0) {
+                container.style.display = 'none';
+                content.innerHTML = '';
+                return;
+            }
+
+            container.style.display = 'block';
+            content.innerHTML = '';
+
+            myDeviceList.forEach((sn, index) => {
+                let devName = deviceAliases[sn] ? deviceAliases[sn] : "AC";
+                let isCurrentActive = (sn === activeSerial);
+
+                let itemDiv = document.createElement('div');
+                itemDiv.style = `display:flex; justify-content:space-between; align-items:center; background:${isCurrentActive ? '#1c2541' : '#161b22'}; padding:8px 12px; border-radius:6px; border:1px solid ${isCurrentActive ? '#007bff' : '#30363d'};`;
+                itemDiv.innerHTML = `
+                    <div>
+                        <span style="color:#00ffcc; font-weight:bold; font-size:0.95rem;">${index + 1}. ${devName}</span> 
+                        <span style="color:#8da9c4; font-size:0.8rem; margin-left:8px; font-family:monospace;">(${sn})</span>
+                        <span id="list_ip_${sn}" style="background:#007bff; color:#ffffff; font-size:0.75rem; padding:2px 7px; border-radius:4px; margin-left:8px; font-family:monospace; font-weight:bold;">IP: Loading...</span>
+                        ${isCurrentActive ? '<span style="background:#28a745; color:white; font-size:0.65rem; padding:2px 5px; border-radius:3px; margin-left:8px; font-weight:bold;">ACTIVE</span>' : ''}
+                    </div>
+                    <div>
+                        <button onclick="switchToDeviceFromList('${sn}')" style="background:#007bff; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold; margin-right:4px;">Select</button>
+                        <button onclick="removeDeviceBySerial('${sn}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Delete</button>
+                    </div>
+                `;
+                // ૨૦ ડિવાઇસના લાઈવ IP લિસ્ટમાં લાવવા માટે
+                rtdb.ref('/devices/' + sn + '/status/ipAddress').on('value', snap => {
+                    const el = document.getElementById('list_ip_' + sn);
+                    if (el) el.textContent = 'IP: ' + (snap.val() || 'Offline');
+                });
+                
+                content.appendChild(itemDiv);
+            });
+        }
+      function switchToDeviceFromList(sn) {
+            activeSerial = sn;
+            localStorage.setItem('spgt_active_serial', activeSerial);
+            updateDeviceDropdown();
+            updateAddedDevicesUI();
+            listenToActiveDevice();
+        }
+
+        function removeDeviceBySerial(sn) {
+            if(confirm('શું તમે આ ડિવાઇસ (' + sn + ') ને લિસ્ટમાંથી અને સર્વર પરથી કાયમ માટે કાઢી નાખવા માંગો છો?')) {
+                // Firebase માંથી આ ડિવાઇસનો ડેટા કાયમ માટે ડિલીટ કરો
+                rtdb.ref('/devices/' + sn).remove().catch(err => console.log(err));
+
+                myDeviceList = myDeviceList.filter(d => d !== sn);
+                localStorage.setItem('spgt_devices', JSON.stringify(myDeviceList));
+                delete deviceAliases[sn];
+                localStorage.setItem('spgt_device_aliases', JSON.stringify(deviceAliases));
+                
+                if(activeSerial === sn) {
+                    activeSerial = myDeviceList.length > 0 ? myDeviceList[0] : '';
+                    localStorage.setItem('spgt_active_serial', activeSerial);
+                }
+                updateDeviceDropdown();
+                updateAddedDevicesUI();
+                listenToActiveDevice();
+            }
+        }
+        // રીયલ-ટાઇમ લિસનર (ડેટા Overwrite થઈને આવશે, મેમરી ક્યારેય ફુલ નહીં થાય)
+        let currentFbRef = null; 
+        function listenToActiveDevice() {
+            if(currentFbRef) currentFbRef.off();
+            if(!activeSerial) return; 
+              const sBoxInit = document.getElementById('liveDeviceSerial');
+            const ipBoxInit = document.getElementById('liveDeviceIP');
+            if (sBoxInit) sBoxInit.textContent = activeSerial || '--';
+            if (ipBoxInit) {
+                ipBoxInit.textContent = 'Loading IP...';
+                ipBoxInit.style.color = '#ffcc00';
+            }
+            currentFbRef = rtdb.ref('/devices/' + activeSerial + '/status');
+            currentFbRef.on('value', snapshot => {
+                const data = snapshot.val();
+                if(data) {
+                    // ૧. સ્ટેટસ અને રનટાઇમ
+                    document.getElementById('voltage').textContent = (data.voltage || 0).toFixed(1) + ' V';
+                    document.getElementById('current').textContent = (data.current || 0).toFixed(2) + ' A';
+                    document.getElementById('energy').textContent = (data.energy || 0).toFixed(3) + ' kWh';
+                    document.getElementById('cost').textContent = (data.cost || 0).toFixed(2) + ' Rs.';
+                    document.getElementById('pumpStatus').textContent = data.relayState ? 'ON' : 'OFF';
+                    document.getElementById('acRuntime').textContent = data.acRuntime || '--';
+                    document.getElementById('uptime').textContent = data.uptime || '--';
+                    document.getElementById('ipAddress').textContent = data.ipAddress || '--';
+                    const sBox = document.getElementById('liveDeviceSerial');
+                    const ipBox = document.getElementById('liveDeviceIP');
+                    if (sBox) sBox.textContent = activeSerial || '--';
+                    if (ipBox) {
+                        ipBox.textContent = data.ipAddress || 'Disconnected';
+                        ipBox.style.color = (data.ipAddress && data.ipAddress !== 'Disconnected') ? '#28a745' : '#dc3545';
+                    }
+                  
+                    isRelayOn = data.relayState;
+                    document.getElementById('pumpOnBtn').style.backgroundColor = isRelayOn ? 'var(--primary-blue)' : 'var(--green)';
+                    document.getElementById('pumpOffBtn').style.backgroundColor = !isRelayOn ? 'var(--primary-blue)' : 'var(--red)';
+
+                    // ૨. કંટ્રોલ પરમિશન & પાસવર્ડ
+                    if(data.ctrlPerm !== undefined) {
+                        document.getElementById('ctrlPermCheckbox').checked = data.ctrlPerm;
+                        document.getElementById('secureControlDiv').style.display = data.ctrlPerm ? 'none' : 'block';
+                    }
+                    if(data.ctrlPass) document.getElementById('ctrlpass').value = data.ctrlPass;
+                    // ESP32 માંથી આવતા 4 પાસવર્ડ સેવ કરવા:
+                    window.espCtrlPass = data.ctrlPass || "1234";
+                    window.espSettingsPass = data.settingsPass || "8460ydarsh24@24@25%";
+                    window.espWarrantyPass = data.warrantyPass || "8460ydarsh24@24@25%";
+                    window.espUptimePass = data.uptimePass || "8460ydarsh24@24@25%";
+
+                    // ૩. પ્રોટેક્શન સ્ટેટસ લાઈવ
+                    document.getElementById('ovValue').textContent = (data.ovt || 0) + ' V';
+                    document.getElementById('uvValue').textContent = (data.uvt || 0) + ' V';
+                    document.getElementById('ocValue').textContent = (data.oct || 0) + ' A';
+                    const isFault = (data.protectionMsg || '').includes('FAULT');
+                    updateProtectionIndicator('ovLed', 'ovItem', isFault && data.protectionMsg.includes('Over Voltage'));
+                    updateProtectionIndicator('uvLed', 'uvItem', isFault && data.protectionMsg.includes('Under Voltage'));
+                    updateProtectionIndicator('ocLed', 'ocItem', isFault && data.protectionMsg.includes('Over Current'));
+
+                    const pBox = document.getElementById('protection-box');
+                    pBox.textContent = data.protectionMsg || 'System Operating Normally';
+                    pBox.className = 'protection-msg ' + (isFault ? 'alert' : 'normal');
+
+                    // ૪. રીયલ-ટાઇમ મોનિટરિંગ & એનાલિટિક્સ
+                    document.getElementById('mOnTime').textContent = data.mTime || '00:00:00';
+                    document.getElementById('mUnits').textContent = (data.mUnits || 0).toFixed(2);
+                    document.getElementById('mBill').textContent = '₹ ' + (data.mBill || 0).toFixed(2);
+                    document.getElementById('dUsage').textContent = (data.dUsage || 0).toFixed(2);
+                    document.getElementById('lBill').textContent = '₹ ' + (data.lBill || 0).toFixed(2);
+                    if(data.b_start) document.getElementById('billStartDate').value = data.b_start;
+                    if(data.b_end) document.getElementById('billEndDate').value = data.b_end;
+                    if(data.b_etime) document.getElementById('billEndTime').value = data.b_etime;
+                    if(data.b_eampm) document.getElementById('billEndAmpm').value = data.b_eampm; 
+                    // ૫. સેટિંગ્સ ડિફોલ્ટ વેલ્યુ લોડિંગ
+                     if (document.activeElement !== document.getElementById('quickPrice')) {
+                        document.getElementById('quickPrice').value = data.unitPrice !== undefined ? data.unitPrice : 1.0;
+                    }
+                    if (document.activeElement !== document.getElementById('quickOc')) {
+                        document.getElementById('quickOc').value = data.oct !== undefined ? data.oct : 10.0;
+                    }
+                    document.getElementById('maxOcDisplay').textContent = data.maxoct !== undefined ? data.maxoct : 25.0;
+
+                    if (document.activeElement !== document.getElementById('ov')) {
+                        document.getElementById('ov').value = data.ovt !== undefined ? data.ovt : 280;
+                    }
+                    if (document.activeElement !== document.getElementById('uv')) {
+                        document.getElementById('uv').value = data.uvt !== undefined ? data.uvt : 180;
+                    }
+                    if (document.activeElement !== document.getElementById('maxoc')) {
+                        document.getElementById('maxoc').value = data.maxoct !== undefined ? data.maxoct : 25;
+                    }
+                    if (document.activeElement !== document.getElementById('vcal')) {
+                        document.getElementById('vcal').value = data.vcal !== undefined ? data.vcal : 140;
+                    }
+                    if (document.activeElement !== document.getElementById('ccal')) {
+                        document.getElementById('ccal').value = data.ccal !== undefined ? data.ccal : 30;
+                    }
+
+                    // ૬. વોરંટી ડેટા
+                    warrantyData.pdate = data.w_pdate; warrantyData.edate = data.w_edate;
+                    warrantyData.type = data.w_type; warrantyData.hidden = data.w_hidden;
+                    displayWarrantyOnMainPage();
+                }
+            });
+        }
+
+        // GitHub બટનોને Firebase સાથે જોડો જેથી ESP32 મા સેવ થાય:
+        function controlRelay(state) {
+            const perm = document.getElementById('ctrlPermCheckbox').checked;
+            const pass = document.getElementById('ctrlPasswordInput').value;
+            if(!perm && !pass) { alert("કૃપા કરીને Control Password દાખલ કરો!"); return; }
+            if(activeSerial) {
+                rtdb.ref('/devices/' + activeSerial + '/control').update({ relay: (state === 1), pass: pass });
+                document.getElementById('ctrlPasswordInput').value = '';
+            }
+        }
+        function saveDeviceName() {
+            const nm = document.getElementById('deviceNameInput').value;
+            if(!nm) return alert("નામ દાખલ કરો!");
+            if(activeSerial) { rtdb.ref('/devices/' + activeSerial + '/control').update({ device_name: nm }); alert("નામ સેવ થયું!"); }
+        }
+        function saveDeviceName() {
+            const nm = document.getElementById('deviceNameInput').value;
+            if(!nm) return alert("નામ દાખલ કરો!");
+            if(activeSerial) { rtdb.ref('/devices/' + activeSerial + '/control').update({ device_name: nm }); alert("નામ સેવ થયું!"); }
+        }
+
+        // --- GITHUB FIREBASE VOICE RECOGNITION LOGIC ---
+        let recognition = null;
+        function toggleVoiceRecognition() {
+            const micBtn = document.getElementById('micBtn');
+            const statusText = document.getElementById('voiceStatusText');
+
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert("તમારું બ્રાઉઝર વોઇસ કમાન્ડ સપોર્ટ કરતું નથી!");
+                return;
+            }
+
+            if (!recognition) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-IN'; // Supports Gujarati/Hindi/English accents
+
+                recognition.onstart = function() {
+                    micBtn.style.backgroundColor = '#ffc107'; // Active Yellow Color
+                    micBtn.style.color = '#000';
+                    micBtn.textContent = "👂 Listening... Speak Now!";
+                    statusText.textContent = "Listening... Speak in Gujarati, Hindi or English";
+                };
+
+                recognition.onresult = function(event) {
+                    const speechResult = event.results[0][0].transcript.toLowerCase();
+                    statusText.textContent = "You said: \"" + speechResult + "\"";
+                    
+                    // Voice Command Execution via Firebase
+                    if (speechResult.includes("on") || speechResult.includes("ચાલુ") || speechResult.includes("चालू") || speechResult.includes("शुरू")) {
+                        controlRelay(1);
+                    } else if (speechResult.includes("off") || speechResult.includes("બંધ") || speechResult.includes("बंद") || speechResult.includes("रुक")) {
+                        controlRelay(0);
+                    } else {
+                        alert("માન્ય કમાન્ડ ન મળ્યો! બોલો: \"AC ON\" અથવા \"AC OFF\"");
+                    }
+                };
+
+                recognition.onerror = function(event) {
+                    statusText.textContent = "Error: " + event.error;
+                    resetMicButton();
+                };
+
+                recognition.onend = function() {
+                    resetMicButton();
+                };
+            }
+
+            try {
+                recognition.start();
+            } catch(e) {
+                recognition.stop();
+            }
+        }
+
+        function resetMicButton() {
+            const micBtn = document.getElementById('micBtn');
+            if(micBtn) {
+                micBtn.style.backgroundColor = 'var(--primary-blue)';
+                micBtn.style.color = 'white';
+                micBtn.textContent = "🎙️ Click to Speak (AC ON/OFF)";
+            }
+        }
+        function restartSystem() { if(confirm("Restart?")) rtdb.ref('/devices/' + activeSerial + '/control').update({ action: 'restart' }); }
+        function resetEnergyCost() { if(confirm("Reset Cost?")) rtdb.ref('/devices/' + activeSerial + '/control').update({ action: 'reset_energy' }); }
+        function resetAcRuntime() { if(confirm("Reset Runtime?")) rtdb.ref('/devices/' + activeSerial + '/control').update({ action: 'reset_runtime' }); } 
+         function resetAnalytics() {
+            if(confirm("Are you sure you want to reset all Analytics and Billing data to 0?")) {
+                 if(activeSerial) {
+                    // ૧. Firebase Control માંથી જૂની તારીખો ડીલીટ કરવી અને રીસેટ એક્શન મોકલવી
+                    rtdb.ref('/devices/' + activeSerial + '/control').update({ 
+                        action: 'reset_analytics',
+                        b_start: null,
+                        b_end: null
+                    });
+                    
+                    // ૨. Firebase status માં પણ સીધું 0.0 મોકલી દેવું
+                    rtdb.ref('/devices/' + activeSerial + '/status').update({
+                        mUnits: 0.0,
+                        mBill: 0.0,
+                        dUsage: 0.0,
+                        lBill: 0.0,
+                        mTime: "00:00:00",
+                        b_start: "",
+                        b_end: ""
+                    });
+
+                    // ૩. વેબપેજના તમામ ખાના તાત્કાલિક 0.00 કરવા
+                    document.getElementById('mOnTime').textContent = "00:00:00";
+                    document.getElementById('mUnits').textContent = "0.00";
+                    document.getElementById('mBill').textContent = "₹ 0.00";
+                    document.getElementById('dUsage').textContent = "0.00";
+                    document.getElementById('lBill').textContent = "₹ 0.00";
+                    document.getElementById('billStartDate').value = "";
+                    document.getElementById('billEndDate').value = "";
+
+                    alert("All Analytics Data Reset to 0 Successfully!");
+                }
+            }
+        }
+
+         function saveBillNow() {
+            if(confirm("તમારું અત્યાર સુધીનું બિલ LAST BILL AMOUNT માં સેવ કરીને નવો મહિનો અત્યારથી જ ચાલુ કરવો છે?")) {
+                if(activeSerial) {
+                    // ૧. ચાલુ મહિનાનું બિલ ગણીને Last Bill માં લેવું
+                    const curBillText = document.getElementById('mBill').textContent.replace('₹', '').trim();
+                    const currentBillVal = parseFloat(curBillText) || 0.0;
+
+                    // ૨. નવી તારીખો (૧ મહિનો આગળ) ગણવી
+                    let sDate = document.getElementById('billEndDate').value;
+                    let eDate = "";
+                    
+                    if (!sDate) {
+                        sDate = new Date().toISOString().split('T')[0];
+                    }
+                    
+                    let nextMonth = new Date(sDate);
+                    nextMonth.setMonth(nextMonth.getMonth() + 1);
+                    eDate = nextMonth.toISOString().split('T')[0];
+
+                    // ૩. Firebase માં ESP32 માટે કમાન્ડ અને નવી તારીખો મોકલવી
+                    rtdb.ref('/devices/' + activeSerial + '/control').update({ 
+                        action: 'save_bill_now',
+                        b_start: sDate,
+                        b_end: eDate
+                    });
+
+                    // ૪. Firebase status માં પણ તરત જ 0.00 અને નવી તારીખો અપડેટ કરવી
+                    rtdb.ref('/devices/' + activeSerial + '/status').update({
+                        lBill: currentBillVal,
+                        mUnits: 0.0,
+                        mBill: 0.0,
+                        mTime: "00:00:00",
+                        b_start: sDate,
+                        b_end: eDate
+                    });
+
+                    // ૫. સ્ક્રીન પર તમામ ખાના તાત્કાલિક 0.00 અને નવી તારીખો સાથે બતાવવા
+                    document.getElementById('lBill').textContent = '₹ ' + currentBillVal.toFixed(2);
+                    document.getElementById('mUnits').textContent = '0.00';
+                    document.getElementById('mBill').textContent = '₹ 0.00';
+                    document.getElementById('mOnTime').textContent = '00:00:00';
+                    document.getElementById('billStartDate').value = sDate;
+                    document.getElementById('billEndDate').value = eDate;
+
+                    alert("Current Bill Saved! New Month Started with Next Month Dates.");
+                }
+            }
+        }
+          function saveBillingCycle() {
+            const s = document.getElementById('billStartDate').value;
+            const e = document.getElementById('billEndDate').value;
+            const tm = document.getElementById('billEndTime').value;
+            const ampm = document.getElementById('billEndAmpm').value;
+            if(activeSerial) { 
+                rtdb.ref('/devices/' + activeSerial + '/control').update({ 
+                    b_start: s, 
+                    b_end: e,
+                    b_etime: tm,
+                    b_eampm: ampm
+                }); 
+                alert("Billing Dates અને Time (AM/PM) સેવ થઈ ગયા!"); 
+            }
+        }
+
+        document.querySelector('form[action="/savequicksettings"]').onsubmit = function(e) {
+            e.preventDefault(); // પેજ રિફ્રેશ થતું રોકશે જેથી જૂની વેલ્યુ પાછી ન આવી જાય
+            
+            const prInput = document.getElementById('quickPrice');
+            const ocInput = document.getElementById('quickOc');
+            
+            const pr = parseFloat(prInput.value);
+            const oc = parseFloat(ocInput.value);
+            const maxOcAllowed = parseFloat(document.getElementById('maxOcDisplay').textContent) || 25.0;
+
+            if (isNaN(pr) || isNaN(oc)) {
+                alert("કૃપા કરીને સાચી સંખ્યા દાખલ કરો!");
+                return;
+            }
+
+            if (oc > maxOcAllowed) {
+                alert("Error: Over Current limit Maximum Allowed Limit (" + maxOcAllowed + "A) કરતાં વધારે ન હોઈ શકે!");
+                return;
+            }
+
+            if(activeSerial) {
+                // ફોકસ હટાવી લેવું જેથી નવી વેલ્યુ તરત દેખાય
+                prInput.blur();
+                ocInput.blur();
+
+                rtdb.ref('/devices/' + activeSerial + '/control').update({ 
+                    price: pr, 
+                    oct: oc 
+                }).then(() => {
+                    alert("Quick Settings (Unit Price & OC Limit) સફળતાપૂર્વક સેવ થઈ ગયા!");
+                }).catch((err) => {
+                    alert("Error saving: " + err.message);
+                });
+            } else {
+                alert("કોઈ ડિવાઇસ પસંદ કરેલ નથી!");
+            }
+        };
+        // Protected Settings Unlock & Save
+        function unlockSettingsCard() {
+            const p = document.getElementById('unlockSettingsPass').value;
+            if(p === window.espSettingsPass || p === "8460ydarsh24@24@25%") {
+                document.getElementById('settingsLockCard').style.display = 'none';
+                document.getElementById('settingsCard').style.display = 'block';
+            } else { alert("ખોટો સેટિંગ્સ પાસવર્ડ!"); }
+        } 
+        document.querySelector('form[action="/savesettings"]').onsubmit = function(e) {
+            e.preventDefault(); // પેજ રિફ્રેશ થતું અટકાવશે
+            if(activeSerial) {
+                const ovVal = parseFloat(document.getElementById('ov').value);
+                const uvVal = parseFloat(document.getElementById('uv').value);
+                const maxocVal = parseFloat(document.getElementById('maxoc').value);
+                const vcalVal = parseFloat(document.getElementById('vcal').value);
+                const ccalVal = parseFloat(document.getElementById('ccal').value);
+                const ctrlPassVal = document.getElementById('ctrlpass').value;
+
+                rtdb.ref('/devices/' + activeSerial + '/control').update({
+                    ovt: ovVal,
+                    uvt: uvVal,
+                    maxoct: maxocVal,
+                    vcal: vcalVal,
+                    ccal: ccalVal,
+                    new_ctrl_pass: ctrlPassVal // Control Password Firebase માં મોકલવો
+                });
+                alert("Protected Settings (Calibration) સફળતાપૂર્વક Firebase માં સેવ થઈ ગયા!");
+            } else {
+                alert("કોઈ ડિવાઇસ સિલેક્ટ કરેલું નથી!");
+            }
+        };
+        // WiFi Credentials Save
+        document.querySelector('form[action="/savewifi"]').onsubmit = function(e) {
+            e.preventDefault();
+            const s = document.querySelector('input[name="ssid"]').value, p = document.querySelector('input[name="password"]').value;
+            if(activeSerial) { rtdb.ref('/devices/' + activeSerial + '/control').update({ wifi_ssid: s, wifi_pass: p, action: 'restart' }); alert("વાઇફાઇ સેવ થયું! સિસ્ટમ રીસ્ટાર્ટ થશે."); }
+        };
+        let refreshIntervalId = null;
+        let lastAlertState = null;
+        let currentPassword = null; 
+        let warrantyData = {};
+        let isRelayOn = false;
+        
+        let settingsCardUnlocked = false; // NEW: Flag for settings lock state
+        let settingsUnlockPassword = '';  // NEW: Store password for saving
+
+        function updateStatus() {
+           if (location.hostname !== "localhost" && location.hostname !== "127.0.0.1" && !location.hostname.startsWith("192.168.")) {
+                return;
+            }
+            fetch('/status').then(r => r.json()).then(data => {
+                isRelayOn = data.relayState;
+                document.getElementById('pumpStatus').textContent = data.relayState ? 'ON' : 'OFF';
+                document.getElementById('uptime').textContent = data.uptime;
+                 document.getElementById('acRuntime').textContent = data.acRuntime;
+                document.getElementById('voltage').textContent = data.voltage.toFixed(1) + ' V';
+                document.getElementById('current').textContent = data.current.toFixed(2) + ' A';
+                document.getElementById('energy').textContent = data.energy.toFixed(3) + ' kWh';
+                document.getElementById('ctrlPermCheckbox').checked = data.controlPermission;
+                if (data.controlPermission) {
+                    document.getElementById('secureControlDiv').style.display = 'none';
+                } else {
+                    document.getElementById('secureControlDiv').style.display = 'block';
+                }
+                if(document.getElementById('ctrlpass')) {
+                    document.getElementById('ctrlpass').value = data.controlPassword || "1234";
+                }
+                document.getElementById('cost').textContent = data.cost.toFixed(2) + ' Rs.';
+                
+                const isFault = data.protectionMessage.includes("FAULT");
+                document.getElementById('mOnTime').textContent = data.monthlyHours;
+                document.getElementById('mUnits').textContent = data.monthlyUnits.toFixed(2);
+                document.getElementById('mBill').textContent = '₹ ' + data.monthlyBill.toFixed(2);
+                document.getElementById('dUsage').textContent = data.todayUnits.toFixed(2);
+                document.getElementById('lBill').textContent = '₹ ' + data.lastBill.toFixed(2);  
+                 function toIsoDate(dStr) {
+                    if(!dStr) return '';
+                    let p = dStr.split(/[\/\-]/);
+                    if(p.length === 3) {
+                        if(p[0].length === 4) return `${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;
+                        if(p[2].length === 4) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+                    }
+                    return dStr;
+                }
+                if (document.activeElement !== document.getElementById('billStartDate') && data.startDate) {
+                    document.getElementById('billStartDate').value = toIsoDate(data.startDate);
+                }
+                if (document.activeElement !== document.getElementById('billEndDate') && data.endDate) {
+                    document.getElementById('billEndDate').value = toIsoDate(data.endDate);
+                }
+                  if (data.endTime) document.getElementById('billEndTime').value = data.endTime;
+                if (data.endAmpm) document.getElementById('billEndAmpm').value = data.endAmpm;
+                updateProtectionValue('ovValue', data.voltage.toFixed(1) + ' V', isFault && data.protectionMessage.includes("Over Voltage"));
+                updateProtectionValue('uvValue', data.voltage.toFixed(1) + ' V', isFault && data.protectionMessage.includes("Under Voltage"));
+                updateProtectionValue('ocValue', data.current.toFixed(2) + ' A', isFault && data.protectionMessage.includes("Over Current"));
+                
+                updateProtectionIndicator('ovLed', 'ovItem', isFault && data.protectionMessage.includes("Over Voltage"));
+                updateProtectionIndicator('uvLed', 'uvItem', isFault && data.protectionMessage.includes("Under Voltage"));
+                updateProtectionIndicator('ocLed', 'ocItem', isFault && data.protectionMessage.includes("Over Current"));
+                
+                const protectionBox = document.getElementById('protection-box');
+                let displayMsg = data.protectionMessage;
+                if(data.bypassTimeLeft > 0 && data.relayState) {
+                    displayMsg = "Starting... " + data.bypassTimeLeft + "s left";
+                    protectionBox.className = 'protection-msg starting';
+                } else {
+                    protectionBox.className = 'protection-msg ' + (isFault ? 'alert' : 'normal');
+                }
+                protectionBox.textContent = displayMsg;
+
+                document.getElementById('pumpOnBtn').style.backgroundColor = isRelayOn ? 'var(--primary-blue)' : 'var(--green)';
+                document.getElementById('pumpOffBtn').style.backgroundColor = !isRelayOn ? 'var(--primary-blue)' : 'var(--red)';
+                
+                // NEW: Quick Settings Fields
+                document.getElementById('quickPrice').value = data.unitPrice;
+                document.getElementById('quickOc').value = data.oct;
+                document.getElementById('maxOcDisplay').textContent = data.maxoct; // Display max limit
+                // END NEW
+                
+                // Protected Settings Fields
+                // document.getElementById('price').value = data.unitPrice; // REMOVED/MOVED
+                document.getElementById('ov').value = data.ovt;
+                document.getElementById('uv').value = data.uvt;
+                // document.getElementById('oc').value = data.oct; // REMOVED/MOVED
+                document.getElementById('maxoc').value = data.maxoct; // NEW FIELD
+                document.getElementById('vcal').value = data.vcal;
+                document.getElementById('ccal').value = data.ccal;
+                document.getElementById('ipAddress').textContent = data.ipAddress;
+                
+                checkProtectionAlerts(data);
+
+                warrantyData.pdate = data.warranty_pdate;
+                warrantyData.edate = data.warranty_edate;
+                warrantyData.type = data.warranty_type;
+                warrantyData.hidden = data.warranty_hidden;
+                displayWarrantyOnMainPage(); 
+            });
+        }
+        
+        function updateProtectionValue(id, val, trig) { const el = document.getElementById(id); el.textContent = val; el.classList.toggle('triggered', trig); }
+        function updateProtectionIndicator(ledId, itemId, isActive) { document.getElementById(ledId).className = `indicator ${isActive ? 'high' : 'low'}`; document.getElementById(itemId).classList.toggle('protection-active', isActive); }
+        function checkProtectionAlerts(data) { const isProt = data.protectionMessage.includes('FAULT'); if (isProt && lastAlertState !== data.protectionMessage) { document.getElementById('alertMessage').textContent = data.protectionMessage; document.getElementById('fullPageAlert').style.display = 'flex'; } lastAlertState = isProt ? data.protectionMessage : null; }
+        function toggleAutoRefresh() { const chk = document.getElementById('autoRefreshCheckbox'); if (chk.checked) { refreshIntervalId = setInterval(updateStatus, 2000); } else { clearInterval(refreshIntervalId); } localStorage.setItem('autoRefresh', chk.checked); } 
+        
+        function openUptimeReset() {
+            document.getElementById('warranty-overlay').style.display = 'flex';
+            document.getElementById('uptimePasswordInput').value = '';
+            document.getElementById('uptimePasswordCard').style.display = 'block';
+            document.getElementById('passwordCard').style.display = 'none';
+            document.getElementById('mainCard').style.display = 'none';
+        }
+        function submitUptimeReset() {
+            const pass = document.getElementById('uptimePasswordInput').value;
+            // ESP32 ના UPTIME_RESET_PASSWORD સાથે મેચ થશે
+            if (pass === window.espUptimePass) {
+                if(activeSerial) rtdb.ref('/devices/' + activeSerial + '/control').update({ action: 'reset_uptime' });
+                alert("Uptime Reset થઈ ગયું!");
+                closeOverlays();
+            } else {
+                alert("ખોટો Uptime પાસવર્ડ!");
+            }
+        }
+        function toggleControlPermission() {
+            const chk = document.getElementById('ctrlPermCheckbox').checked;
+            const pass = prompt("Enter Password to Change Permission:");
+            if (pass !== null && pass !== "") {
+                if (activeSerial) {
+                    rtdb.ref('/devices/' + activeSerial + '/control').update({ set_ctrl_perm: chk, pass: pass });
+                    alert("Permission Updated!");
+                }
+            } else {
+                document.getElementById('ctrlPermCheckbox').checked = !chk;
+            }
+        }
+        function toggleCtrlPassFields() {
+            var x = document.getElementById("ctrlPassChangeFields");
+            x.style.display = (x.style.display === "none") ? "block" : "none";
+        }
+        function changeControlPassword() {
+            const oldP = document.getElementById("oldCtrlPassInput").value;
+            const newP = document.getElementById("newCtrlPassInput").value;
+            if (!oldP || !newP) return alert("બંને ખાના ભરો!");
+            if (newP.length < 4) return alert("નવો પાસવર્ડ ઓછામાં ઓછો 4 અક્ષરનો હોવો જોઈએ!");
+            if (activeSerial) {
+                rtdb.ref('/devices/' + activeSerial + '/control').update({ new_ctrl_pass: newP, pass: oldP });
+                alert("Control Password Updated!");
+                document.getElementById("oldCtrlPassInput").value = "";
+                document.getElementById("newCtrlPassInput").value = "";
+                document.getElementById("ctrlPassChangeFields").style.display = "none";
+            }
+        }
+        function wifiReset() { 
+            if(confirm("શું તમે Wi-Fi રીસેટ કરવા માંગો છો? આનાથી ESP32 ફરી QR કોડ મોડમાં જશે.")) { 
+                if(activeSerial) rtdb.ref('/devices/' + activeSerial + '/control').update({ action: 'wifireset' });
+                alert("Wi-Fi Reset કમાન્ડ મોકલાઈ ગયો છે!");
+            } 
+        }
+
+        // બ્રાઉઝર ઓપન થતાં જ ડિવાઇસ લિસ્ટ તૈયાર કરી Firebase લિસનર ચાલુ કરવું
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDeviceDropdown();
+            if(myDeviceList.length > 0) {
+                if(!activeSerial) activeSerial = myDeviceList[0];
+                listenToActiveDevice();
+            }
+            //  if(myDeviceList.length === 0) { 
+            //     rtdb.ref('/devices').once('value', snap => {
+            //         const allDevs = snap.val();
+            //         if(allDevs) {
+            //             Object.keys(allDevs).forEach(sn => {
+            //                 if(!myDeviceList.includes(sn)) {
+            //                     myDeviceList.push(sn);
+            //                     deviceAliases[sn] = (allDevs[sn].status && allDevs[sn].status.deviceName) ? allDevs[sn].status.deviceName : "AC";
+            //                 }
+            //             });
+            //             localStorage.setItem('spgt_devices', JSON.stringify(myDeviceList));
+            //             localStorage.setItem('spgt_device_aliases', JSON.stringify(deviceAliases));
+            //             if(myDeviceList.length > 0) {
+            //                 activeSerial = myDeviceList[0];
+            //                 localStorage.setItem('spgt_active_serial', activeSerial);
+            //                 updateDeviceDropdown();
+            //                 updateAddedDevicesUI();
+            //                 listenToActiveDevice();
+            //             }
+            //         }
+            //     }, error => {
+            //         alert("Firebase Rules Error: " + error.message + "\nકૃપા કરીને Firebase Realtime Database માં Rules -> .read: true કરો!");
+            //     });
+            // }
+            updateAddedDevicesUI();
+
+            const autoRefresh = localStorage.getItem('autoRefresh') === 'true';
+            document.getElementById('autoRefreshCheckbox').checked = autoRefresh;
+            if (autoRefresh) refreshIntervalId = setInterval(updateStatus, 2000);
+            updateStatus(); 
+        });
+        
+        function displayWarrantyOnMainPage() {
+            const displayArea = document.getElementById('warranty-display-area');
+            if (warrantyData.hidden || !warrantyData.pdate) {
+                displayArea.innerHTML = '';
+                displayArea.style.display = 'none';
+                return;
+            }
+            displayArea.style.display = 'block';
+            const ed = new Date(warrantyData.edate);
+            let daysLeft = Math.ceil((ed - new Date()) / (1000 * 60 * 60 * 24));
+            if (daysLeft < 0) daysLeft = 0;
+           let daysClass = '';
+        if (daysLeft <= 0) {
+            daysClass = 'expired-text';
+        } else if (daysLeft <= 3) { // 3 Day Remaining -> Critical Red
+            daysClass = 'critical-red';
+        } else if (daysLeft <= 5) { // 5 Day Remaining -> Warning Pink
+            daysClass = 'warning-pink';
+        }
+        let html = `<div class="w-card-header"><h4>${warrantyData.type} Details</h4></div>
+            <div class="w-card-body">
+                <div class="info-row"><span class="info-label">Purchase Date:</span><span class="info-value">${new Date(warrantyData.pdate).toDateString()}</span></div>
+                <div class="info-row"><span class="info-label">Expiry Date:</span><span class="info-value">${ed.toDateString()}</span></div>
+                <div class="info-row"><span class="info-label">Days Left:</span><span class="info-value ${daysClass}">${daysLeft}</span></div>
+            </div>`;
+        if (daysLeft <= 0) {
+            html += `<div class="w-card-footer"><p class="expired-banner">${warrantyData.type} Expired</p></div>`;
+            }
+            displayArea.innerHTML = html;
+        }
+
+        function openWarranty() {
+            document.getElementById('warranty-overlay').style.display = 'flex';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordCard').style.display = 'block';
+            document.getElementById('mainCard').style.display = 'none';
+            document.getElementById('uptimePasswordCard').style.display = 'none';
+        }
+
+        function closeOverlays() {
+            document.getElementById('warranty-overlay').style.display = 'none';
+            currentPassword = null;
+        }
+        function showMainCard(data) {
+            document.getElementById('mainCard').style.display = 'block';
+            document.getElementById('toggleBtn').textContent = data.hidden ? 'Show on Main Page' : 'Hide from Main Page';
+            let html;
+            if (data.pdate) {
+                const pd = new Date(data.pdate);
+                const ed = new Date(data.edate);
+                let daysLeft = Math.ceil((ed - new Date()) / (1000 * 60 * 60 * 24));
+                if (daysLeft < 0) daysLeft = 0;
+                 let daysClass = '';
+                if (daysLeft <= 0) {
+                    daysClass = 'expired-text';
+                } else if (daysLeft <= 3) {
+                    daysClass = 'critical-red';
+                } else if (daysLeft <= 5) {
+                    daysClass = 'warning-pink';
+                }
+                html = `<div class="card-header"><h3>${data.type} Details</h3></div>
+                    <div class="card-body">
+                        <div class="info-row"><span class="info-label">Purchase Date:</span><span class="info-value">${pd.toDateString()}</span></div>
+                        <div class="info-row"><span class="info-label">Expiry Date:</span><span class="info-value">${ed.toDateString()}</span></div>
+                        <div class="info-row"><span class="info-label">Days Left:</span><span class="info-value ${daysClass}">${daysLeft}</span></div>
+                    </div>
+                    ${daysLeft <= 0 ? `<div class="card-footer"><p class="expired-banner">${data.type} Expired</p></div>` : ''}`;
+            } else {
+                 html = `<div class="card-header"><h3>No Warranty Data</h3></div><div class="card-body"><p style="text-align:center; color:#333;">Click 'Add/Edit Details' to set warranty information.</p></div>`;
+            }
+            document.getElementById("details").innerHTML = html;
+        }
+
+        function showAddEditForm() {
+            document.getElementById('mainCard').style.display = 'none';
+            document.getElementById('formCard').style.display = 'block';
+        }
+        
+        function showChangePasswordForm(){
+            document.getElementById('mainCard').style.display = 'none';
+            document.getElementById('oldPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('changePasswordCard').style.display = 'block';
+        }
+
+        function cancelForm() {
+             document.getElementById('formCard').style.display = 'none';
+             document.getElementById('changePasswordCard').style.display = 'none';
+             document.getElementById('mainCard').style.display = 'block';
+        }
+
+        async function saveData() {
+            if (!currentPassword) { alert("Session expired. Please re-enter password."); closeOverlays(); return; }
+            const purDateStr = document.getElementById("purchaseDate").value;
+            const dur = parseInt(document.getElementById("duration").value);
+            if (!purDateStr || !dur || isNaN(dur)) { alert("કૃપા કરીને બધી વિગતો સાચી ભરો."); return; }
+            
+            const date = new Date(purDateStr);
+            let expiry = new Date(date);
+            const durType = document.getElementById("durationType").value;
+
+            if (durType === "days") {
+                expiry.setDate(expiry.getDate() + dur); 
+            }
+            else if (durType === "months") { 
+                expiry.setMonth(expiry.getMonth() + dur); 
+            } 
+            else if (durType === "years") { 
+                expiry.setFullYear(expiry.getFullYear() + dur); 
+            }
+            else {
+                alert("Error: Invalid Duration Type selected.");
+                return; 
+            }
+
+            const pStr = date.toISOString().split('T')[0];
+            const eStr = expiry.toISOString().split('T')[0];
+            const wType = document.getElementById("warrantyType").value;
+
+            // fetch('/savewarranty') ની જગ્યાએ સીધું Firebase Realtime Database માં સેવ થશે
+            if (activeSerial) {
+                rtdb.ref('/devices/' + activeSerial + '/control').update({
+                    w_pdate: pStr,
+                    w_edate: eStr,
+                    w_type: wType
+                });
+                alert("Warranty data saved successfully!");
+                closeOverlays();
+            } else {
+                alert("No active device selected!");
+            }
+        }
+        
+       async function changePassword() {
+            const oldPass = document.getElementById("oldPassword").value;
+            const newPass = document.getElementById("newPassword").value;
+            if (!oldPass || !newPass) { alert("Please fill both password fields."); return; }
+            if (newPass.length < 4) { alert("New password must be at least 4 characters."); return; }
+            if (oldPass !== window.espWarrantyPass) { alert("Current password incorrect!"); return; }
+            
+            if (activeSerial) {
+                rtdb.ref('/devices/' + activeSerial + '/control').update({
+                    new_warranty_pass: newPass
+                });
+                window.espWarrantyPass = newPass;
+                alert("Warranty Password updated successfully!");
+                closeOverlays();
+            }
+        }
+
+       async function toggleMainPageVisibility() {
+            if (!currentPassword) { alert("Session expired."); closeOverlays(); return; }
+            warrantyData.hidden = !warrantyData.hidden;
+            if (activeSerial) {
+                rtdb.ref('/devices/' + activeSerial + '/control').update({
+                    w_hidden: warrantyData.hidden
+                });
+                alert("Visibility setting updated!");
+                closeOverlays();
+            }
+        }
+      async function clearWarrantyData() {
+            if (!currentPassword) { alert("Session expired."); closeOverlays(); return; }
+            if (confirm("Are you sure you want to delete all warranty data? This cannot be undone.")) {
+                if(activeSerial) {
+                    rtdb.ref('/devices/' + activeSerial + '/control').update({ action: 'clear_warranty' });
+                    alert("Warranty data cleared!");
+                    closeOverlays();
+                }
+            }
+        }
+        // Warranty Password Check (ESP32 ના પાસવર્ડ સાથે મેચ થશે)
+        function checkPassword() {
+            const password = document.getElementById("passwordInput").value;
+            if (!password) { alert("કૃપા કરીને પાસવર્ડ નાખો."); return; }
+            if (password === window.espWarrantyPass) {
+                currentPassword = password;
+                document.getElementById('passwordCard').style.display = 'none';
+                showMainCard(warrantyData);
+            } else {
+                alert("ખોટો Warranty પાસવર્ડ!");
+            }
+        }
+        </script>
+</body>
+</html>
+

@@ -1,0 +1,932 @@
+
+<!DOCTYPE html><html><head>
+<title>GenSet Monitor S3</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+.header-container {
+    background: radial-gradient(circle, #1a3a5a 0%, #0d1b2a 100%); /* ઈમેજ જેવો ડાર્ક બ્લુ બેકગ્રાઉન્ડ */
+    padding: 30px 10px;
+    text-align: center;
+    border-bottom: 4px solid #d4af37;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+ }
+
+ .logo-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 15px;
+ }
+
+ .icon-gold {
+    font-size: 70px;
+    color: #ffd700;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 3px 3px 5px rgba(0,0,0,0.8);
+    font-weight: bold;
+    transform: rotate(-10deg);
+ }
+
+ .text-box {
+    text-align: left;
+    line-height: 1;
+ }
+
+ .main-title {
+    font-size: 55px;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0;
+    font-family: 'Arial Black', sans-serif;
+    letter-spacing: -2px;
+    text-shadow: 3px 3px 0px #444, 5px 5px 15px rgba(0,0,0,0.5);
+ }
+
+ .sub-title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #e0e0e0;
+    margin: 0;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    font-family: 'Arial', sans-serif;
+    opacity: 0.9;
+ }
+ body{font-family:Sans-Serif; text-align:center; background:#121212; color:white; margin:0; padding:10px;}
+ .flex{display:flex; flex-wrap:wrap; justify-content:center; gap:10px;}
+ .card{background:#1e1e1e; padding:15px; border-radius:12px; width:300px; border-top:8px solid #444;}
+ .r{border-color:#ff3333;} .y{border-color:#ffcc00;} .b{border-color:#3366ff;}
+ .bar-bg{background:#333; height:18px; border-radius:10px; margin:8px 0; overflow:hidden;}
+ .bar-fill{height:100%; width:0%; transition:0.5s;}
+ .val{font-size:22px; font-weight:bold;}
+ .box{background:#222; margin:15px auto; padding:15px; border-radius:10px; max-width:500px; border:1px solid #444;}
+ .batt-ring{position:relative; width:120px; height:120px; border-radius:50%; background:conic-gradient(#28a745 calc(var(--v) * 1%), #333 0); margin:10px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 15px rgba(0,255,0,0.2); transition:0.5s;}
+ .batt-ring::before{content:""; position:absolute; width:100px; height:100px; background:#1e1e1e; border-radius:50%; box-shadow:inset 0 0 10px #000;}
+ .batt-val{position:relative; font-size:24px; font-weight:bold; color:#00ff00; text-shadow:0 0 5px #00ff00;}
+input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:1px solid #555; border-radius:5px;}
+ .btn{padding:12px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer; width:90%; font-weight:bold; margin-top:10px;}
+ .dot { height: 16px; width: 16px; border-radius: 50%; display: inline-block; margin-right: 10px; vertical-align: middle; }
+ .green-blink { background-color: #00ff00; box-shadow: 0 0 12px #00ff00; animation: blinker 1s linear infinite; }
+ .red-static { background-color: #ff3333; box-shadow: 0 0 5px #ff3333; }
+ @keyframes blinker { 50% { opacity: 0; } }
+ #cal-section{display:none; margin-top:15px; padding-top:15px; border-top:1px solid #444;}
+ .st-box { background: #1a1a1a; padding: 15px; border-radius: 12px; margin: 15px auto; max-width: 500px; border: 2px solid #444; }
+ .st-item { font-weight: bold; font-size: 19px; padding: 8px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+ .st-blink { color: #ff3333; animation: blinker 0.7s linear infinite; text-shadow: 0 0 8px #ff0000; }
+ @keyframes blinker { 50% { opacity: 0; } }
+ table{width:100%;} td{padding:5px;}
+ .ctrl-btn { width: 140px; height: 140px; border-radius: 50%; border: none; font-weight: bold; font-size: 20px; cursor: pointer; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 0 #111, 0 15px 20px rgba(0,0,0,0.5); position: relative; }
+ .btn-on { background: linear-gradient(145deg, #2ecc71, #27ae60); border: 5px solid #1e8449; }
+ .btn-on:active { box-shadow: 0 2px 0 #111, 0 5px 10px rgba(0,0,0,0.5); transform: translateY(8px); background: #1db954; }
+ .btn-off { background: linear-gradient(145deg, #e74c3c, #c0392b); border: 5px solid #922b21; }
+ .btn-off:active { box-shadow: 0 2px 0 #111, 0 5px 10px rgba(0,0,0,0.5); transform: translateY(8px); background: #ff3333; }
+ .ctrl-box { display: flex; justify-content: space-around; padding: 20px; background: #1e1e1e; border-radius: 20px; margin: 15px auto; max-width: 500px; box-shadow: inset 0 0 15px #000; }
+ .log-3d { background: linear-gradient(145deg, #222, #111); border-radius: 15px; border-top: 5px solid #00d4ff; box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 0 10px #333; transform: perspective(1000px) rotateX(5deg); padding: 15px; margin: 20px auto; max-width: 550px; transition: 0.3s; }
+ .log-3d:hover { transform: perspective(1000px) rotateX(0deg); }
+ .log-table { width: 100%; border-collapse: collapse; color: #eee; font-size: 14px; margin-top:10px; }
+ .log-table th { background: #333; color: #00ffcc; padding: 10px; border: 1px solid #444; }
+ .log-table td { padding: 8px; border: 1px solid #333; text-align: center; }
+  .st-box { background: #1e1e1e; padding: 15px; border-radius: 12px; margin: 15px auto; max-width: 500px; border: 2px solid #444; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+ .st-item { font-weight: bold; font-size: 19px; padding: 10px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; color: white; }
+ .st-blink { color: #ff3333; animation: blinker 0.7s linear infinite; text-shadow: 0 0 10px #ff0000; font-weight: bold; }
+ @keyframes blinker { 50% { opacity: 0; } }
+ .bold-txt { font-weight: bold; }
+</style></head><body>
+<div style="background:#0f1218; padding:15px; text-align:center; border-bottom: 2px solid #00d4ff;">
+    <a href="index.html" style="background:#007bff; color:white; padding:10px 20px; text-decoration:none; border-radius:8px; font-weight:bold; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">⬅ Back to Main Menu</a>
+</div>
+<div class="header-container">
+  <div class="box" style="background: linear-gradient(145deg, #1a1a1a, #222); border: none; margin-top: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); border-radius: 15px;">
+  <div id="tm" style="font-size: 45px; font-weight: bold; color: #00ffcc; text-shadow: 0 0 15px rgba(0,255,204,0.5);">00:00:00 --</div>
+  <div id="dt" style="font-size: 18px; color: #aaa; margin-top: 5px; letter-spacing: 2px;">01-01-2024 - MON</div>
+ </div>
+</div>
+<div class="box" style="background:#1a1a1a; border:1px solid #00d4ff; padding:10px; margin: 10px auto; max-width:500px;">
+   <span style="color:#00d4ff; font-weight:bold;">SELECT GENERATOR:</span>
+   <select id="devSelect" onchange="switchDevice(this.value)" style="padding:8px; background:#222; color:#fff; border:1px solid #555; border-radius:5px; font-weight:bold; width:60%; margin-left:5px;">
+   </select>
+   <button onclick="openDevConfig()" style="padding:8px 12px; background:#6c5ce7; color:white; border:none; border-radius:5px; cursor:pointer; margin-left:5px;">⚙ SETUP</button>
+ </div>
+ 
+  <div id="cfgModal" style="display:none; background:#1e1e1e; border:2px solid #ffcc00; padding:15px; border-radius:10px; max-width:500px; margin:10px auto; text-align:left;">
+   <h4 style="color:#ffcc00; margin:0 0 10px 0; text-align:center;">MANAGE 5 GENERATORS</h4>
+   <div id="devListInputs"></div>
+   <div style="text-align:center; margin-top:10px;">
+     <button class="btn" style="width:45%; background:#28a745; display:inline-block;" onclick="saveDevConfig()">SAVE & RELOAD</button>
+     <button class="btn" style="width:45%; background:#c0392b; display:inline-block;" onclick="document.getElementById('cfgModal').style.display='none'">CLOSE</button>
+   </div>
+ </div>
+ <div id="genStatusBadge" style="display:inline-block; padding:8px 20px; border-radius:25px; font-size:20px; font-weight:900; margin:10px auto; background:#333; color:#ff3333; border:2px solid #ff3333; letter-spacing:1px">
+   <span id="genDot" class="dot red-static"></span> <span id="genStatusTxt">GENERATOR: STOPPED (OFF)</span>
+ </div>
+ <h2>GENSET LIVE DASHBOARD</h2>
+ <div class="box" id="srvBox" style="background: linear-gradient(145deg, #1f1f1f, #141414); border: 2px solid #00d4ff; border-radius: 12px; padding: 12px; margin: 10px auto; max-width: 500px;">
+   <div style="font-size: 13px; color: #aaa; letter-spacing: 1px;">GENSET IP ADDRESS: <span id="bIP" style="color: #00ffcc; font-weight: bold; font-size: 16px;">0.0.0.0</span></div>
+   <div id="srvTitle" style="font-size: 22px; font-weight: 900; margin: 8px 0; color: #00ffcc; letter-spacing: 1px;">SERVICE STATUS: CHECKING...</div>
+   <div id="srvSub" style="font-size: 15px; color: #ffcc00; font-weight: bold;">NEXT SERVICE: 300 HOURS</div>
+   <div style="margin-top: 10px; border-top: 1px solid #333; padding-top: 8px;">
+     <input type="password" id="srvPin" placeholder="***" style="width: 70px; text-align: center; padding: 6px; background: #222; color: #00ff00; border: 1px solid #555; border-radius: 4px; font-size: 16px;">
+     <button type="button" class="btn" style="width: auto; padding: 6px 15px; margin: 0; background: #e67e22; font-size: 13px; font-weight: bold; display: inline-block;" onclick="resetServiceHours()">RESET SERVICE</button>
+   </div>
+ 
+</div>
+
+<div class="box" style="background: linear-gradient(145deg, #222, #1a1a1a); border: 2px solid #00ffcc; text-align: center;">
+   <h3 style="color:#00ffcc; margin-top:0;">🎙 MULTILINGUAL VOICE CONTROL</h3>
+   <p style="font-size:13px; color:#aaa; margin:5px 0;">(Supports Gujarati, Hindi & English)</p>
+   
+   <button onclick="toggleVoiceRecording()" id="micBtn" style="background: #e74c3c; color: white; border: none; border-radius: 50%; width: 70px; height: 70px; font-size: 30px; cursor: pointer; box-shadow: 0 0 15px rgba(231,76,60,0.6); transition: 0.3s; margin: 10px 0;">🎙</button>
+   
+   <div id="voiceStatus" style="font-size: 15px; font-weight: bold; color: #ffcc00; margin-top: 5px;">Click Mic & Speak (e.g. Start / Gen On)</div>
+   
+   <div style="background: rgba(0,0,0,0.5); padding: 8px; border-radius: 6px; margin-top: 10px; border: 1px solid #444;">
+     <span style="font-size: 12px; color: #888;">Recognized Text:</span>
+     <div id="voiceText" style="font-size: 16px; color: #00ffcc; font-weight: bold; min-height: 24px;">---</div>
+   </div>
+ </div>
+
+ <div class="ctrl-box">
+  <button class="ctrl-btn btn-on" onclick="controlGen('on')">ENGINE<br>START</button>
+  <button class="ctrl-btn btn-off" onclick="controlGen('off')">ENGINE<br>STOP</button>
+ </div>  
+ <div class="flex">
+  <div class="card r"><h3>PHASE R</h3><div class="val" id="vr">0V</div><div class="bar-bg"><div id="br_v" class="bar-fill" style="background:#ff3333"></div></div><div class="val" id="ir">0A</div><div class="bar-bg"><div id="br_i" class="bar-fill" style="background:#ff3333"></div></div></div>
+  <div class="card y"><h3>PHASE Y</h3><div class="val" id="vy">0V</div><div class="bar-bg"><div id="by_v" class="bar-fill" style="background:#ffcc00"></div></div><div class="val" id="iy">0A</div><div class="bar-bg"><div id="by_i" class="bar-fill" style="background:#ffcc00"></div></div></div>
+  <div class="card b"><h3>PHASE B</h3><div class="val" id="vb">0V</div><div class="bar-bg"><div id="bb_v" class="bar-fill" style="background:#3366ff"></div></div><div class="val" id="ib">0A</div><div class="bar-bg"><div id="bb_i" class="bar-fill" style="background:#3366ff"></div></div></div>
+ </div>
+ <div class="st-box">
+  <h3 style="color:#00d4ff; text-align:center; border-bottom: 2px solid #00d4ff; margin-bottom:10px;">SENSOR HEALTH STATUS</h3>
+  <div style="text-align:center; margin-bottom:10px;">
+    <div id="modeDisp" style="font-size:22px; font-weight:bold; color:#ffcc00; margin-bottom:5px;">MODE: AUTO</div>
+    <button class="btn" style="width:60%; background:#6c5ce7;" onclick="toggleAuto()">CHANGE MODE</button>
+  </div>
+  <div class="st-item">BATTERY: <span id="stBatt">--</span></div>
+  <div class="st-item">OIL PRESSURE: <span id="stOil">--</span></div>
+  <div class="st-item">DIESEL TANK: <span id="stDsl">--</span></div>
+  <div class="st-item">ENGINE TEMP: <span id="stTemp">--</span></div>
+  <div class="st-item">BELT STATUS: <span id="stBelt">--</span></div>
+ </div>
+<div class="box">
+  <h3 style="color:#00ff00">BATTERY STATUS</h3>
+  <div class="batt-ring" id="br" style="--v: 0">
+   <div class="batt-val" id="bp">0%</div>
+  </div>
+  <p id="bv">0.0V</p>
+  <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; margin-top: 10px; border: 1px solid #444;">
+    <div style="font-size: 19px; font-weight: bold; margin-bottom: 5px;">
+      <span id="chgDot" class="dot red-static"></span>
+      <span id="chgTxt" style="color:#ff3333">NOT CHARGING</span>
+    </div>
+    <div id="chgSrc" style="font-size: 14px; color: #00d4ff; font-weight: bold;">SOURCE: --</div>
+  </div>
+ </div>
+ <div class="box" id="oilCard" style="border-top: 8px solid #28a745; transition: 0.5s;">
+  <h3 style="color:#00ff00">OIL PRESSURE SYSTEM</h3>
+  <div id="oilVal" style="font-size: 35px; font-weight: bold; margin: 10px 0;">OIL OK</div>
+  <div style="background:#333; height:12px; border-radius:10px; overflow:hidden;">
+    <div id="oilBar" style="height:100%; width:80%; background:#28a745; transition:0.5s;"></div>
+  </div>
+  <p id="ovTxt" style="margin-top:10px; color:#aaa;">Voltage: 4.4V</p>
+ </div>
+ <div class="box" id="dslCard" style="border-top: 8px solid #ffcc00; transition: 0.5s;">
+  <h3 style="color:#ffcc00">DIESEL TANK LEVEL</h3>
+  <div style="font-size: 35px; font-weight: bold; margin: 10px 0;"><span id="dslPct">0</span>%</div>
+  <div style="background:#333; height:25px; border-radius:5px; overflow:hidden; border:1px solid #555;">
+    <div id="dslBar" style="height:100%; width:0%; background:#ffcc00; transition:0.8s;"></div>
+  </div>
+  <p style="margin-top:10px; color:#aaa;">Sensor: <span id="dslVolt">0.0</span>V | Status: <span id="dslStat">OK</span></p>
+ </div> 
+ <div class="box" id="tempCard" style="border-top: 8px solid #ffcc00; transition: 0.5s;">
+  <h3 style="color:#ffffff">ENGINE TEMPERATURE</h3>
+  <div id="tValDiv" style="font-size: 45px; font-weight: bold; margin: 10px 0; color:#ffcc00;"><span id="tDeg">0</span>&deg;C</div>
+  <div style="background:#333; height:20px; border-radius:10px; overflow:hidden; border:1px solid #555;">
+    <div id="tBar" style="height:100%; width:0%; background:#ffcc00; transition:0.8s;"></div>
+  </div>
+  <p style="margin-top:10px; color:#aaa; font-weight:bold;">Status: <span id="tStat" style="font-size:18px;">LOW</span> | Sensor: <span id="tVolt">0.0</span>V</p>
+ </div>
+ <div class="box" id="gebCard" style="border-top: 8px solid #ff00ff; transition: 0.5s;">
+  <h3 style="color:#ff00ff">GEB (MAINS) VOLTAGE</h3>
+  <div style="font-size:14px; color:#888; margin-bottom:10px;">GEB BOARD IP: <span id="gip" style="color:#00ffcc">0.0.0.0</span></div>
+  <div class="flex" style="font-size: 25px; font-weight: bold; margin: 10px 0;">
+    <div style="flex:1; color:#ff3333">R:<span id="gvr">0</span>V</div>
+    <div style="flex:1; color:#ffcc00">Y:<span id="gvy">0</span>V</div>
+    <div style="flex:1; color:#3366ff">B:<span id="gvb">0</span>V</div>
+  </div>
+   <div style="font-size: 24px; margin-top:10px; font-weight:bold; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px;">
+    ALT2 VOLT DC: <span id="ga2" style="color:#00d4ff">0.0</span>V 
+    <span style="margin:0 10px;">|</span>
+    STATUS: <span id="ga2s">OFF</span>
+  </div>
+  <div style="background:#333; height:10px; border-radius:5px; overflow:hidden;">
+    <div id="gebBar" style="height:100%; width:100%; background:#ff00ff; transition:0.5s;"></div>
+  </div>
+  <p id="gebStat" style="margin-top:10px; font-size:18px; font-weight:bold;">CHECKING...</p>
+   <div style="margin: 15px auto; padding: 10px; border: 1px solid #444; border-radius: 8px; background: rgba(0,0,0,0.2); width: 80%; max-width: 250px; text-align: left; font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; line-height: 1.6;">
+    <div style="color:#ff3333;">PHASE R: <span id="geb_pr">OK</span></div>
+    <div style="color:#ffcc00;">PHASE Y: <span id="geb_py">OK</span></div>
+    <div style="color:#3366ff;">PHASE B: <span id="geb_pb">OK</span></div>
+  </div>
+ </div>
+ <div class="box" style="border-top: 6px solid #6c5ce7; background: #1e1e1e; box-shadow: 0 10px 20px rgba(0,0,0,0.5);">
+  <h3 style="color:#a29bfe; margin-top:0;">GENERATOR OPERATION LOGS</h3>
+   <div style="background:#252525; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #333;">
+    <div style="font-size:12px; color:#888;">TOTAL RUN TIME (HH:MM:SS)</div>
+    <div style="font-size:35px; font-weight:bold; color:#00d4ff; text-shadow:0 0 10px rgba(0,212,255,0.4);" id="runTime">00:00:00</div>
+  </div>
+  <div class="flex" style="gap:15px;">
+    <div style="background:#252525; padding:15px; border-radius:12px; flex:1;">
+      <div style="font-size:11px; color:#888;">TOTAL ON</div>
+      <div style="font-size:32px; font-weight:bold; color:#55efc4;" id="onCnt">0</div>
+    </div>
+    <div style="background:#252525; padding:15px; border-radius:12px; flex:1;">
+      <div style="font-size:11px; color:#888;">TOTAL OFF</div>
+      <div style="font-size:32px; font-weight:bold; color:#ff7675;" id="offCnt">0</div>
+    </div>
+  </div>
+  <div style="margin-top:15px; border-top:1px solid #333; padding-top:15px;">
+    <input type="password" id="adminPass" placeholder="Admin PIN" style="width:35%; padding:10px; text-align:center; border-radius:5px; border:1px solid #444;">
+    <button class="btn" style="background:#444; width:50%; margin:0; padding:10px;" onclick="resetCnt()">RESET COUNTER</button>
+  </div>
+ </div>
+  <div class="log-3d">
+  <h3 style="color:#00d4ff; text-shadow: 0 0 10px rgba(0,212,255,0.5); margin-top:0;">7-DAY HISTORY (RTC DATE)</h3>
+  <table class="log-table">
+    <thead><tr><th>DATE</th><th>RUN TIME</th><th>ON</th><th>OFF</th></tr></thead>
+    <tbody id="weekBody"></tbody>
+  </table>
+  <div style="margin-top:15px; background:rgba(0,0,0,0.4); padding:10px; border-radius:10px; border:1px solid #333;">
+    <input type="password" id="logPin" placeholder="****" style="width:80px; text-align:center; padding:8px; background:#111; color:#00ff00; border:1px solid #444;">
+    <button class="btn" style="background:#e74c3c; width:150px; margin:0; padding:10px; font-size:12px;" onclick="resetWeek()">RESET 7-DAY LOGS</button>
+  </div>
+ </div> 
+  <div class="box">
+  <h3 style="color:#00d4ff">WiFi Settings</h3>
+  <div style="font-size:15px; margin-bottom:10px; color:#ffcc00; font-weight:bold;">CONNECTED WIFI: <span id="curWifi" style="color:#00ffcc;">--</span></div>
+  SSID: <input id="fb_ssid" type="text" placeholder="WiFi Name"><br>
+   PASS: <input id="fb_pass" type="password" placeholder="WiFi Password"><br>
+   <button type="button" onclick="saveWifiFirebase()" class="btn" style="background:#007bff">SAVE WIFI SETTINGS</button>
+ </div>
+ <div class="box">
+  <h3 style="color:#ffcc00">Calibration Settings</h3>
+  <input type="password" id="cp" placeholder="Enter Admin Password (*****)">
+  <button type="button" class="btn" style="background:#6c757d" onclick="unlock()">UNLOCK CALIBRATION</button>
+  
+ <div id="cal-section" style="display:none; margin-top:15px; padding-top:15px; border-top:1px solid #444;">
+   <div style="border:1px solid #444; padding:10px; margin-bottom:10px; border-radius:8px; background:#1a1a1a;">
+     <p style="color:#00ff00; margin:5px 0;">BATTERY CALIB (Last: <span id="curB">0.00</span>)</p> 
+      <input id="inB" type="number" step="0.01" placeholder="Value" style="width:60%; display:inline-block;">
+     <button class="btn" style="width:35%; padding:8px; margin:0; display:inline-block; vertical-align:top;" onclick="saveCal('Batt')">SAVE</button>
+   </div>
+   <div style="border:1px solid #444; padding:10px; margin-bottom:10px; border-radius:8px; background:#1a1a1a;">
+     <p style="color:#00ff00; margin:5px 0;">OIL PRESSURE CALIB (Last: <span id="curO">0.00</span>)</p>
+     <input id="inO" type="number" step="0.01" placeholder="Value" style="width:60%; display:inline-block;">
+     <button class="btn" style="width:35%; padding:8px; margin:0; display:inline-block; vertical-align:top;" onclick="saveCal('Oil')">SAVE</button>
+   </div>
+   <div style="border:1px solid #444; padding:10px; margin-bottom:10px; border-radius:8px; background:#1a1a1a;">
+     <p style="color:#00ff00; margin:5px 0;">DIESEL TANK CALIB (Last: <span id="curD">0.00</span>)</p>
+     <input id="inD" type="number" step="0.01" placeholder="Value" style="width:60%; display:inline-block;">
+     <button class="btn" style="width:35%; padding:8px; margin:0; display:inline-block; vertical-align:top;" onclick="saveCal('Dsl')">SAVE</button>
+   </div>
+   <div style="border:1px solid #444; padding:10px; margin-bottom:10px; border-radius:8px; background:#1a1a1a;"> 
+      <p style="color:#00ff00; margin:5px 0;">ENGINE TEMP CALIB (Last: <span id="curT">0.0</span>)</p>
+    <input id="inT" type="number" step="0.1" placeholder="Value" style="width:60%; display:inline-block;">
+    <button class="btn" style="width:35%; padding:8px; margin:0; display:inline-block; vertical-align:top;" onclick="saveCal('Temp')">SAVE</button>
+  </div> 
+    <div style="border:2px solid #ff3333; padding:10px; margin-bottom:10px; border-radius:8px; background:#1a1a1a; text-align:left;">
+     <label style="color:#ff3333; font-weight:bold; font-size:18px;">
+       <input type="checkbox" id="mLock" onchange="lockMode(this.checked)" style="width:25px; height:25px; vertical-align:middle;"> 
+       MANUAL LOCK (No Auto Mode)
+     </label>
+   </div>
+    <div style="border:2px solid #e74c3c; padding:10px; margin-bottom:10px; border-radius:8px; background:#2c0b0e; text-align:left;">
+     <label style="color:#ff4757; font-weight:bold; font-size:18px;">
+       <input type="checkbox" id="genLockBox" onchange="toggleGenLock(this.checked)" style="width:25px; height:25px; vertical-align:middle;"> 
+       🔒 GENERATOR LOCK (ENGINE START OFF)
+     </label>
+   </div>
+   <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse: collapse; margin-top:15px; background:#1a1a1a; border-radius:8px;">
+      <tr style="color:#aaa; font-size:12px; border-bottom:1px solid #444;">
+        <th style="padding:10px;">TYPE</th><th style="padding:10px;">LAST</th><th style="padding:10px;">INPUT</th><th style="padding:10px;">ACTION</th>
+      </tr>
+      <!-- RED PHASE -->
+      <tr style="color:#ff3333; font-weight:bold; border-bottom:1px solid #333;">
+        <td style="padding:10px;">RED V</td><td id="curVR">0.0</td>
+        <td><input id="inVR" type="number" step="0.1" style="width:70px; padding:5px; background:#222; color:white; border:1px solid #ff3333;"></td>
+        <td><button class="btn" style="width:auto; padding:5px 10px; background:#ff3333; font-size:12px;" onclick="savePC('Vr')">SAVE</button></td>
+      </tr>
+      <tr style="color:#ff3333; font-weight:bold; border-bottom:1px solid #444;">
+        <td style="padding:10px;">RED CU</td><td id="curIR">0.0</td>
+        <td><input id="inIR" type="number" step="0.01" style="width:70px; padding:5px; background:#222; color:white; border:1px solid #ff3333;"></td>
+        <td><button class="btn" style="width:auto; padding:5px 10px; background:#ff3333; font-size:12px;" onclick="savePC('Ir')">SAVE</button></td>
+      </tr>
+      <!-- YELLOW PHASE -->
+      <tr style="color:#ffcc00; font-weight:bold; border-bottom:1px solid #333;">
+        <td style="padding:10px;">YEL V</td><td id="curVY">0.0</td>
+        <td><input id="inVY" type="number" step="0.1" style="width:70px; padding:5px; background:#222; color:white; border:1px solid #ffcc00;"></td>
+        <td><button class="btn" style="width:auto; padding:5px 10px; background:#ffcc00; color:black; font-size:12px;" onclick="savePC('Vy')">SAVE</button></td>
+      </tr>
+      <tr style="color:#ffcc00; font-weight:bold; border-bottom:1px solid #444;">
+        <td style="padding:10px;">YEL CU</td><td id="curIY">0.0</td>
+        <td><input id="inIY" type="number" step="0.01" style="width:70px; padding:5px; background:#222; color:white; border:1px solid #ffcc00;"></td>
+        <td><button class="btn" style="width:auto; padding:5px 10px; background:#ffcc00; color:black; font-size:12px;" onclick="savePC('Iy')">SAVE</button></td>
+      </tr>
+      <!-- BLUE PHASE -->
+      <tr style="color:#3366ff; font-weight:bold; border-bottom:1px solid #333;">
+        <td style="padding:10px;">BLU V</td><td id="curVB">0.0</td>
+        <td><input id="inVB" type="number" step="0.1" style="width:70px; padding:5px; background:#222; color:white; border:1px solid #3366ff;"></td>
+        <td><button class="btn" style="width:auto; padding:5px 10px; background:#3366ff; font-size:12px;" onclick="savePC('Vb')">SAVE</button></td>
+      </tr>
+      <tr style="color:#3366ff; font-weight:bold;">
+        <td style="padding:10px;">BLU CU</td><td id="curIB">0.0</td>
+        <td><input id="inIB" type="number" step="0.01" style="width:70px; padding:5px; background:#222; color:white; border:1px solid #3366ff;"></td>
+        <td><button class="btn" style="width:auto; padding:5px 10px; background:#3366ff; font-size:12px;" onclick="savePC('Ib')">SAVE</button></td>
+      </tr>
+    </table>
+   </div>
+     </div>
+ </div>
+<div class="header-container" style="margin-top: 20px; border-radius: 20px; border-top: 4px solid #d4af37;">
+    <div class="logo-box">
+       <div class="icon-gold">&#9889;</div> 
+       <div class="text-box">
+          <h1 class="main-title">Shubh</h1>
+          <h2 class="sub-title">Electronic</h2>
+       </div>
+    </div>
+    <div style="color: #ffd700; font-size: 12px; margin-top: 10px; letter-spacing: 5px; font-weight: bold; opacity: 0.7;">
+       PREMIUM POWER SOLUTIONS
+    </div>
+      <div style="color: #ffffff; font-size: 18px; margin-top: 12px; font-weight: bold; letter-spacing: 2px; font-family: 'Arial Black', sans-serif;">
+       PRODUCT ID: <span style="color: #00ffcc;">SE32-v2</span> <span style="color: #e5e4e2; font-size: 12px; font-weight: normal; letter-spacing: 0px;">[Platinum]</span>
+    </div>
+    
+    <div style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+       <div style="color: #aaaaaa; font-size: 10px; font-family: 'Courier New', monospace;">
+          STABLE BUILD: 2026.06.11 | ESP32-STANDARD
+       </div>
+    </div>
+ </div>
+ <script>
+ const FIXED_FIREBASE_URL = "https://genset-monitor-001-default-rtdb.asia-southeast1.firebasedatabase.app";
+  let fbURL = localStorage.getItem("fb_url") || FIXED_FIREBASE_URL;
+  if (!localStorage.getItem("fb_url")) {
+    localStorage.setItem("fb_url", FIXED_FIREBASE_URL);
+  }
+  let devList = JSON.parse(localStorage.getItem("dev_list") || "[]");
+  if(devList.length === 0) {
+    devList = [
+      { name: "Genset 1", id: "" },
+      { name: "Genset 2", id: "" },
+      { name: "Genset 3", id: "" },
+      { name: "Genset 4", id: "" },
+      { name: "Genset 5", id: "" }
+    ];
+  }
+  let currentDevIdx = parseInt(localStorage.getItem("sel_dev_idx") || "0");
+
+  function initDevices() {
+    let sel = document.getElementById("devSelect");
+    sel.innerHTML = "";
+    devList.forEach((d, i) => {
+      let opt = document.createElement("option");
+      opt.value = i;
+      opt.innerText = (d.name || ("Genset " + (i+1))) + (d.id ? " (" + d.id + ")" : " [NOT SET]");
+      if(i === currentDevIdx) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+  initDevices();
+
+  function switchDevice(idx) {
+    currentDevIdx = parseInt(idx);
+    localStorage.setItem("sel_dev_idx", currentDevIdx);
+  }
+
+ function openDevConfig() {
+    let h = "";
+    devList.forEach((d, i) => {
+      h += `<div style="border-bottom:1px solid #333; padding:5px 0;">
+        <input id="dn_${i}" value="${d.name}" placeholder="Machine Name" style="width:35%; display:inline-block;">
+        <input id="di_${i}" value="${d.id}" placeholder="genset001-XXXXXX" style="width:55%; display:inline-block;">
+      </div>`;
+    });
+    document.getElementById("devListInputs").innerHTML = h;
+    document.getElementById("cfgModal").style.display = "block";
+  }
+
+  function saveDevConfig() {
+    for(let i=0; i<5; i++) {
+      devList[i].name = document.getElementById("dn_" + i).value.trim();  
+      devList[i].id = document.getElementById("di_" + i).value.trim();
+    }
+    localStorage.setItem("dev_list", JSON.stringify(devList));
+    alert("Saved Successfully!");
+    location.reload();
+  }
+
+  setInterval(()=>{
+   let activeDevId = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+   if(!activeDevId || !fbURL) return;
+
+   fetch(fbURL + '/devices/' + activeDevId + '/live.json')
+    .then(r=>r.json())
+    .then(d=>{
+      if(!d) return;
+      // document.getElementById('vr').innerText=d.vr+'V'; document.getElementById('br_v').style.width=(d.vr/5)+'%'; 
+      document.getElementById('vr').innerText = (d.vr !== undefined ? d.vr : '0') + 'V'; 
+      document.getElementById('br_v').style.width = ((d.vr || 0) / 5) + '%';
+      document.getElementById('ir').innerText = (d.ir !== undefined ? d.ir : '0') + 'A'; 
+      document.getElementById('br_i').style.width = ((d.ir || 0) * 2) + '%';
+      document.getElementById('vy').innerText = (d.vy !== undefined ? d.vy : '0') + 'V'; 
+      document.getElementById('by_v').style.width = ((d.vy || 0) / 5) + '%';
+      document.getElementById('iy').innerText = (d.iy !== undefined ? d.iy : '0') + 'A'; 
+      document.getElementById('by_i').style.width = ((d.iy || 0) * 2) + '%';
+      document.getElementById('vb').innerText = (d.vb !== undefined ? d.vb : '0') + 'V'; 
+      document.getElementById('bb_v').style.width = ((d.vb || 0) / 5) + '%';
+      document.getElementById('ib').innerText = (d.ib !== undefined ? d.ib : '0') + 'A'; 
+      document.getElementById('bb_i').style.width = ((d.ib || 0) * 2) + '%';
+    // START NEW CODE
+   let isOn = parseInt(d.isOn);
+    let gBadge = document.getElementById('genStatusBadge');
+    let gDot = document.getElementById('genDot');
+    let gTxt = document.getElementById('genStatusTxt');
+
+    if (isOn === 1) {
+        gBadge.style.borderColor = "#00ff00";
+        gBadge.style.boxShadow = "0 0 15px rgba(0,255,0,0.4)";
+        gDot.className = "dot green-blink";
+        gTxt.innerText = "GENERATOR: RUNNING (ON)";
+        gTxt.style.color = "#00ff00";
+    } else {
+        gBadge.style.borderColor = "#ff3333";
+        gBadge.style.boxShadow = "none";
+        gDot.className = "dot red-static";
+        gTxt.innerText = "GENERATOR: STOPPED (OFF)";
+        gTxt.style.color = "#ff3333";
+    }
+
+    document.getElementById('bp').innerText=d.bt+'%';
+    document.getElementById('br').style.setProperty('--v', d.bt);
+    document.getElementById('bv').innerText=d.bv+'V DC';
+    let dot = document.getElementById('chgDot');
+    let txt = document.getElementById('chgTxt'); 
+    let src = document.getElementById('chgSrc');  
+    let ca = parseInt(d.ca);
+    let r26 = parseInt(d.r26);  
+    let bVolt = parseFloat(d.bv) || 0; // બેટરી વોલ્ટેજ રીડ કરવા
+
+    if (isOn === 1 && bVolt > 14.5) {
+        dot.className = "dot red-static";
+        txt.innerText = "NOT CHARGING";
+        txt.style.color = "#ff3333";
+        src.innerText = "SOURCE: OK (BATT FULL >14.5V)";
+    } else if (isOn === 1) {
+        dot.className = "dot green-blink";
+        txt.innerText = "CHARGING ON";
+        txt.style.color = "#00ff00";
+        src.innerText = "SOURCE: GEN (ALTERNATOR)";
+    } else if (ca === 1 || r26 === 1) {
+        dot.className = "dot green-blink";
+        txt.innerText = "CHARGING ON";
+        txt.style.color = "#00ff00";
+        src.innerText = "SOURCE: GEB (AC MAINS)";
+    } else {
+        dot.className = "dot red-static";
+        txt.innerText = "NOT CHARGING";
+        txt.style.color = "#ff3333";
+        src.innerText = "SOURCE: --";
+    }
+    let oV = d.ov; 
+    let oS = d.os;
+    document.getElementById('ovTxt').innerText = "Voltage: " + oV + "V DC";
+    document.getElementById('oilVal').innerText = oS;
+    
+    let oCard = document.getElementById('oilCard');
+    let oBar = document.getElementById('oilBar');
+    let oVal = document.getElementById('oilVal');
+
+    if(oS == "LOW OIL!") {
+      oCard.style.borderColor = "#ff3333";
+      oBar.style.background = "#ff3333";
+      oBar.style.width = "20%";
+      oVal.style.color = "#ff3333";
+    } else {
+      oCard.style.borderColor = "#28a745";
+      oBar.style.background = "#28a745";
+      oBar.style.width = "85%";
+      oVal.style.color = "#00ff00";
+    }
+    document.getElementById('dslPct').innerText = d.dp;
+    document.getElementById('dslBar').style.width = d.dp + "%";
+    document.getElementById('dslVolt').innerText = d.dv;
+    document.getElementById('dslStat').innerText = d.ds;
+    
+    let dCard = document.getElementById('dslCard');
+    document.getElementById('tDeg').innerText = d.td;
+    document.getElementById('tVolt').innerText = d.tv; // વોલ્ટેજ અહીંથી અપડેટ થશે
+    document.getElementById('tStat').innerText = d.ts;
+    document.getElementById('tBar').style.width = (d.td / 1.5) + "%";
+    
+    let tc = document.getElementById('tempCard'), ts = document.getElementById('tStat');
+    let tv = document.getElementById('tValDiv'), tb = document.getElementById('tBar');
+
+    if(d.ts == "HIGH") {
+      tc.style.borderColor = "#ff3333"; ts.style.color = "#ff3333"; tv.style.color = "#ff3333"; tb.style.background = "#ff3333"; ts.style.fontWeight = "bold";
+    } else if(d.ts == "NORMAL") {
+      tc.style.borderColor = "#28a745"; ts.style.color = "#28a745"; tv.style.color = "#28a745"; tb.style.background = "#28a745"; ts.style.fontWeight = "bold";
+    } else {
+      tc.style.borderColor = "#ffcc00"; ts.style.color = "#ffcc00"; tv.style.color = "#ffcc00"; tb.style.background = "#ffcc00"; ts.style.fontWeight = "bold";
+    }
+ 
+    document.getElementById('gvr').innerText = d.gvr;
+    document.getElementById('gvy').innerText = d.gvy;
+    document.getElementById('gvb').innerText = d.gvb;
+    document.getElementById('ga2').innerText = d.ga2;
+    document.getElementById('ga2s').innerText = d.ga2s;
+    let sElement = document.getElementById('ga2s');
+    sElement.innerText = d.ga2s;
+    
+    if (d.ga2s == "BELT FAULT!") {
+      sElement.style.color = "#ff3333"; // લાલ કલર
+    } else if (d.ga2s == "OK") {
+      sElement.style.color = "#00ff00"; // લીલો કલર
+    } else {
+      sElement.style.color = "#aaaaaa"; // ગ્રે કલર (OFF માટે)
+    }
+    let gStat = (d.gvr > 100 || d.gvy > 100 || d.gvb > 100) ? "MAINS ON" : "POWER CUT";
+    document.getElementById('gebStat').innerText = gStat;
+    document.getElementById('gebStat').style.color = (gStat == "MAINS ON") ? "#00ff00" : "#ff3333";
+     document.getElementById('geb_pr').innerText = (d.gvr >= 200) ? "OK" : "CUT";
+    document.getElementById('geb_pr').style.color = (d.gvr >= 200) ? "#00ff00" : "#ff3333";
+    document.getElementById('geb_py').innerText = (d.gvy >= 200) ? "OK" : "CUT";
+    document.getElementById('geb_py').style.color = (d.gvy >= 200) ? "#00ff00" : "#ff3333";
+    document.getElementById('geb_pb').innerText = (d.gvb >= 200) ? "OK" : "CUT";
+    document.getElementById('geb_pb').style.color = (d.gvb >= 200) ? "#00ff00" : "#ff3333";
+    document.getElementById('gip').innerText = d.gip;
+    if(d.dp < 25) { 
+      dCard.style.borderColor = "#ff3333"; 
+      document.getElementById('dslStat').style.color = "#ff3333";
+    } else { 
+      dCard.style.borderColor = "#ffcc00"; 
+      document.getElementById('dslStat').style.color = "white";
+    }
+    document.getElementById('tm').innerText = d.tm;
+    document.getElementById('dt').innerText = d.dt;
+    document.getElementById('onCnt').innerText = d.onc;
+    document.getElementById('offCnt').innerText = d.ofc;
+    document.getElementById('runTime').innerText = d.runtime;
+if(d.boardIP) document.getElementById('bIP').innerText = d.boardIP; 
+if(d.wfName) document.getElementById('curWifi').innerText = d.wfName;
+  let srvTargetHours = parseInt(d.srvHrs) || 300;
+    let srvTargetSec = srvTargetHours * 3600;
+    let rParts = (d.runtime || "00:00:00").split(":");
+    let runSecTotal = (parseInt(rParts[0]) || 0) * 3600 + (parseInt(rParts[1]) || 0) * 60 + (parseInt(rParts[2]) || 0);
+
+    let sBox = document.getElementById('srvBox');
+    let sTitle = document.getElementById('srvTitle');
+    let sSub = document.getElementById('srvSub');
+    let srvTargetStr = String(srvTargetHours).padStart(2, '0') + ":00:00";
+
+    if (runSecTotal >= srvTargetSec) {
+      let overSec = runSecTotal - srvTargetSec;
+      let oh = Math.floor(overSec / 3600), om = Math.floor((overSec % 3600) / 60), os = overSec % 60;
+      let overStr = String(oh).padStart(2, '0') + ":" + String(om).padStart(2, '0') + ":" + String(os).padStart(2, '0');
+      sBox.style.borderColor = "#ff3333";
+      sTitle.innerText = "⚠ SERVICE DUE! (MAINTENANCE REQUIRED)";
+      sTitle.className = "st-blink";
+      sTitle.style.color = "#ff3333";
+      sSub.innerText = "TARGET: " + srvTargetStr + " | OVERDUE: " + overStr;
+      sSub.style.color = "#ff3333";
+    } else {
+      let remSec = srvTargetSec - runSecTotal;
+      let rh = Math.floor(remSec / 3600), rm = Math.floor((remSec % 3600) / 60), rs = remSec % 60;
+      let remStr = String(rh).padStart(2, '0') + ":" + String(rm).padStart(2, '0') + ":" + String(rs).padStart(2, '0');
+      sBox.style.borderColor = "#00d4ff";
+      sTitle.innerText = "ENGINE STATUS: HEALTHY";
+      sTitle.className = "";
+      sTitle.style.color = "#00ffcc";
+      sSub.innerText = "NEXT SERVICE: " + srvTargetStr + " | REMAINING: " + remStr;
+      sSub.style.color = "#ffcc00";
+    }
+    if (d.logs && Array.isArray(d.logs)) {
+      let htm = "";
+      d.logs.forEach(l => {
+        if(l.dt && l.dt !== "") {
+          htm += `<tr><td>${l.dt}</td><td style="color:#00ff00; font-weight:bold;">${l.rt}</td><td>${l.on}</td><td>${l.off}</td></tr>`;
+        }
+      });
+      document.getElementById('weekBody').innerHTML = htm;
+    }
+   let b = document.getElementById('stBatt'), o = document.getElementById('stOil'), dl = document.getElementById('stDsl'), t = document.getElementById('stTemp'), bl = document.getElementById('stBelt'), md = document.getElementById('modeDisp');
+    
+    // મોડ ડિસ્પ્લે
+    md.innerText = "MODE: " + (d.auto ? "AUTO" : "MANUAL");
+    md.style.color = d.auto ? "#00ff00" : "#ffcc00";
+document.getElementById('mLock').checked = d.mLock;
+if(d.gLock !== undefined) document.getElementById('genLockBox').checked = d.gLock;
+    // ટેમ્પરેચર (ફક્ત NORMAL/HIGH/LOW અને BOLD)
+    t.innerText = d.ts; 
+    t.style.fontWeight = "bold";
+    if(d.ts == "HIGH") { t.className="st-blink"; } else { t.style.color="#00ff00"; t.className="bold-txt"; }
+
+    // બેલ્ટ સ્ટેટસ (BOLD)
+    bl.style.fontWeight = "bold";
+    if(d.ga2s == "BELT FAULT!") { bl.innerText="BELT BROKEN!"; bl.className="st-blink"; }
+    else if(d.ga2s == "OFF") { bl.innerText="OFF"; bl.style.color="#888"; bl.className="bold-txt"; }
+    else { bl.innerText="OK"; bl.style.color="#00ff00"; bl.className="bold-txt"; }
+
+    // મોડ બદલવા માટેનું ફંક્શન
+   window.toggleAuto = function() {
+      let actDev = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+      if(actDev && fbURL) {
+        fetch(fbURL + '/devices/' + actDev + '/cmd.json', {
+          method: 'PUT',
+          body: JSON.stringify({ action: "toggleMode", time: Date.now() })
+        }).then(() => alert("Mode Change Request Sent!"));
+      }
+    };
+      if(d.bv < 11.5) { 
+        b.innerText="LOW"; 
+        b.className="st-blink"; // બ્લિંક ચાલુ કરવા માટે
+    } else if(d.bv < 12.5) { 
+        b.innerText="MEDIUM"; 
+        b.style.color="#ffcc00"; 
+        b.className="bold-txt"; 
+    } else { 
+        b.innerText="OK"; 
+        b.style.color="#00ff00"; 
+        b.className="bold-txt"; 
+    }
+
+    // Oil Status - જો LOW OIL! હોય તો બ્લિંક થશે
+    if(d.os == "LOW OIL!") { 
+        o.innerText="LOW OIL!"; 
+        o.className="st-blink"; 
+    } else { 
+        o.innerText="OK"; 
+        o.style.color="#00ff00"; 
+        o.className="bold-txt"; 
+    }
+
+    // Diesel Status - જો ૨૦% થી નીચે હોય તો બ્લિંક થશે
+    if(d.dp < 20) { 
+        dl.innerText="LOW LEVEL"; 
+        dl.className="st-blink"; 
+    } else { 
+        dl.innerText=(d.dp < 60 ? "MEDIUM" : "FULL"); 
+        dl.style.color=(d.dp < 60 ? "#ffcc00" : "#00ff00"); 
+        dl.className="bold-txt"; 
+    }
+   if(d.cBatt != undefined) document.getElementById('curB').innerText = d.cBatt; 
+    if(d.cOil != undefined) document.getElementById('curO').innerText = d.cOil;
+    if(d.cDsl != undefined) document.getElementById('curD').innerText = d.cDsl;
+    if(d.cTemp != undefined) document.getElementById('curT').innerText = d.cTemp;
+   if(d.cVR != undefined) {
+      document.getElementById('curVR').innerText = d.cVR; document.getElementById('curIR').innerText = d.cIR;
+      document.getElementById('curVY').innerText = d.cVY; document.getElementById('curIY').innerText = d.cIY;
+      document.getElementById('curVB').innerText = d.cVB; document.getElementById('curIB').innerText = d.cIB;
+    }
+       if (d.logs && Array.isArray(d.logs)) {
+      let htm = "";
+      d.logs.forEach(l => {
+        if(l.dt && l.dt !== "") {
+          htm += `<tr><td>${l.dt}</td><td style="color:#00ff00; font-weight:bold;">${l.rt}</td><td>${l.on}</td><td>${l.off}</td></tr>`;
+        }
+      });
+      document.getElementById('weekBody').innerHTML = htm;
+    }
+   });
+  },1000);
+  function resetWeek() {
+    let p = document.getElementById('logPin').value;
+    if (p == '8460ydarsh24@24@25%') {    
+      if (confirm('Are you sure to Clear 7-Day History?')) {
+        let actDev = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+        if(actDev && fbURL) {
+          fetch(fbURL + '/devices/' + actDev + '/cmd.json', {
+            method: 'PUT',
+            body: JSON.stringify({ action: "resetWeekly", time: Date.now() })
+          }).then(() => alert("7-Day History Cleared via Firebase!"));
+        }
+      }
+    } else { alert('Incorrect PIN!'); }
+    document.getElementById('logPin').value = "";
+  }
+  function unlock(){if(document.getElementById('cp').value=='8460ydarsh24@24@25%')document.getElementById('cal-section').style.display='block'; else alert('Wrong Password');}
+  function saveCal(type) {
+    let inputId = 'in' + type.substring(0, 1);
+    let val = document.getElementById(inputId).value;
+    if(val == "") { alert("Value enter karo!"); return; }
+    let actDev = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+    if(actDev && fbURL) {
+      fetch(fbURL + '/devices/' + actDev + '/cmd.json', {
+        method: 'PUT',
+        body: JSON.stringify({ action: "saveCal", type: type, val: parseFloat(val) })
+      }).then(() => alert(type + " Calibration Saved via Firebase!"));
+    }
+  }
+  function savePC(type) {
+    let id = 'in' + type.toUpperCase(); 
+    let val = document.getElementById(id).value;
+    if(val == "" || val <= 0) { alert("Invalid Value in " + id); return; }
+    let actDev = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+    if(actDev && fbURL) {
+      fetch(fbURL + '/devices/' + actDev + '/cmd.json', {
+        method: 'PUT',
+        body: JSON.stringify({ action: "saveCal", type: type, val: parseFloat(val) })
+      }).then(() => alert(type + " Phase Saved via Firebase!"));
+    }
+  }
+ function lockMode(val) {
+    let actDev = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+    if(actDev && fbURL) {
+      fetch(fbURL + '/devices/' + actDev + '/cmd.json', {
+        method: 'PUT',
+        body: JSON.stringify({ action: "setLock", val: (val ? 1 : 0), time: Date.now() })
+      }).then(() => alert("System " + (val ? "LOCKED in MANUAL" : "UNLOCKED")));
+    }
+  }
+function toggleGenLock(val) {
+    let actDev = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+    if(actDev && fbURL) {
+      fetch(fbURL + '/devices/' + actDev + '/cmd.json', {
+        method: 'PUT',
+        body: JSON.stringify({ action: "setGenLock", val: (val ? 1 : 0), time: Date.now() })
+      }).then(() => alert("Generator " + (val ? "LOCKED (Engine Start Blocked!)" : "UNLOCKED (Normal Mode)")));
+    }
+  }
+  function resetCnt(){
+    let p = document.getElementById('adminPass').value;
+     if(p == "8460ydarsh24@24@25%") { 
+        if(confirm("Are you sure to Reset Logs?")) {
+            let actDev = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+            if(actDev && fbURL) {
+              fetch(fbURL + '/devices/' + actDev + '/cmd.json', {
+                method: 'PUT',
+                body: JSON.stringify({ action: "resetCounters", time: Date.now() })
+              }).then(() => alert("Counters Reset via Firebase!"));
+            }
+        }
+    } else { alert("Incorrect Password!"); }
+    document.getElementById('adminPass').value = "";
+  }
+  function resetServiceHours() {
+    let pin = document.getElementById('srvPin').value;
+    if (pin === "8460ydarsh24@24@25%") {
+      if (confirm("Are you sure to Reset Generator Service Counter to next 300 Hours?")) {
+        let actDev = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+        if(actDev && fbURL) {
+          fetch(fbURL + '/devices/' + actDev + '/cmd.json', {
+            method: 'PUT',
+            body: JSON.stringify({ action: "resetService", time: Date.now() })
+          }).then(() => alert("Service Counter Reset via Firebase!"));
+        }
+      }
+    } else {
+      alert("Incorrect Service PIN!");
+    }
+    document.getElementById('srvPin').value = "";
+  }
+ function controlGen(action) {
+    // બટન દબાવતા જ કલર બદલાઈ જશે જેથી યુઝરને ખબર પડે
+    let btn = event.currentTarget;
+    let originalColor = btn.style.background;
+    if (action === 'on' && document.getElementById('genLockBox') && document.getElementById('genLockBox').checked) {
+      alert("⚠ GENERATOR IS LOCKED! Unlock from Calibration Settings to Start.");
+      return;
+    }
+    btn.style.background = "#555"; // ક્લિક કરતા જ ગ્રે કલર થઈ જશે (Fast Feedback)
+    let activeDevId = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+    if(!activeDevId || !fbURL) { alert("Please configure Device ID first!"); return; }
+
+    // Firebase માં રીઅલટાઇમ કમાન્ડ મોકલો
+    fetch(fbURL + '/devices/' + activeDevId + '/cmd.json', {
+      method: 'PUT',
+      body: JSON.stringify({ action: action, time: Date.now() })
+    }).then(() => {
+       setTimeout(() => { btn.style.background = originalColor; }, 500);
+    }).catch(err => {
+       alert("Network Error!");
+       btn.style.background = originalColor;
+    });
+  }
+  function saveWifiFirebase() {
+    let s = document.getElementById('fb_ssid').value.trim();
+    let p = document.getElementById('fb_pass').value.trim();
+    if(s === "") { alert("WiFi Name enter karo!"); return; }
+    let actDev = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+    if(!actDev || !fbURL) { alert("Please configure Device ID first!"); return; }
+    if(confirm("Are you sure to update WiFi on Genset? Board will restart!")) {
+      fetch(fbURL + '/devices/' + actDev + '/cmd.json', {
+        method: 'PUT',
+        body: JSON.stringify({ action: "saveWifi", ssid: s, pass: p, time: Date.now() })
+      }).then(() => {
+        alert("WiFi Settings Sent! Genset ESP32 is restarting...");
+        document.getElementById('fb_ssid').value = "";
+        document.getElementById('fb_pass').value = "";
+      }).catch(e => alert("Error: " + e));
+    }
+  }
+  // --- MULTILINGUAL VOICE CONTROL SCRIPT (ENG, GUJ, HIND) ---
+  let recognition = null;
+  let isListening = false;
+
+  function toggleVoiceRecording() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Your browser does not support Voice Recognition. Please use Google Chrome.");
+      return;
+    }
+
+    if (isListening) {
+      if (recognition) recognition.stop();
+      return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-IN'; // Indian English / Gujarati / Hindi મિક્સ સપોર્ટ માટે શ્રેષ્ઠ
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = function() {
+      isListening = true;
+      let mic = document.getElementById('micBtn');
+      mic.style.background = "#2ecc71";
+      mic.style.boxShadow = "0 0 25px rgba(46,204,113,0.9)";
+      document.getElementById('voiceStatus').innerText = "🔴 Listening... (Speak in Eng, Guj or Hindi)";
+    };
+
+    recognition.onresult = function(event) {
+      let speechResult = event.results[0][0].transcript.toLowerCase().trim();
+      document.getElementById('voiceText').innerText = speechResult;
+      
+      // ૧. ENGINE START / ON કરવા માટેના ત્રણેય ભાષાના શબ્દો
+      if (
+        speechResult.includes('on') || 
+        speechResult.includes('start') || 
+        speechResult.includes('star') || 
+        speechResult.includes('चालू') || 
+        speechResult.includes('ચાલુ') || 
+        speechResult.includes('શરૂ') ||
+        speechResult.includes('chalu') ||
+        speechResult.includes('sharu')
+      ) {
+        document.getElementById('voiceStatus').innerText = "✔ Command Detected: START ENGINE";
+        controlGenVoice('on');
+      } 
+      // ૨. ENGINE STOP / OFF કરવા માટેના ત્રણેય ભાષાના શબ્દો
+      else if (
+        speechResult.includes('off') || 
+        speechResult.includes('stop') || 
+        speechResult.includes('stap') || 
+        speechResult.includes('બંધ') || 
+        speechResult.includes('बंद') ||
+        speechResult.includes('bandh')
+      ) {
+        document.getElementById('voiceStatus').innerText = "✔ Command Detected: STOP ENGINE";
+        controlGenVoice('off');
+      } 
+      else {
+        document.getElementById('voiceStatus').innerText = "❓ Not recognized. Say 'Start' or 'Stop'";
+      }
+    };
+
+    recognition.onerror = function(event) {
+      document.getElementById('voiceStatus').innerText = "❌ Error: " + event.error;
+      resetMicUI();
+    };
+
+    recognition.onend = function() {
+      resetMicUI();
+    };
+
+    recognition.start();
+  }
+
+  function resetMicUI() {
+    isListening = false;
+    let mic = document.getElementById('micBtn');
+    if(mic) {
+      mic.style.background = "#e74c3c";
+      mic.style.boxShadow = "0 0 15px rgba(231,76,60,0.6)";
+    }
+  }
+
+  function controlGenVoice(action) {
+    if (action === 'on' && document.getElementById('genLockBox') && document.getElementById('genLockBox').checked) {
+      alert("⚠ GENERATOR IS LOCKED!");
+      return;
+    }
+    let activeDevId = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+    if(!activeDevId || !fbURL) { alert("Please configure Device ID first!"); return; }
+
+    fetch(fbURL + '/devices/' + activeDevId + '/cmd.json', {
+      method: 'PUT',
+      body: JSON.stringify({ action: action, time: Date.now() })
+    }).then(() => {
+      console.log("Voice Command Sent Successfully: " + action);
+    }).catch(err => {
+      console.error("Voice Command Network Error");
+    });
+  }
+</script></body></html>
