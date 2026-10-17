@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shubh Electronic - 3-Phase Live Monitor</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background-color: #0d0e12; color: #ffffff; padding: 20px 12px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .header { font-size: 18px; font-weight: 700; letter-spacing: 2px; margin-bottom: 20px; color: #9a9aa2; text-transform: uppercase; text-align: center; }
+    .container { width: 100%; max-width: 950px; display: flex; flex-direction: column; gap: 18px; }
+
+    /* Current Card */
+    .current-card { background: #171821; border-radius: 14px; padding: 20px; text-align: center; box-shadow: 0 8px 25px rgba(0,0,0,0.5); border-top: 4px solid #00e676; }
+    .curr-title { font-size: 14px; font-weight: 700; color: #8e8e93; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+    .curr-val { font-size: 38px; font-weight: 800; color: #00e676; margin-bottom: 12px; }
+
+    /* Grid Layout */
+    .section-name { font-size: 13px; font-weight: 600; color: #7e7e86; letter-spacing: 1.5px; text-transform: uppercase; margin: 6px 0 -6px 4px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; width: 100%; }
+    .card { background: #171821; border-radius: 14px; padding: 20px; text-align: center; box-shadow: 0 6px 18px rgba(0,0,0,0.4); }
+    .card-title { font-size: 15px; font-weight: 700; letter-spacing: 1.2px; margin-bottom: 10px; }
+    .card-val { font-size: 30px; font-weight: 700; color: #ffffff; margin-bottom: 12px; }
+
+    /* Phase Colors */
+    .bar-r { background: #ff2b2b; } .card-r .card-title { color: #ff2b2b; }
+    .bar-y { background: #ffb800; } .card-y .card-title { color: #ffb800; }
+    .bar-b { background: #2072ff; } .card-b .card-title { color: #2072ff; }
+
+    /* Line to Line Gradients */
+    .bar-ry { background: linear-gradient(90deg, #ff2b2b 45%, #ffb800 55%); }
+    .bar-yb { background: linear-gradient(90deg, #ffb800 45%, #2072ff 55%); }
+    .bar-br { background: linear-gradient(90deg, #2072ff 45%, #ff2b2b 55%); }
+
+    /* Progress Bar Track */
+    .track { width: 100%; height: 9px; background: #252632; border-radius: 5px; overflow: hidden; margin-top: 10px; }
+    .fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; }
+    .pct-text { font-size: 11px; color: #8e8e93; margin-top: 5px; text-align: right; }
+
+    @keyframes blinker { 50% { opacity: 0.3; } }
+  </style>
+</head>
+<body>
+
+  <!-- ⬅ BACK TO MAIN MENU BUTTON (SPGT સ્ટાઇલ) -->
+  <div style="background:#0f1218; padding:15px; text-align:center; width:100%; max-width:950px; margin-bottom:15px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.5);">
+    <a href="index.html" style="background:#007bff; color:white; padding:10px 20px; text-decoration:none; border-radius:8px; font-weight:bold; font-size:16px; box-shadow:0 4px 6px rgba(0,0,0,0.3); display:inline-block;">⬅ BACK TO MAIN MENU</a>
+  </div>
+  
+  <!-- HEADER & BRANDING -->
+  <div class="header" style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 5px;">
+      <svg width="42" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 10px #ff7b00);">
+        <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="url(#shubhTopLightning)" stroke="#ff4500" stroke-width="0.3"/>
+        <defs>
+          <linearGradient id="shubhTopLightning" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#ffcc00"/>
+            <stop offset="60%" stop-color="#ff6600"/>
+            <stop offset="100%" stop-color="#e63900"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div style="text-align: left;">
+        <div style="font-size: 2.4em; font-weight: 900; color: #ffffff; line-height: 0.95; text-shadow: 2px 3px 0px #222222, 0 0 8px rgba(255,255,255,0.2);">Shubh</div>
+        <div style="font-size: 1.25em; font-weight: 800; color: #c5d3e2; letter-spacing: 2.5px; margin-top: 2px;">ELECTRONIC</div>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; font-size: 0.92em; font-weight: bold; color: #61dafb; margin-top: 5px; margin-bottom: 6px; letter-spacing: 0.5px;">
+      <span>📞 Customer Care Number:</span>
+      <span style="color: #ffd600; white-space: nowrap; font-size: 1.08em; font-weight: 900; letter-spacing: 1px;">
+        <a href="tel:8460242425" style="color:#ffd600; text-decoration:none;">8460 24 24 25</a>
+      </span>
+    </div>
+    
+    <!-- મોડેલ નંબર બેજ (MODEL NUMBER BADGE) -->
+      <div style="display:inline-flex; align-items:center; justify-content:center; gap:8px; font-size:0.90em; font-weight:900; color:#00e676; margin-bottom:12px; background:linear-gradient(135deg, rgba(0, 230, 118, 0.15), rgba(0, 188, 212, 0.15)); border:1.5px solid #00e676; padding:6px 18px; border-radius:30px; box-shadow:0 0 15px rgba(0,230,118,0.3); letter-spacing:1px;">
+      <span>🏷️ MODEL:</span>
+      <span style="color:#ffd600; letter-spacing:2px; font-size:1.05em;">SE-VORTEX 900-PRO+</span>
+      <span style="color:#61dafb; font-size:0.82em; font-weight:700;">(IoT & GSM 3-Phase)</span>
+    </div>
+    <div>⚡ 3-Phase Live Monitor ⚡</div>
+    <button id="refBtn" onclick="toggleAuto()" style="padding:7px 18px;font-size:13px;font-weight:700;color:#fff;background:#00c853;border:none;border-radius:20px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,0.4);">🔄 Auto-Refresh: ON</button>
+  </div>
+
+  <div class="container">
+
+  <!-- 🔑 CLOUD SERIAL KEY & DEVICE SELECTOR (૫ થી ૧૦૦ ડિવાઇસ કંટ્રોલ) -->
+    <div style="background:#171821;border-radius:14px;padding:15px;box-shadow:0 8px 25px rgba(0,0,0,0.5);border-top:4px solid #00bcd4;border:1px solid #333;">
+      <div style="color:#00bcd4;font-size:15px;font-weight:bold;margin-bottom:10px;text-align:center;letter-spacing:1px;">☁️ CLOUD DEVICE SERIAL KEY (ડિવાઇસ લિંક)</div>
+      
+      <!-- સેવ કરેલા ડિવાઇસ પસંદ કરવાનું ડ્રોપડાઉન (૧૦૦ ડિવાઇસ સુધી) -->
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+        <select id="deviceSelect" onchange="switchDevice()" style="flex:1;min-width:200px;padding:8px;background:#252632;color:#fff;border:1px solid #00bcd4;border-radius:6px;font-weight:bold;font-size:14px;outline:none;"></select>
+        <button type="button" onclick="deleteCurrentDevice()" style="padding:8px 12px;background:#d50000;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">🗑️ Delete</button>
+      </div>
+
+      <!-- નવું ડિવાઇસ Serial Number થી ઉમેરવા માટે -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <input type="text" id="inputSerial" placeholder="Serial Key (VTX900-A1B2C3D4E5F6)" style="flex:1;min-width:150px;padding:8px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;font-size:13px;">
+        <input type="text" id="inputName" placeholder="નામ (દા.ત. વાડી મોટર)" style="flex:1;min-width:110px;padding:8px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;font-size:13px;">
+        <input type="password" id="inputPass" placeholder="ડિવાઇસ પાસવર્ડ" style="flex:1;min-width:100px;padding:8px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;font-size:13px;">
+        <button type="button" onclick="saveNewDevice()" style="padding:8px 15px;background:#00bcd4;color:#000;font-weight:bold;border:none;border-radius:6px;cursor:pointer;">➕ Add / Save</button>
+      </div> 
+
+      <!-- પાસવર્ડ બદલવા માટેનું સેક્શન -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#131d27;padding:8px;border-radius:6px;border:1px solid #333;">
+        <span style="font-size:12px;color:#ffb800;font-weight:bold;">🔑 Change Password:</span>
+        <input type="password" id="newDevPass" placeholder="નવો પાસવર્ડ નાખો" style="flex:1;min-width:130px;padding:6px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;font-size:12px;">
+        <button type="button" onclick="changeDevicePassword()" style="padding:6px 12px;background:#ff9800;color:#000;font-weight:bold;border:none;border-radius:6px;cursor:pointer;font-size:12px;">💾 Update Password</button>
+      </div>
+
+      <!-- 📋 SAVED DEVICES & LIVE IP ટેબલ (તમારા ફોટા મુજબનું ડિઝાઇન) -->
+      <div style="background:#131d27;border:1px solid #00bcd4;border-radius:10px;padding:12px;margin-top:12px;box-shadow:inset 0 0 10px rgba(0,188,212,0.15);">
+        <div style="color:#ffd600;font-size:13px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+          <span>📋 Saved Devices & Live IP:</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:left;">
+            <thead>
+             <tr style="border-bottom:1px solid #22374a;color:#00bcd4;font-weight:700;">
+                <th style="padding:6px;">Device Name</th>
+                <th style="padding:6px;">Serial Number</th>
+                <th style="padding:6px;text-align:center;">Device (Wi-Fi)</th>
+                <th style="padding:6px;text-align:center;">Motor Status</th>
+                <th style="padding:6px;">Live IP</th>
+                <th style="padding:6px;text-align:center;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="deviceTableBody">
+              <!-- ૧ થી ૧૦૦ ડિવાઇસ અહીં લાઈવ લોડ થશે -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- ૧. LOAD CURRENT -->
+    <div class="current-card">
+      <div class="curr-title">LOAD CURRENT (સેન્સર)</div>
+      <div class="curr-val"><span id="valAmp">14.80</span> <span style="font-size:20px;color:#fff;">A</span></div>
+      <div class="track" style="max-width:500px;margin:auto;">
+        <div id="barAmp" class="fill" style="background:#00e676;width:49%;"></div>
+      </div>
+    </div>
+
+    <!-- START / STOP બટન -->
+    <div style="display:flex;gap:15px;max-width:500px;margin:10px auto;width:100%;justify-content:center;">
+      <button type="button" onclick="setMotor(true)" style="flex:1;padding:16px;font-size:18px;font-weight:700;color:#fff;background:#00c853;border:none;border-radius:12px;cursor:pointer;">🟢 START (ON)</button>
+      <button type="button" onclick="setMotor(false)" style="flex:1;padding:16px;font-size:18px;font-weight:700;color:#fff;background:#d50000;border:none;border-radius:12px;cursor:pointer;">🔴 STOP (OFF)</button>
+    </div>
+    <div id="motorStatus" style="text-align:center;font-size:14px;color:#00e676;font-weight:600;margin-bottom:10px;">STATUS: RUNNING (ચાલુ છે)</div>
+
+     <!-- 🎤 VOICE CONTROL MIC BUTTON & MULTI-LANGUAGE TRIGGER SETTING -->
+    <div style="max-width:500px;margin:10px auto 15px auto;width:100%;text-align:center;">
+      <button type="button" onclick="startVoiceControl()" id="micBtn" style="width:100%;padding:14px;font-size:16px;font-weight:800;color:#fff;background:linear-gradient(135deg, #00bcd4, #2196f3);border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 15px rgba(0,188,212,0.4);display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px;">
+        <span style="font-size:22px;">🎤</span> <span id="micText">VOICE CONTROL (બોલીને ચાલુ/બંધ કરો)</span>
+      </button>
+
+      <!-- 🗣️ તમે જે બોલશો તે લખાણ અહીં લાઈવ દેખાશે -->
+      <div id="spokenTextDisplay" style="display:none;background:#131d27;border:1.5px dashed #00e676;border-radius:8px;padding:9px 12px;margin-bottom:8px;font-size:13px;text-align:center;">
+        <span style="color:#ffd600;font-weight:bold;">🗣️ તમે બોલ્યા: </span>
+        <span id="heardWord" style="color:#00e676;font-weight:900;letter-spacing:1px;font-size:15px;">"..."</span>
+      </div>
+
+      <div style="display:flex;gap:6px;background:#171821;padding:8px 10px;border-radius:8px;border:1px solid #333;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:12px;color:#00bcd4;font-weight:bold;white-space:nowrap;">🏷️ Name:</span>
+        <input type="text" id="voiceNameInput" value="motor" placeholder="દા.ત. motor / vadi" style="flex:1;min-width:90px;padding:6px 8px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;font-size:13px;text-align:center;">
+        <select id="voiceLangSelect" style="padding:6px 8px;background:#252632;color:#ffd600;border:1px solid #00bcd4;border-radius:6px;font-size:12px;font-weight:bold;outline:none;cursor:pointer;">
+          <option value="gu-IN" selected>🇮🇳 ગુજરાતી</option>
+          <option value="hi-IN">🇮🇳 हिन्दी</option>
+          <option value="en-IN">🇬🇧 English</option>
+        </select>
+        <button type="button" onclick="saveVoiceNameCloud()" style="padding:6px 12px;background:#00bcd4;color:#000;font-weight:bold;border:none;border-radius:6px;cursor:pointer;font-size:12px;">💾 Save</button>
+      </div>
+      <div style="font-size:11px;color:#888;margin-top:4px;text-align:left;">💡 <b>ગુજરાતી:</b> "મોટર ચાલુ / બંધ" | <b>हिन्दी:</b> "मोटर चालू / बंद" | <b>English:</b> "motor on / off".</div>
+    </div>
+
+    <!-- સિસ્ટમ ફોલ્ટ સ્ટેટસ -->
+      <div id="sysFaultBox" style="background:#171821;padding:14px;border-radius:12px;max-width:500px;margin:10px auto 15px auto;width:100%;text-align:center;border:2px solid #00e676;box-shadow:0 4px 15px rgba(0,0,0,0.5);">
+      <div style="font-size:12px;color:#8e8e93;font-weight:700;letter-spacing:1.5px;margin-bottom:6px;">SYSTEM STATUS</div>
+      <div id="sysFaultText" style="color:#00e676;font-size:18px;font-weight:900;letter-spacing:1.5px;">✅ SYSTEM NORMAL</div>
+    </div>
+
+
+    <!-- ૨. PHASE TO NEUTRAL (230V) -->
+    <div class="section-name">Phase to Neutral (230V)</div>
+    <div class="grid">
+      <div class="card card-r">
+        <div class="card-title">PHASE R</div>
+        <div class="card-val" id="valR">232.4 V</div>
+        <div class="track"><div class="fill bar-r" style="width:100%;"></div></div>
+      </div>
+      <div class="card card-y">
+        <div class="card-title">PHASE Y</div>
+        <div class="card-val" id="valY">228.1 V</div>
+        <div class="track"><div class="fill bar-y" style="width:100%;"></div></div>
+      </div>
+      <div class="card card-b">
+        <div class="card-title">PHASE B</div>
+        <div class="card-val" id="valB">230.5 V</div>
+        <div class="track"><div class="fill bar-b" style="width:100%;"></div></div>
+      </div>
+    </div>
+
+    <!-- ૩. LINE TO LINE (415V) -->
+    <div class="section-name">Line to Line (Max 550V)</div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title"><span style="color:#ff2b2b;">LINE R</span> - <span style="color:#ffb800;">Y</span></div>
+        <div class="card-val" id="valRY">402.5 V</div>
+        <div class="track"><div id="barRY" class="fill bar-ry" style="width:73%;"></div></div>
+        <div class="pct-text" id="pctRY">73% (550V)</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span style="color:#ffb800;">LINE Y</span> - <span style="color:#2072ff;">B</span></div>
+        <div class="card-val" id="valYB">397.1 V</div>
+        <div class="track"><div id="barYB" class="fill bar-yb" style="width:72%;"></div></div>
+        <div class="pct-text" id="pctYB">72% (550V)</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span style="color:#2072ff;">LINE B</span> - <span style="color:#ff2b2b;">R</span></div>
+        <div class="card-val" id="valBR">401.2 V</div>
+        <div class="track"><div id="barBR" class="fill bar-br" style="width:73%;"></div></div>
+        <div class="pct-text" id="pctBR">73% (550V)</div>
+      </div>
+    </div>
+
+    <!-- ૪. વોલ્ટેજ પ્રોટેક્શન સેટિંગ્સ -->
+    <div style="background:#171821;padding:15px;border-radius:12px;max-width:500px;margin:20px auto 10px auto;width:100%;border:1px solid #333;box-shadow:0 6px 18px rgba(0,0,0,0.4);">
+      <div style="color:#2979ff;font-size:15px;font-weight:700;margin-bottom:12px;text-align:center;letter-spacing:1px;">⚡ VOLTAGE PROTECTION SETTINGS (415V L-L)</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <label style="font-size:14px;color:#ccc;">Over Voltage Limit (V):</label>
+    <input type="number" id="ovVal" value="460.0" style="width:90px;padding:6px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;text-align:center;font-size:15px;"> 
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+        <label style="font-size:14px;color:#ccc;">Under Voltage Limit (V):</label>
+        <input type="number" id="uvVal" value="320.0" style="width:90px;padding:6px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;text-align:center;font-size:15px;">
+      </div>
+      <button type="button" onclick="saveVoltCloud()" style="width:100%;padding:12px;background:#2979ff;color:#fff;font-weight:700;font-size:15px;border:none;border-radius:8px;cursor:pointer;">💾 SAVE VOLTAGE SETTINGS</button>
+    </div>
+
+    <!-- ૫. કરંટ પ્રોટેક્શન સેટિંગ્સ -->
+    <div style="background:#171821;padding:15px;border-radius:12px;max-width:500px;margin:20px auto 10px auto;width:100%;border:1px solid #333;box-shadow:0 6px 18px rgba(0,0,0,0.4);">
+      <div style="color:#00e676;font-size:15px;font-weight:700;margin-bottom:12px;text-align:center;letter-spacing:1px;">⚙️ Current Protection Setting (કરંટ પ્રોટેક્શન)</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <label style="font-size:14px;color:#ccc;">Over Current Limit (Amp):</label>
+        <input type="number" id="overVal" step="0.1" value="20.0" style="width:90px;padding:6px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;text-align:center;font-size:15px;">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <label style="font-size:14px;color:#ff5252;font-weight:bold;">Motor Jam Limit (Amp):</label>
+        <input type="number" id="jamVal" step="0.5" value="25.0" style="width:90px;padding:6px;background:#252632;color:#ff5252;border:1px solid #ff5252;border-radius:6px;text-align:center;font-size:15px;font-weight:bold;">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+        <label style="font-size:14px;color:#ccc;">Dry Run Current Limit (Amp):</label>
+        <input type="number" id="dryVal" step="0.1" value="8.0" style="width:90px;padding:6px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;text-align:center;font-size:15px;">
+      </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+        <label style="font-size:14px;color:#ccc;">Dry Run Time (HH:MM:SS):</label>
+        <input type="text" id="timeVal" value="00:05:00" style="width:105px;padding:6px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;text-align:center;font-size:15px;">
+      </div>
+      <button type="button" onclick="saveCurrentCloud()" style="width:100%;padding:12px;background:#2979ff;color:#fff;font-weight:700;font-size:15px;border:none;border-radius:8px;cursor:pointer;">💾 SAVE CURRENT SETTINGS</button>
+    </div>
+
+    <!-- ૬. મોટર સેફ્ટી અને ડાયગ્નોસ્ટિક્સ --> 
+    <div style="background:#131b24;border-radius:10px;padding:14px 18px;max-width:500px;margin:15px auto;width:100%;border-left:5px solid #00e676;box-shadow:0 6px 20px rgba(0,0,0,0.6);">
+      <div style="color:#00e676;font-size:15px;font-weight:800;letter-spacing:1px;margin-bottom:12px;">🌊 DEDICATED MOTOR SAFETY & DIAGNOSTICS</div>
+      
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #222e3c;font-size:13px;">
+        <span style="color:#ccc;">⚙️ Motor Health Index:</span>
+        <span id="diagHealth" style="color:#00e676;font-weight:bold;font-size:14px;">100.0 %</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #222e3c;font-size:13px;">
+        <span style="color:#ccc;">🔌 Motor Cable Status:</span>
+        <span id="diagCable" style="color:#00e676;font-weight:bold;">🟢 CONNECTED OK</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #222e3c;font-size:13px;">
+        <span style="color:#ccc;">⚡ 3-Phase Supply Status:</span>
+        <span id="diagSupply" style="color:#00e676;font-weight:bold;">🟢 NORMAL OK</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #222e3c;font-size:13px;">
+        <span style="color:#ccc;">🌊 Motor Jam / Short Protection:</span>
+        <span id="diagJam" style="color:#00e676;font-weight:bold;">🟢 NORMAL OK</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #222e3c;font-size:13px;">
+        <span style="color:#ccc;">⚡ Voltage Protection (OV/UV):</span>
+        <span id="diagVolt" style="color:#00e676;font-weight:bold;">🟢 NORMAL OK</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #222e3c;font-size:13px;">
+        <span style="color:#ccc;">🔄 Phase Sequence (R-Y-B):</span>
+        <span id="diagSeq" style="color:#00e676;font-weight:bold;">🟢 NORMAL OK</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #222e3c;font-size:13px;">
+        <span style="color:#ccc;">🔥 Over Current Protection:</span>
+        <span id="diagOc" style="color:#00e676;font-weight:bold;">🟢 NORMAL OK</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;">
+        <span style="color:#ccc;">💧 Dry Run Protection:</span>
+        <span id="diagDry" style="color:#00e676;font-weight:bold;">🟢 NORMAL OK</span>
+      </div>
+    </div>
+
+    <!-- RESTART SYSTEM -->
+    <div style="background:#171821;padding:15px;border-radius:12px;max-width:500px;margin:15px auto;width:100%;border:1px solid #d50000;box-shadow:0 6px 18px rgba(0,0,0,0.4);text-align:center;">
+      <button type="button" onclick="restartCloud()" style="width:100%;padding:12px;background:#d50000;color:#fff;font-weight:bold;font-size:15px;border:none;border-radius:8px;cursor:pointer;">🔄 RESTART SYSTEM (રીસ્ટાર્ટ)</button>
+    </div>
+
+    <!-- ૭. WI-FI CONFIGURATION -->
+    <div style="background:#171821;padding:18px;border-radius:14px;max-width:500px;margin:15px auto;width:100%;border-top:4px solid #ff9800;border:1px solid #333;box-shadow:0 8px 25px rgba(0,0,0,0.5);">
+      <div style="color:#ff9800;font-size:16px;font-weight:800;margin-bottom:14px;text-align:center;letter-spacing:1px;">📶 WI-FI CONFIGURATION (વાઇફાઇ સેટિંગ્સ)</div>
+      
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <label style="font-size:14px;color:#cfd8dc;font-weight:600;">Wi-Fi Name (SSID):</label>
+        <input type="text" id="wfSsid" value="Shubh_Office_WiFi" placeholder="Wi-Fi Name" style="width:180px;padding:8px 10px;background:#252632;color:#fff;border:1px solid #555;border-radius:8px;font-size:14px;outline:none;">
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <label style="font-size:14px;color:#cfd8dc;font-weight:600;">Password:</label>
+        <input type="password" id="wfPass" value="shubh@1234" placeholder="Password" style="width:180px;padding:8px 10px;background:#252632;color:#fff;border:1px solid #555;border-radius:8px;font-size:14px;outline:none;">
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-bottom:15px;">
+        <input type="checkbox" id="togglePass" onclick="var p=document.getElementById('wfPass'); p.type = (p.type==='password')?'text':'password';" style="cursor:pointer;width:15px;height:15px;">
+        <label for="togglePass" style="font-size:12px;color:#aaa;cursor:pointer;user-select:none;">👁️ Show Password</label>
+      </div>
+
+      <button type="button" onclick="saveWifiCloud()" style="width:100%;padding:12px;background:linear-gradient(90deg, #ff9800, #f57c00);color:#000;font-weight:800;font-size:15px;border:none;border-radius:8px;cursor:pointer;">💾 SAVE WI-FI & RESTART</button>
+    </div>
+
+    <!-- ૮. GSM MOBILE CONTROL -->
+    <div style="background:#171821;padding:18px;border-radius:14px;max-width:500px;margin:15px auto;width:100%;border-top:4px solid #e91e63;box-shadow:0 8px 25px rgba(0,0,0,0.5);">
+      <div style="color:#e91e63;font-size:16px;font-weight:800;margin-bottom:14px;text-align:center;letter-spacing:1px;">📞 GSM MOBILE CONTROL (૨જિસ્ટર્ડ નંબર)</div>
+      
+      <!-- Fault SMS Alert ON / OFF સ્વિચ (ડિફોલ્ટ OFF) -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;background:#252632;padding:10px;border-radius:8px;border:1px solid #444;">
+        <input type="checkbox" id="smsAlertEn" style="width:18px;height:18px;cursor:pointer;">
+        <label for="smsAlertEn" style="font-size:13px;color:#fff;font-weight:bold;cursor:pointer;">📩 Enable Fault SMS Alert (ફોલ્ટ SMS એલર્ટ ચાલુ કરો)</label>
+      </div>
+
+      <div style="font-size:12px;color:#888;text-align:center;margin-bottom:12px;">કોઈપણ નંબર કાઢવા માટે ખાનું ખાલી કરી દો (Delete)</div>
+       
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <label style="font-size:13px;color:#cfd8dc;">Number 1:</label>
+        <input type="text" id="gsm0" value="" style="width:180px;padding:6px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;font-size:14px;">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <label style="font-size:13px;color:#cfd8dc;">Number 2:</label>
+        <input type="text" id="gsm1" value="" placeholder="નંબર ખાલી રાખો (Delete)" style="width:180px;padding:6px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;font-size:14px;">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <label style="font-size:13px;color:#cfd8dc;">Number 3:</label>
+        <input type="text" id="gsm2" value="" placeholder="નંબર ખાલી રાખો (Delete)" style="width:180px;padding:6px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;font-size:14px;">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <label style="font-size:13px;color:#cfd8dc;">Number 4:</label>
+        <input type="text" id="gsm3" value="" placeholder="નંબર ખાલી રાખો (Delete)" style="width:180px;padding:6px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;font-size:14px;">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <label style="font-size:13px;color:#cfd8dc;">Number 5:</label>
+        <input type="text" id="gsm4" value="" placeholder="નંબર ખાલી રાખો (Delete)" style="width:180px;padding:6px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;font-size:14px;">
+      </div>
+
+      <button type="button" onclick="saveGsmCloud()" style="width:100%;padding:12px;background:#e91e63;color:#fff;font-weight:800;font-size:14px;border:none;border-radius:8px;cursor:pointer;margin-top:10px;">💾 SAVE / UPDATE NUMBERS</button>
+    </div>
+
+    <!-- ૯. AUTO DELAY & RUN TIMER -->
+    <div style="background:#171821;padding:18px;border-radius:14px;max-width:500px;margin:15px auto;width:100%;border-top:4px solid #00bcd4;border:1px solid #333;box-shadow:0 8px 25px rgba(0,0,0,0.5);">
+      <div style="color:#00bcd4;font-size:16px;font-weight:800;margin-bottom:14px;text-align:center;letter-spacing:1px;">⏰ AUTO DELAY & RUN TIMER (ઓટો ટાઈમર)</div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;background:#252632;padding:10px;border-radius:8px;">
+        <input type="checkbox" id="timerEn" onchange="toggleTimerBox()" style="width:18px;height:18px;cursor:pointer;">
+        <label for="timerEn" style="font-size:14px;color:#fff;font-weight:bold;cursor:pointer;">Enable Timer (ટાઈમર ચાલુ કરો)</label>
+      </div>
+
+      <div id="timerInputsBox" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <label style="font-size:14px;color:#cfd8dc;font-weight:600;">Power-ON Delay (HH:MM:SS):</label>
+          <input type="text" id="onTimeVal" value="00:01:00" style="width:105px;padding:8px;background:#252632;color:#fff;border:1px solid #555;border-radius:8px;text-align:center;font-size:14px;">
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+          <label style="font-size:14px;color:#cfd8dc;font-weight:600;">Motor Run Time (HH:MM:SS):</label>
+          <input type="text" id="runTimeVal" value="02:00:00" style="width:105px;padding:8px;background:#252632;color:#fff;border:1px solid #555;border-radius:8px;text-align:center;font-size:14px;">
+        </div>
+
+        <div style="background:#1b2a32;border:1px dashed #00bcd4;padding:12px;border-radius:8px;margin-bottom:15px;text-align:center;">
+          <div style="font-size:13px;color:#00bcd4;font-weight:bold;margin-bottom:4px;">⏳ TIMER LEFT (બાકી સમય):</div>
+          <div id="timerLeftDisplay" style="font-size:22px;color:#ffffff;font-weight:900;letter-spacing:1.5px;">00:00:00</div>
+        </div>
+      </div>
+
+      <button type="button" onclick="saveTimerCloud()" style="width:100%;padding:12px;background:linear-gradient(90deg, #00bcd4, #0097a7);color:#000;font-weight:800;font-size:15px;border:none;border-radius:8px;cursor:pointer;">💾 SAVE TIMER SETTINGS</button>
+    </div>
+
+    <!-- ૧૦. હિડન કેલિબ્રેશન -->
+    <div style="background:#171821;padding:15px;border-radius:12px;max-width:500px;margin:15px auto;width:100%;border:1px solid #444;box-shadow:0 6px 18px rgba(0,0,0,0.4);">
+      <div style="color:#e0e0e0;font-size:15px;font-weight:700;margin-bottom:12px;text-align:center;">🔒 સેન્સર કેલિબ્રેશન (CALIBRATION)</div>
+
+      <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;background:#252632;padding:8px;border-radius:8px;">
+        <input type="password" id="calPass" placeholder="PASSWORD " style="flex:1;padding:8px;background:#171821;color:#fff;border:1px solid #ffeb3b;border-radius:6px;text-align:center;font-size:15px;">
+        <button type="button" onclick="checkUnlock()" style="padding:8px 16px;background:#ffeb3b;color:#000;font-weight:bold;border:none;border-radius:6px;cursor:pointer;">🔓 OK</button>
+      </div>
+
+      <div id="calibFields" style="display:none;margin-top:15px;">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+          <label style="width:110px;font-size:13px;color:#ff2b2b;font-weight:bold;">R-Phase Cal:</label>
+          <input type="number" id="calR" step="0.01" value="300.00" style="flex:1;padding:6px;background:#252632;color:#ff2b2b;border:1px solid #ff2b2b;border-radius:6px;text-align:center;font-weight:bold;">
+          <button type="button" onclick="saveCalibCloud('R', 'calR')" style="padding:6px 14px;background:#ff2b2b;color:#fff;font-weight:bold;border:none;border-radius:6px;cursor:pointer;">SAVE R</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+          <label style="width:110px;font-size:13px;color:#ffb800;font-weight:bold;">Y-Phase Cal:</label>
+          <input type="number" id="calY" step="0.01" value="300.00" style="flex:1;padding:6px;background:#252632;color:#ffb800;border:1px solid #ffb800;border-radius:6px;text-align:center;font-weight:bold;">
+          <button type="button" onclick="saveCalibCloud('Y', 'calY')" style="padding:6px 14px;background:#ffb800;color:#000;font-weight:bold;border:none;border-radius:6px;cursor:pointer;">SAVE Y</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+          <label style="width:110px;font-size:13px;color:#2072ff;font-weight:bold;">B-Phase Cal:</label>
+          <input type="number" id="calB" step="0.01" value="300.00" style="flex:1;padding:6px;background:#252632;color:#2072ff;border:1px solid #2072ff;border-radius:6px;text-align:center;font-weight:bold;">
+          <button type="button" onclick="saveCalibCloud('B', 'calB')" style="padding:6px 14px;background:#2072ff;color:#fff;font-weight:bold;border:none;border-radius:6px;cursor:pointer;">SAVE B</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="width:110px;font-size:13px;color:#00e676;font-weight:bold;">Current Cal:</label>
+          <input type="number" id="calI" step="0.01" value="20.00" style="flex:1;padding:6px;background:#252632;color:#00e676;border:1px solid #00e676;border-radius:6px;text-align:center;font-weight:bold;">
+          <button type="button" onclick="saveCalibCloud('I', 'calI')" style="padding:6px 14px;background:#00e676;color:#000;font-weight:bold;border:none;border-radius:6px;cursor:pointer;">SAVE CT</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    var autoRef = true;
+    var liveTimer = null;
+
+    function toggleAuto(){
+      autoRef = !autoRef;
+      var btn = document.getElementById('refBtn');
+      if(autoRef){
+        btn.innerHTML = '🔄 Auto-Refresh: ON';
+        btn.style.background = '#00c853';
+        startSimulation();
+      } else {
+        btn.innerHTML = '⏸️ Auto-Refresh: OFF';
+        btn.style.background = '#555560';
+        clearInterval(liveTimer);
+      }
+    }
+
+  // --- FIREBASE CLOUD CONFIGURATION ---
+  // (અહીં તમારા Firebase Realtime Database નો અસલી URL લખવો)
+   const FIREBASE_URL = "https://gsm-wifi-motor-contrller-default-rtdb.asia-southeast1.firebasedatabase.app";
+  
+  var deviceList = JSON.parse(localStorage.getItem('saved_esp_devices') || '[]');
+  var activeSerial = localStorage.getItem('active_serial') || '';
+
+  // શરૂઆતમાં જો લિસ્ટ ખાલી હોય તો ડિફોલ્ટ સેમ્પલ કી ઉમેરવી
+  if (deviceList.length === 0) {
+  deviceList.push({ serial: "VTX900-1234567890AB", name: "મુખ્ય મોટર (વાડી)" });
+    activeSerial = "VTX900-1234567890AB";
+    saveToStorage();
+  }
+
+  function saveToStorage() {
+    localStorage.setItem('saved_esp_devices', JSON.stringify(deviceList));
+    localStorage.setItem('active_serial', activeSerial);
+    populateDropdown();
+    renderDeviceTable();
+  }
+
+  function populateDropdown() {
+    var sel = document.getElementById('deviceSelect');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">-- Choose Device --</option>';
+    deviceList.forEach(function(d) {
+      var opt = document.createElement('option');
+      opt.value = d.serial;
+      opt.text = d.name + " (" + d.serial + ")";
+      if (d.serial === activeSerial) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+//////////////////////////////////////////////////////
+async function renderDeviceTable() {
+    var tbody = document.getElementById('deviceTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    deviceList.forEach(function(d) {
+      var isCurrent = (d.serial === activeSerial);
+      var tr = document.createElement('tr');
+      tr.style.borderBottom = "1px solid #1c2b38";
+      if (isCurrent) tr.style.background = "rgba(0, 188, 212, 0.15)";
+
+      // ૧. Device Name
+      var tdName = `<td style="padding:8px 6px;font-weight:bold;color:${isCurrent ? '#00e676' : '#ffffff'};">${d.name} ${isCurrent ? '⭐' : ''}</td>`;
+      
+      // ૨. Serial Number
+      var tdSerial = `<td style="padding:8px 6px;color:#ffd600;font-family:monospace;font-size:11px;">${d.serial}</td>`;
+      
+      // ૩. અલગ ખાનું: Device Wi-Fi Status (ONLINE / OFFLINE)
+      var tdNet = `<td style="padding:8px 6px;text-align:center;" id="net_${d.serial}"><span style="color:#aaa;">Checking...</span></td>`;
+      
+      // ૪. અલગ ખાનું: Motor Status (RUNNING / STOPPED)
+      var tdMotor = `<td style="padding:8px 6px;text-align:center;" id="mot_${d.serial}"><span style="color:#aaa;">Checking...</span></td>`;
+      
+      // ૫. અલગ ખાનું: Live IP
+      var tdIP = `<td style="padding:8px 6px;" id="ip_${d.serial}"><span style="color:#888;">--</span></td>`;
+      
+      // ૬. Action Buttons (View & Delete)
+      var tdAction = `<td style="padding:8px 6px;text-align:center;white-space:nowrap;">
+        <button onclick="selectDeviceDirect('${d.serial}')" style="padding:3px 8px;font-size:11px;background:#00bcd4;color:#000;font-weight:bold;border:none;border-radius:4px;cursor:pointer;margin-right:4px;">⚡ View</button>
+        <button onclick="deleteDeviceDirect('${d.serial}')" style="padding:3px 6px;font-size:11px;background:#d50000;color:#fff;border:none;border-radius:4px;cursor:pointer;">🗑️</button>
+      </td>`;
+
+      tr.innerHTML = tdName + tdSerial + tdNet + tdMotor + tdIP + tdAction;
+      tbody.appendChild(tr);
+
+      // બેકગ્રાઉન્ડમાં લાઈવ ડેટા ખેંચવો
+      updateRowLiveInfo(d.serial);
+    });
+  }
+
+  // લાઈવ વિગતો બંને ખાનામાં અલગ-અલગ અપડેટ કરવાનું ફંક્શન
+  window.seenTracker = window.seenTracker || {};
+
+  async function updateRowLiveInfo(serial) {
+    try {
+      var res = await fetch(FIREBASE_URL + "/devices/" + serial + ".json");
+      var d = await res.json();
+      var netEl = document.getElementById("net_" + serial);
+      var motEl = document.getElementById("mot_" + serial);
+      var ipEl = document.getElementById("ip_" + serial);
+
+      if (d) {
+        var now = Date.now();
+        var isOnline = false;
+
+        // Firebase સર્વર ટાઈમસ્ટેમ્પ (ts) અથવા last_seen થી Online ચેક થશે
+        if (d.ts) {
+          isOnline = (now - d.ts < 12000);
+        } else if (d.last_seen !== undefined) {
+          var prev = window.seenTracker[serial];
+          if (!prev || prev.val !== d.last_seen) {
+            window.seenTracker[serial] = { val: d.last_seen, time: now };
+            isOnline = true;
+          } else {
+            isOnline = (now - prev.time < 12000);
+          }
+        }
+
+        // ૧. Device Wi-Fi Status ખાનું (Bold Green / Bold Red)
+        if (netEl) {
+          netEl.innerHTML = isOnline ? 
+            `<span style="color:#00e676;font-weight:900;font-size:12px;letter-spacing:0.5px;">🟢 ONLINE</span>` : 
+            `<span style="color:#ff1744;font-weight:900;font-size:12px;letter-spacing:0.5px;">🔴 OFFLINE</span>`;
+        }
+
+        // ૨. Motor Status ખાનું (RUNNING / STOPPED)
+        if (motEl) {
+          if (!isOnline) {
+            motEl.innerHTML = `<span style="color:#777;font-weight:bold;">--</span>`;
+          } else if (d.status === "RUNNING") {
+            motEl.innerHTML = `<span style="color:#00e676;font-weight:bold;font-size:12px;">🟢 RUNNING</span>`;
+          } else {
+            motEl.innerHTML = `<span style="color:#ff5252;font-weight:bold;font-size:12px;">🔴 STOPPED</span>`;
+          }
+        }
+
+        // ૩. Live IP ખાનું
+        if (ipEl) {
+          if (isOnline && d.ip && d.ip.length > 6) {
+            ipEl.innerHTML = `<a href="http://${d.ip}" target="_blank" style="color:#61dafb;font-weight:bold;text-decoration:underline;">🔗 ${d.ip}</a>`;
+          } else {
+            ipEl.innerHTML = `<span style="color:#888;">--</span>`;
+          }
+        }
+
+      } else {
+        if (netEl) netEl.innerHTML = `<span style="color:#ff1744;font-weight:900;font-size:12px;">🔴 OFFLINE</span>`;
+        if (motEl) motEl.innerHTML = `<span style="color:#777;">--</span>`;
+        if (ipEl) ipEl.innerHTML = `<span style="color:#888;">--</span>`;
+      }
+    } catch (e) {
+      var netEl = document.getElementById("net_" + serial);
+      if (netEl) netEl.innerHTML = `<span style="color:#ff1744;font-weight:900;font-size:12px;">🔴 OFFLINE</span>`;
+    }
+  }
+
+  function selectDeviceDirect(serial) {
+    activeSerial = serial;
+    localStorage.setItem('active_serial', activeSerial);
+    populateDropdown();
+    renderDeviceTable();
+    fetchFirebaseData();
+  }
+
+  function deleteDeviceDirect(serial) {
+    if (confirm("શું તમે આ ડિવાઇસ કાઢી નાખવા માંગો છો? (" + serial + ")")) {
+      deviceList = deviceList.filter(function(d){ return d.serial !== serial; });
+      activeSerial = deviceList.length > 0 ? deviceList[0].serial : '';
+      saveToStorage();
+      fetchFirebaseData();
+    }
+  }
+
+  function switchDevice() {
+    var sel = document.getElementById('deviceSelect');
+    activeSerial = sel.value;
+    localStorage.setItem('active_serial', activeSerial);
+    fetchFirebaseData();
+  }
+
+  // --- ૧. નવું ડિવાઇસ Serial Number અને પાસવર્ડથી ચકાસીને એડ કરવું ---
+  async function saveNewDevice() {
+    var s = document.getElementById('inputSerial').value.trim().toUpperCase();
+    var n = document.getElementById('inputName').value.trim();
+    var p = document.getElementById('inputPass').value.trim();
+
+    if (!s) { alert("કૃપા કરીને Serial Key દાખલ કરો!"); return; }
+    if (!n) n = s; 
+    if (!p) { alert("કૃપા કરીને ડિવાઇસ પાસવર્ડ દાખલ કરો (૪ કે ૮ આંકડા)!"); return; }
+
+    // Firebase માંથી ચકાસણી કરશે કે આ Serial Key નો સાચો પાસવર્ડ શું છે
+    try {
+      var res = await fetch(FIREBASE_URL + "/devices/" + s + ".json");
+      var d = await res.json();
+      
+      // જો ડિવાઇસ ક્લાઉડ પર હોય અને પાસવર્ડ ખોટો નાખ્યો હોય તો રોકી દેશે
+      if (d && d.device_pass && d.device_pass !== p) {
+        alert("❌ ખોટો પાસવર્ડ! આ સીરીયલ નંબર (" + s + ") માટે નાખેલો પાસવર્ડ ખોટો છે. ડિવાઇસ કનેક્ટ નહીં થાય.");
+        return;
+      }
+    } catch (e) {
+      console.log("Offline check skipped");
+    }
+
+    var found = false;
+    for (var i = 0; i < deviceList.length; i++) {
+      if (deviceList[i].serial === s) {
+        deviceList[i].name = n;
+        deviceList[i].pass = p;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      deviceList.push({ serial: s, name: n, pass: p });
+    }
+    activeSerial = s;
+    saveToStorage();
+    document.getElementById('inputSerial').value = '';
+    document.getElementById('inputName').value = '';
+    document.getElementById('inputPass').value = '';
+    alert("✅ પાસવર્ડ સાચો છે! ડિવાઇસ સફળતાપૂર્વક કનેક્ટ થઈ ગયું.");
+    fetchFirebaseData();
+  }
+
+  // --- ૨. પાસવર્ડ બદલવો (૪ કે ૮ આંકડા) - ESP32 Preferences અને Firebase માં કાયમી સેવ થશે ---
+  async function changeDevicePassword() {
+    if (!activeSerial) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
+    var newP = document.getElementById('newDevPass').value.trim();
+    if (!newP) { alert("કૃપા કરીને નવો પાસવર્ડ દાખલ કરો!"); return; }
+    if (newP.length < 4) { alert("પાસવર્ડ ઓછામાં ઓછો ૪ આંકડાનો હોવો જોઈએ!"); return; }
+
+    try {
+      // ૧. ESP32 ને Preferences Library માં કાયમી સેવ કરવા કમાન્ડ મોકલો
+      await fetch(FIREBASE_URL + "/devices/" + activeSerial + "/cmd.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "SET_DEV_PASS", pass: newP, timeStamp: Date.now() })
+      });
+
+      // ૨. Firebase માં પણ તરત અપડેટ કરો
+      await fetch(FIREBASE_URL + "/devices/" + activeSerial + ".json", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ device_pass: newP })
+      });
+      
+      for (var i = 0; i < deviceList.length; i++) {
+        if (deviceList[i].serial === activeSerial) {
+          deviceList[i].pass = newP;
+          break;
+        }
+      }
+      saveToStorage();
+      document.getElementById('newDevPass').value = '';
+      alert("✅ નવો પાસવર્ડ (" + newP + ") ESP32 Preferences મેમરી અને Firebase માં કાયમી સેવ થઈ ગયો!");
+    } catch (e) {
+      alert("❌ પાસવર્ડ અપડેટ કરવામાં ભૂલ આવી!");
+    }
+  }
+
+   // --- સિલેક્ટ કરેલું ડિવાઇસ ડીલીટ કરવું (છેલ્લું ૧ ડિવાઇસ પણ ડીલીટ થશે) ---
+  function deleteCurrentDevice() {
+    if (deviceList.length === 0) {
+      alert("લિસ્ટમાં કોઈ ડિવાઇસ નથી!");
+      return;
+    }
+    if (confirm("શું તમે આ ડિવાઇસ કાઢી નાખવા માંગો છો?")) {
+      deviceList = deviceList.filter(function(d){ return d.serial !== activeSerial; });
+      activeSerial = deviceList.length > 0 ? deviceList[0].serial : '';
+      saveToStorage();
+      fetchFirebaseData();
+    }
+  }
+
+  // --- FIREBASE પરથી લાઈવ ડેટા ખેંચવાનું ફંક્શન ---
+  async function fetchFirebaseData() {
+    if (!activeSerial || !autoRef) return;
+    try {
+      var res = await fetch(FIREBASE_URL + "/devices/" + activeSerial + ".json");
+      var data = await res.json();
+
+      var cStatus = document.getElementById('cloudStatus');
+      if (!data) {
+        if (cStatus) cStatus.innerHTML = "⚠️ ડિવાઇસનો કોઈ ડેટા મળ્યો નથી (ઓફલાઇન હોઈ શકે છે)";
+        return;
+      } 
+      // ૧. કનેક્શન લાઈનમાં પણ લાઈવ IP બતાવશે (ક્લિક કરવાથી લોકલ પેજ ખુલશે)
+      var liveDeviceIP = (data.ip && data.ip.length > 6) ? data.ip : "Online";
+      if (cStatus) {
+        cStatus.innerHTML = `🟢 CONNECTED TO CLOUD | Device: ${activeSerial} | Live IP: <a href="http://${liveDeviceIP}" target="_blank" style="color:#00e676;text-decoration:underline;font-weight:bold;">🔗 ${liveDeviceIP}</a>`;
+      }
+
+      // ૨. ટેબલમાં પણ લાઈવ IP અને સ્ટેટસ તાત્કાલિક અપડેટ કરવું
+      var curStEl = document.getElementById("st_" + activeSerial);
+      var curIpEl = document.getElementById("ip_" + activeSerial);
+      if (curStEl) curStEl.innerHTML = (data.status === "RUNNING") ? "<span style='color:#00e676;font-weight:bold;'>🟢 RUNNING</span>" : "<span style='color:#ff5252;font-weight:bold;'>🔴 STOPPED</span>";
+      if (curIpEl) curIpEl.innerHTML = (data.ip && data.ip.length > 6) ? `<a href="http://${data.ip}" target="_blank" style="color:#61dafb;font-weight:bold;text-decoration:underline;">🔗 ${data.ip}</a>` : "<span style='color:#888;'>No IP</span>";
+
+      // ૩. કરંટ અને કરંટ બાર અપડેટ
+
+      // ૧. કરંટ અને કરંટ બાર અપડેટ
+      var cur = parseFloat(data.current || 0);
+      document.getElementById('valAmp').innerText = cur.toFixed(2);
+      var curPct = Math.min(Math.max((cur / 30.0) * 100, 3), 100);
+      document.getElementById('barAmp').style.width = curPct + "%";
+
+      // ૨. Phase to Neutral વોલ્ટેજ
+      document.getElementById('valR').innerText = (data.v_r || 0).toFixed(1) + " V";
+      document.getElementById('valY').innerText = (data.v_y || 0).toFixed(1) + " V";
+      document.getElementById('valB').innerText = (data.v_b || 0).toFixed(1) + " V";
+
+      // ૩. Line to Line વોલ્ટેજ અને પ્રોગ્રેસ બાર (550V સ્કેલ)
+      var vry = parseFloat(data.v_ry || 0);
+      var vyb = parseFloat(data.v_yb || 0);
+      var vbr = parseFloat(data.v_br || 0);
+
+      document.getElementById('valRY').innerText = vry.toFixed(1) + " V";
+      document.getElementById('valYB').innerText = vyb.toFixed(1) + " V";
+      document.getElementById('valBR').innerText = vbr.toFixed(1) + " V";
+
+      var pRY = Math.round(Math.min((vry / 550.0) * 100, 100));
+      var pYB = Math.round(Math.min((vyb / 550.0) * 100, 100));
+      var pBR = Math.round(Math.min((vbr / 550.0) * 100, 100));
+
+      document.getElementById('barRY').style.width = pRY + "%";
+      document.getElementById('barYB').style.width = pYB + "%";
+      document.getElementById('barBR').style.width = pBR + "%";
+
+      document.getElementById('pctRY').innerText = pRY + "% (550V)";
+      document.getElementById('pctYB').innerText = pYB + "% (550V)";
+      document.getElementById('pctBR').innerText = pBR + "% (550V)";
+ 
+     // ESP32 માંથી સેટ કરેલા Over/Under વોલ્ટેજ લાઈવ દેખાડશે (Local Web Page જેવું જ)
+      if (data.ov_limit && document.activeElement !== document.getElementById('ovVal')) {
+        document.getElementById('ovVal').value = parseFloat(data.ov_limit).toFixed(1);
+      }
+      if (data.uv_limit && document.activeElement !== document.getElementById('uvVal')) {
+        document.getElementById('uvVal').value = parseFloat(data.uv_limit).toFixed(1);
+      }
+  
+      // ૪. મોટર ચાલુ / બંધ સ્ટેટસ
+      var isRunning = (data.status === "RUNNING");
+      var statusDiv = document.getElementById('motorStatus');
+      statusDiv.style.color = isRunning ? '#00e676' : '#ff5252';
+      statusDiv.innerText = isRunning ? 'STATUS: RUNNING (ચાલુ છે)' : 'STATUS: STOPPED (બંધ છે)'; 
+
+   // ૫. સિસ્ટમ ફોલ્ટ લાઈવ અપડેટ (ફેઝ કટ, હાઈ/લો વોલ્ટેજ, ડ્રાય રન વગેરે)
+      var fText = document.getElementById('sysFaultText');
+      var fBox = document.getElementById('sysFaultBox');
+      if (fText && fBox && data.fault) {
+        var hasFault = (data.fault.indexOf("NORMAL") < 0);
+        fText.innerText = hasFault ? ("⚠️ " + data.fault) : "✅ " + data.fault;
+        fText.style.color = hasFault ? "#ff2b2b" : "#00e676";
+        fBox.style.borderColor = hasFault ? "#ff2b2b" : "#00e676";
+      }
+
+      // કરંટ પ્રોટેક્શન વેલ્યુ લાઈવ સેટ કરો (જો યુઝર ટાઈપ ન કરતો હોય તો)
+      if (data.over_cur !== undefined && document.activeElement !== document.getElementById('overVal')) document.getElementById('overVal').value = parseFloat(data.over_cur).toFixed(1);
+      if (data.jam_cur !== undefined && document.activeElement !== document.getElementById('jamVal')) document.getElementById('jamVal').value = parseFloat(data.jam_cur).toFixed(1);
+      if (data.dry_cur !== undefined && document.activeElement !== document.getElementById('dryVal')) document.getElementById('dryVal').value = parseFloat(data.dry_cur).toFixed(1);
+      if (data.dry_time !== undefined && document.activeElement !== document.getElementById('timeVal')) {
+        var dt = parseInt(data.dry_time);
+        var dh = Math.floor(dt/3600), dm = Math.floor((dt%3600)/60), ds = dt%60;
+        document.getElementById('timeVal').value = String(dh).padStart(2,'0') + ":" + String(dm).padStart(2,'0') + ":" + String(ds).padStart(2,'0');
+      }
+
+      // સેફ્ટી ડાયગ્નોસ્ટિક્સ લાઈવ અપડેટ
+      if (document.getElementById('diagHealth')) document.getElementById('diagHealth').innerText = (data.health !== undefined ? data.health : "100.0") + " %";
+      if (document.getElementById('diagCable')) {
+        document.getElementById('diagCable').innerHTML = data.cable_cut ? "<span style='color:#ff1744;font-weight:bold;'>🔴 CABLE CUT FAULT</span>" : "<span style='color:#00e676;font-weight:bold;'>🟢 CONNECTED OK</span>";
+      }
+      if (document.getElementById('diagSeq')) {
+        document.getElementById('diagSeq').innerHTML = (data.phase_seq === false) ? "<span style='color:#ff1744;font-weight:bold;'>🔴 REVERSE FAULT</span>" : "<span style='color:#00e676;font-weight:bold;'>🟢 NORMAL OK</span>";
+      } 
+      if (document.getElementById('diagSupply')) {
+        var isCut = (data.fault && data.fault.indexOf("CUT") >= 0);
+        document.getElementById('diagSupply').innerHTML = isCut ? "<span style='color:#ff1744;font-weight:bold;'>🔴 " + data.fault + "</span>" : "<span style='color:#00e676;font-weight:bold;'>🟢 NORMAL OK</span>";
+      }
+      if (document.getElementById('diagVolt')) {
+        var isVolt = (data.fault && data.fault.indexOf("VOLTAGE") >= 0);
+        document.getElementById('diagVolt').innerHTML = isVolt ? "<span style='color:#ff1744;font-weight:bold;'>🔴 " + data.fault + "</span>" : "<span style='color:#00e676;font-weight:bold;'>🟢 NORMAL OK</span>";
+      }
+      if (document.getElementById('diagJam')) {
+        document.getElementById('diagJam').innerHTML = (data.fault === "MOTOR JAM TRIP") ? "<span style='color:#ff1744;font-weight:bold;'>🔴 MOTOR JAM TRIP</span>" : "<span style='color:#00e676;font-weight:bold;'>🟢 NORMAL OK</span>";
+      }
+      if (document.getElementById('diagOc')) {
+        document.getElementById('diagOc').innerHTML = (data.fault === "OVER CURRENT") ? "<span style='color:#ff1744;font-weight:bold;'>🔴 OVER CURRENT TRIP</span>" : "<span style='color:#00e676;font-weight:bold;'>🟢 NORMAL OK</span>";
+      }
+      if (document.getElementById('diagDry')) {
+        document.getElementById('diagDry').innerHTML = (data.fault === "DRY RUN TRIP") ? "<span style='color:#ff1744;font-weight:bold;'>🔴 DRY RUN TRIP</span>" : "<span style='color:#00e676;font-weight:bold;'>🟢 NORMAL OK</span>";
+      }
+
+      // GSM નંબર્સ અપડેટ
+      for(var g=0; g<5; g++) {
+        var gEl = document.getElementById('gsm'+g);
+        if (gEl && data['gsm'+g] !== undefined && document.activeElement !== gEl) {
+          gEl.value = data['gsm'+g];
+        }
+      }
+     if (data.sms_en !== undefined && document.activeElement !== document.getElementById('smsAlertEn')) {
+        document.getElementById('smsAlertEn').checked = (data.sms_en === true || data.sms_en === "true");
+      }
+      // વાઈફાઈ SSID
+      if (data.wifi_ssid && document.activeElement !== document.getElementById('wfSsid')) {
+        document.getElementById('wfSsid').value = data.wifi_ssid;
+      } 
+
+         if (data.voice_name && document.activeElement !== document.getElementById('voiceNameInput')) {
+        document.getElementById('voiceNameInput').value = data.voice_name;
+      }
+
+      // ઓટો ટાઈમર સેટિંગ્સ
+        if (!userEditingTimer && data.timer_en !== undefined) {
+        document.getElementById('timerEn').checked = (data.timer_en === true || data.timer_en === "true");
+        document.getElementById('timerInputsBox').style.display = document.getElementById('timerEn').checked ? 'block' : 'none';
+      }
+      if (!userEditingTimer && data.on_delay !== undefined && document.activeElement !== document.getElementById('onTimeVal')) {
+        var od = parseInt(data.on_delay);
+        document.getElementById('onTimeVal').value = String(Math.floor(od/3600)).padStart(2,'0') + ":" + String(Math.floor((od%3600)/60)).padStart(2,'0') + ":" + String(od%60).padStart(2,'0');
+      }
+      if (!userEditingTimer && data.run_sec !== undefined && document.activeElement !== document.getElementById('runTimeVal')) {
+        var rs = parseInt(data.run_sec);
+        document.getElementById('runTimeVal').value = String(Math.floor(rs/3600)).padStart(2,'0') + ":" + String(Math.floor((rs%3600)/60)).padStart(2,'0') + ":" + String(rs%60).padStart(2,'0');
+      }
+      if (data.timer_left !== undefined && document.getElementById('timerLeftDisplay')) {
+        var tl = parseInt(data.timer_left);
+        document.getElementById('timerLeftDisplay').innerText = String(Math.floor(tl/3600)).padStart(2,'0') + ":" + String(Math.floor((tl%3600)/60)).padStart(2,'0') + ":" + String(tl%60).padStart(2,'0');
+      }
+
+      // કેલિબ્રેશન ફીલ્ડ્સ
+      if (data.cal_r && document.activeElement !== document.getElementById('calR')) document.getElementById('calR').value = parseFloat(data.cal_r).toFixed(2);
+      if (data.cal_y && document.activeElement !== document.getElementById('calY')) document.getElementById('calY').value = parseFloat(data.cal_y).toFixed(2);
+      if (data.cal_b && document.activeElement !== document.getElementById('calB')) document.getElementById('calB').value = parseFloat(data.cal_b).toFixed(2);
+      if (data.cal_i && document.activeElement !== document.getElementById('calI')) document.getElementById('calI').value = parseFloat(data.cal_i).toFixed(2);
+
+    } catch (err) {
+      var cStatus = document.getElementById('cloudStatus');
+      if (cStatus) cStatus.innerHTML = "🔴 CLOUD NETWORK ERROR (કનેક્શન મળતું નથી)";
+    }
+  }
+
+  // દર ૨ સેકન્ડે Firebase માંથી આપમેળે લાઈવ ડેટા ખેંચશે
+  function startSimulation() {
+    clearInterval(liveTimer);
+    fetchFirebaseData();
+    liveTimer = setInterval(fetchFirebaseData, 2000);
+  }
+
+  // --- બટન અને વોઇસ કમાન્ડ વડે મોટર START / STOP કરવાનો ક્લાઉડ કમાન્ડ ---
+  async function setMotor(state) {
+    if (!activeSerial) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
+
+    var statusEl = document.getElementById('motorStatus');
+    var isAlreadyStopped = statusEl && statusEl.innerText.includes('STOPPED');
+    var isAlreadyRunning = statusEl && statusEl.innerText.includes('RUNNING');
+
+    // જો મોટર પહેલેથી જ બંધ હોય અને કોઈ OFF કરવાનો પ્રયત્ન કરે
+    if (!state && isAlreadyStopped) {
+      alert("ℹ️ મોટર પહેલેથી જ બંધ (OFF) છે! સ્ટોપ રીલે કામ નહીં કરે.");
+      return;
+    }
+
+    // જો મોટર પહેલેથી જ ચાલુ હોય અને કોઈ ફરી START કરવાનો પ્રયત્ન કરે
+    if (state && isAlreadyRunning) {
+      alert("ℹ️ મોટર પહેલેથી જ ચાલુ (RUNNING) છે!");
+      return;
+    }
+
+    var cmd = state ? "START" : "STOP";
+    try {
+      await fetch(FIREBASE_URL + "/devices/" + activeSerial + "/cmd.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: cmd, time: Date.now() })
+      });
+      alert("✅ " + cmd + " કમાન્ડ સફળતાપૂર્વક મોકલાઈ ગયો!");
+    } catch (e) {
+      alert("❌ ક્લાઉડ કમાન્ડ મોકલવામાં ભૂલ આવી!");
+    }
+  }
+
+   // --- વોલ્ટેજ સેટિંગ્સ Firebase માં સેવ કરવાનું ફંક્શન ---
+  async function saveVoltCloud() {
+    if (!activeSerial) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
+    var ov = parseFloat(document.getElementById('ovVal').value);
+    var uv = parseFloat(document.getElementById('uvVal').value);
+    try {
+      await fetch(FIREBASE_URL + "/devices/" + activeSerial + "/cmd.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "SET_VOLT", ov: ov, uv: uv, time: Date.now() })
+      });
+      alert("✅ વોલ્ટેજ સેટિંગ્સ સફળતાપૂર્વક ક્લાઉડ પર સેવ થઈ ગયા!");
+    } catch (e) {
+      alert("❌ ક્લાઉડ સેવિંગમાં ભૂલ આવી!");
+    }
+  }
+
+  // --- કરંટ સેટિંગ્સ Firebase માં સેવ કરવું ---
+  async function saveCurrentCloud() {
+    if (!activeSerial) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
+    var over = parseFloat(document.getElementById('overVal').value);
+    var jam = parseFloat(document.getElementById('jamVal').value);
+    var dry = parseFloat(document.getElementById('dryVal').value);
+    var tStr = document.getElementById('timeVal').value.split(':');
+    var sec = (parseInt(tStr[0]) * 3600) + (parseInt(tStr[1]) * 60) + parseInt(tStr[2]);
+
+    try {
+      await fetch(FIREBASE_URL + "/devices/" + activeSerial + "/cmd.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "SET_CURR", over: over, jam: jam, dry: dry, time: sec, timeStamp: Date.now() })
+      });
+      alert("✅ કરંટ સેટિંગ્સ સફળતાપૂર્વક ક્લાઉડ પર સેવ થઈ ગયા!");
+    } catch (e) { alert("❌ ભૂલ આવી!"); }
+  }
+
+  // --- ઓટો ટાઈમર સેટિંગ્સ ક્લાઉડ પર સેવ કરવું ---
+  var userEditingTimer = false;
+  function toggleTimerBox() {
+    userEditingTimer = true; // યુઝર એડિટ કરે ત્યારે બેકગ્રાઉન્ડ રીફ્રેશ ચેકબોક્સ નહીં હટાવે
+    var isChecked = document.getElementById('timerEn').checked;
+    document.getElementById('timerInputsBox').style.display = isChecked ? 'block' : 'none';
+  }
+
+  // --- ઓટો ટાઈમર સેટિંગ્સ ક્લાઉડ પર સેવ કરવું ---
+  async function saveTimerCloud() {
+    if (!activeSerial) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
+    var en = document.getElementById('timerEn').checked;
+    var onP = document.getElementById('onTimeVal').value.split(':');
+    var onSec = (parseInt(onP[0]) * 3600) + (parseInt(onP[1]) * 60) + parseInt(onP[2]);
+    var runP = document.getElementById('runTimeVal').value.split(':');
+    var runSec = (parseInt(runP[0]) * 3600) + (parseInt(runP[1]) * 60) + parseInt(runP[2]);
+
+    try {
+      await fetch(FIREBASE_URL + "/devices/" + activeSerial + "/cmd.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "SET_TIMER", en: en, onDel: onSec, runSec: runSec, timeStamp: Date.now() })
+      });
+      userEditingTimer = false;
+      alert("✅ ટાઈમર સેટિંગ્સ સફળતાપૂર્વક ક્લાઉડ પર સેવ થઈ ગયા!");
+      fetchFirebaseData(); // તરત નવો ડેટા રિફ્રેશ કરો
+    } catch (e) { alert("❌ ભૂલ આવી!"); }
+  }
+
+  // --- GSM નંબર્સ ક્લાઉડ પર સેવ કરવું ---
+  async function saveGsmCloud() {
+    if (!activeSerial) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
+      var isSmsOn = document.getElementById('smsAlertEn').checked;
+    var payload = { action: "SET_GSM", sms_en: isSmsOn, timeStamp: Date.now() };
+    for(var i=0; i<5; i++) {
+      payload["n"+i] = document.getElementById('gsm'+i).value;
+    }
+    try {
+      await fetch(FIREBASE_URL + "/devices/" + activeSerial + "/cmd.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      alert("✅ GSM નંબર્સ સફળતાપૂર્વક ક્લાઉડ પર અપડેટ થઈ ગયા!");
+    } catch (e) { alert("❌ ભૂલ આવી!"); }
+  }
+
+  // --- વાઈફાઈ સેટિંગ્સ ક્લાઉડ પર સેવ કરવું ---
+  async function saveWifiCloud() {
+    if (!activeSerial) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
+    var ssid = document.getElementById('wfSsid').value;
+    var pass = document.getElementById('wfPass').value;
+    if (confirm("શું તમે વાઇફાઇ બદલવા માંગો છો? ESP32 રીસ્ટાર્ટ થશે.")) {
+      try {
+        await fetch(FIREBASE_URL + "/devices/" + activeSerial + "/cmd.json", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "SET_WIFI", ssid: ssid, pass: pass, timeStamp: Date.now() })
+        });
+        alert("✅ વાઈફાઈ સેવ કમાન્ડ મોકલાઈ ગયો! ESP32 રીસ્ટાર્ટ થશે.");
+      } catch (e) { alert("❌ ભૂલ આવી!"); }
+    }
+  }
+
+  // --- સિસ્ટમ રીસ્ટાર્ટ ક્લાઉડ કમાન્ડ ---
+  async function restartCloud() {
+    if (!activeSerial) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
+    if (confirm("શું તમે સિસ્ટમ રીસ્ટાર્ટ કરવા માંગો છો?")) {
+      try {
+        await fetch(FIREBASE_URL + "/devices/" + activeSerial + "/cmd.json", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "RESTART", timeStamp: Date.now() })
+        });
+        alert("🔄 રીસ્ટાર્ટ કમાન્ડ મોકલાઈ ગયો!");
+      } catch (e) { alert("❌ ભૂલ આવી!"); }
+    }
+  }
+
+  // --- સેન્સર કેલિબ્રેશન ક્લાઉડ સેવ ---
+  async function saveCalibCloud(type, id) {
+    if (!activeSerial) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
+    var pass = document.getElementById('calPass').value;
+    var val = parseFloat(document.getElementById(id).value);
+    try {
+      await fetch(FIREBASE_URL + "/devices/" + activeSerial + "/cmd.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "SET_CALIB", type: type, val: val, pass: pass, timeStamp: Date.now() })
+      });
+      alert("✅ " + type + " કેલિબ્રેશન કમાન્ડ મોકલાઈ ગયો!");
+    } catch (e) { alert("❌ ભૂલ આવી!"); }
+  }
+
+  // પેજ ખુલતા જ શરૂ કરો
+  window.addEventListener('DOMContentLoaded', function() {
+    populateDropdown();
+    renderDeviceTable();
+    startSimulation();
+  });
+
+     // --- વોઈસ કમાન્ડ નામ Firebase અને ESP32 માં સેવ કરવું ---
+  async function saveVoiceNameCloud() {
+    if (!activeSerial) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
+    var vName = document.getElementById('voiceNameInput').value.trim().toLowerCase();
+    if (!vName) { alert("કૃપા કરીને વોઈસ કમાન્ડ નામ દાખલ કરો!"); return; }
+    try {
+      await fetch(FIREBASE_URL + "/devices/" + activeSerial + "/cmd.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "SET_VOICE_NAME", vname: vName, timeStamp: Date.now() })
+      });
+      alert("✅ વોઈસ કમાન્ડ નામ સફળતાપૂર્વક ક્લાઉડ અને ESP32 માં સેવ થઈ ગયું: " + vName);
+    } catch (e) { alert("❌ સેવ કરવામાં ભૂલ આવી!"); }
+  } 
+
+  // --- 🎤 BROWSER SPEECH RECOGNITION (લાઇવ બોલેલા શબ્દો દેખાડવા સાથે) ---
+  function startVoiceControl() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert("⚠️ તમારું બ્રાઉઝર વોઈસ કમાન્ડ સપોર્ટ કરતું નથી! કૃપા કરીને Google Chrome વાપરો.");
+      return;
+    }
+
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var recognition = new SpeechRecognition();
+
+    var langSelect = document.getElementById('voiceLangSelect');
+    recognition.lang = langSelect ? langSelect.value : 'gu-IN';
+    recognition.interimResults = true; // લાઈવ બોલતા જ શબ્દો સ્ક્રીન પર લખાશે
+    recognition.maxAlternatives = 1;
+
+    var micBtn = document.getElementById('micBtn');
+    var micText = document.getElementById('micText');
+    var spokenBox = document.getElementById('spokenTextDisplay');
+    var heardEl = document.getElementById('heardWord');
+
+    // બોલતી વખતે ડિસ્પ્લે બોક્સ ખુલી જશે
+    if (spokenBox) spokenBox.style.display = 'block';
+    if (heardEl) heardEl.innerText = "સાંભળી રહ્યું છે... બોલો...";
+
+    micBtn.style.background = "linear-gradient(135deg, #ff9800, #f57c00)";
+    micText.innerText = "Listening... (બોલી રહ્યા છો)...";
+
+    recognition.start();
+
+    recognition.onresult = function(event) {
+      // આખું બોલાયેલું વાક્ય એકસાથે જોડશે (ટુકડા નહીં થાય)
+      var speechResult = '';
+      for (var i = 0; i < event.results.length; ++i) {
+        speechResult += event.results[i][0].transcript;
+      }
+      
+      // જે બોલ્યા તે શબ્દ બટનની નીચે લાઈવ લખાશે
+      if (heardEl) heardEl.innerText = '"' + speechResult.trim() + '"';
+
+      // માત્ર વાક્ય પૂરું બોલાઈ ગયા પછી જ કમાન્ડ ચેક કરશે
+      if (!event.results[event.results.length - 1].isFinal) return;
+
+      var cleanSpeech = speechResult.toLowerCase().trim();
+      console.log("🎤 Final Voice Heard: " + cleanSpeech);
+
+      micBtn.style.background = "linear-gradient(135deg, #00bcd4, #2196f3)";
+      micText.innerText = "VOICE CONTROL (બોલીને ચાલુ/બંધ કરો)";
+
+      var triggerName = (document.getElementById('voiceNameInput') ? document.getElementById('voiceNameInput').value.trim().toLowerCase() : "motor");
+      if (!triggerName) triggerName = "motor";
+
+      // ૧. નામ મેચિંગ (English, ગુજરાતી અને હિન્દી)
+      var isNameSpoken = cleanSpeech.includes(triggerName) || 
+                         (triggerName === 'motor' && (cleanSpeech.includes('મોટર') || cleanSpeech.includes('मोटर')));
+
+      // ૨. મોટર ચાલુ (ON) કમાન્ડ્સ
+      var isOnSpoken = cleanSpeech.includes('on') || cleanSpeech.includes('start') || cleanSpeech.includes('chalu') || 
+                       cleanSpeech.includes('shuru') || cleanSpeech.includes('suru') ||
+                       cleanSpeech.includes('ચાલુ') || cleanSpeech.includes('શરૂ') || cleanSpeech.includes('ઓન') || cleanSpeech.includes('સ્ટાર્ટ') ||
+                       cleanSpeech.includes('चालू') || cleanSpeech.includes('शुरू') || cleanSpeech.includes('ऑन') || cleanSpeech.includes('स्टार्ट');
+
+      // ૩. મોટર બંધ (OFF) કમાન્ડ્સ
+      var isOffSpoken = cleanSpeech.includes('off') || cleanSpeech.includes('stop') || cleanSpeech.includes('band') || cleanSpeech.includes('bandh') ||
+                        cleanSpeech.includes('બંધ') || cleanSpeech.includes('ઓફ') || cleanSpeech.includes('સ્ટોપ') ||
+                        cleanSpeech.includes('बंद') || cleanSpeech.includes('ऑफ') || cleanSpeech.includes('स्टॉप');
+
+      // --- મોટર START શરત ---
+      if ((isNameSpoken && isOnSpoken) || (!triggerName && isOnSpoken) || (isOnSpoken && !isOffSpoken && (cleanSpeech.includes('ચાલુ') || cleanSpeech.includes('શરૂ') || cleanSpeech.includes('चालू')))) {
+        setMotor(true);
+      } 
+      // --- મોટર STOP શરત ---
+      else if ((isNameSpoken && isOffSpoken) || (!triggerName && isOffSpoken) || (isOffSpoken && !isOnSpoken && (cleanSpeech.includes('બંધ') || cleanSpeech.includes('बंद')))) {
+        setMotor(false);
+      } else {
+        alert("❓ સમજાણું નહીં: \"" + speechResult + "\"\nકૃપા કરીને સ્પષ્ટ બોલો (જેમ કે: '" + triggerName + " on' અથવા '" + (triggerName === 'motor' ? 'મોટર' : triggerName) + " ચાલુ').");
+      }
+    };
+
+    recognition.onerror = function(event) {
+      micBtn.style.background = "linear-gradient(135deg, #00bcd4, #2196f3)";
+      micText.innerText = "VOICE CONTROL (બોલીને ચાલુ/બંધ કરો)";
+      if (heardEl) heardEl.innerText = "❌ અવાજ પકડાયો નહીં!";
+    };
+
+    recognition.onspeechend = function() {
+      micBtn.style.background = "linear-gradient(135deg, #00bcd4, #2196f3)";
+      micText.innerText = "VOICE CONTROL (બોલીને ચાલુ/બંધ કરો)";
+      recognition.stop();
+    };
+  }
+
+    function checkUnlock(){
+      var p = document.getElementById('calPass').value;
+      if(p === '12345'){
+        document.getElementById('calibFields').style.display = 'block';
+        alert('✅ PASSWORD TRUE! કેલિબ્રેશન અનલોક થયું.');
+      } else {
+        alert('❌ WRONG PASSWORD ખોટો પાસવર્ડ!');
+      }
+    }
+  </script>
+</body>
+</html>
