@@ -884,11 +884,6 @@
             if(!nm) return alert("નામ દાખલ કરો!");
             if(activeSerial) { rtdb.ref('/devices/' + activeSerial + '/control').update({ device_name: nm }); alert("નામ સેવ થયું!"); }
         }
-        function saveDeviceName() {
-            const nm = document.getElementById('deviceNameInput').value;
-            if(!nm) return alert("નામ દાખલ કરો!");
-            if(activeSerial) { rtdb.ref('/devices/' + activeSerial + '/control').update({ device_name: nm }); alert("નામ સેવ થયું!"); }
-        }
 
         // --- GITHUB FIREBASE VOICE RECOGNITION LOGIC ---
         let recognition = null;
@@ -1516,4 +1511,3 @@
         </script>
 </body>
 </html>
-
