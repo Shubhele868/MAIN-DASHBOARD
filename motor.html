@@ -722,7 +722,8 @@ async function renderDeviceTable() {
       }
 
       // ૨. ટેબલમાં પણ લાઈવ IP અને સ્ટેટસ તાત્કાલિક અપડેટ કરવું
-      var curStEl = document.getElementById("st_" + activeSerial);
+      var curStEl = document.getElementById("mot_" + activeSerial);
+      // var curStEl = document.getElementById("st_" + activeSerial);
       var curIpEl = document.getElementById("ip_" + activeSerial);
       if (curStEl) curStEl.innerHTML = (data.status === "RUNNING") ? "<span style='color:#00e676;font-weight:bold;'>🟢 RUNNING</span>" : "<span style='color:#ff5252;font-weight:bold;'>🔴 STOPPED</span>";
       if (curIpEl) curIpEl.innerHTML = (data.ip && data.ip.length > 6) ? `<a href="http://${data.ip}" target="_blank" style="color:#61dafb;font-weight:bold;text-decoration:underline;">🔗 ${data.ip}</a>` : "<span style='color:#888;'>No IP</span>";
