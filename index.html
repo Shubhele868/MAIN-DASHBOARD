@@ -2,7 +2,6 @@
 <html lang="gu">
 <head>
     <meta charset="UTF-8">
-    <title>Shubh Electronic - Dashboard</title> 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shubh Electronic - Dashboard</title>
     <style>
@@ -203,38 +202,82 @@
             <div class="contact">
                 📞 Customer Care: <span style="color: #61dafb;">📱 8460 24 24 25</span>
             </div>
-        </div>
+        </div>  
 
         <div class="menu-grid">
-
-         <div class="card">
-                <h3>Product Catalog</h3>
-                <a href="https://infoshaktiprime-art.github.io/Nfc-Business-Card/" target="_blank" class="btn">OUR PRODUCT CATALOG</a>
+            <!-- Product Catalog (હંમેશાં દેખાશે) -->
+            <div class="card">
+                <h3 data-i18n="cat_title">Product Catalog</h3>
+                <a href="https://infoshaktiprime-art.github.io/Nfc-Business-Card/" target="_blank" class="btn" data-i18n="cat_btn">OUR PRODUCT CATALOG</a>
             </div>
 
-            <div class="card">
-                <h3>AC Starter Controller</h3>
-                <a href="ac_starter.html" class="btn">Open Controller</a>
+            <div class="card" id="card-ac">
+                <h3 data-i18n="ac_title">AC Starter Controller</h3>
+                <a href="ac_starter.html" class="btn" data-i18n="ac_btn">Open Controller</a>
             </div>
-            <div class="card">
-                <h3>Safety Guard Relay</h3>
-                <a href="homesafety.html" class="btn">Open Safety</a>
+
+            <div class="card" id="card-safety">
+                <h3 data-i18n="safe_title">Safety Guard Relay</h3>
+                <a href="homesafety.html" class="btn" data-i18n="safe_btn">Open Safety</a>
             </div>
-            <div class="card">
-                <h3>Generator Monitor</h3>
-                <a href="genset.html" class="btn">Open Genset</a>
+
+            <div class="card" id="card-genset">
+                <h3 data-i18n="gen_title">Generator Monitor</h3>
+                <a href="genset.html" class="btn" data-i18n="gen_btn">Open Genset</a>
             </div>
-            <div class="card">
-                <h3>3 Phase Motor</h3>
-                <a href="motor.html" class="btn">Open Motor</a>
+
+            <div class="card" id="card-motor">
+                <h3 data-i18n="mot_title">3 Phase Motor</h3>
+                <a href="motor.html" class="btn" data-i18n="mot_btn">Open Motor</a>
             </div>
+
             <div class="card">
-                <h3 style="color: var(--accent-color);">System Settings</h3>
-                <button onclick="openModal()" class="btn" style="background: linear-gradient(135deg, var(--accent-color), var(--card-bg-1));">Change Theme</button>
+                <h3 style="color: var(--accent-color);" data-i18n="sys_title">System Settings</h3>
+                <button onclick="openModal()" class="btn" style="background: linear-gradient(135deg, var(--accent-color), var(--card-bg-1));" data-i18n="btn_theme">Change Theme</button>
+                <button onclick="openVisModal()" class="btn" style="margin-top: 10px; background: linear-gradient(135deg, #17a2b8, var(--card-bg-1));" data-i18n="btn_manage">કાર્ડ મેનેજ કરો (હાઇડ / શૉ)</button>
+
+                <!-- ભાષા પસંદ કરવા માટેનું ડ્રોપડાઉન (Language Dropdown) -->
+                <div style="margin-top: 15px; text-align: left;">
+                    <label data-i18n="lbl_lang" style="font-size: 0.9em; font-weight: bold; color: var(--text-sub);">🌐 ભાષા પસંદ કરો (Language):</label>
+                    <select id="langSelect" onchange="changeLanguage(this.value)" style="width: 100%; margin-top: 6px; padding: 12px; border-radius: 14px; background: var(--bg-color); color: var(--text-main); border: 2px solid var(--border-color); font-weight: bold; font-size: 1em; cursor: pointer; outline: none;">
+                        <option value="gu">ગુજરાતી (Gujarati)</option>
+                        <option value="en">English</option>
+                        <option value="hi">हिन्दी (Hindi)</option>
+                    </select>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- કાર્ડ છુપાવવા / બતાવવા માટેનું Popup Modal -->
+    <div class="modal-overlay" id="visModal">
+        <div class="modal-content">
+            <div class="modal-header" data-i18n="vis_head">👁️ કાર્ડ સેટિંગ્સ</div>
+            <div class="modal-sub" data-i18n="vis_sub">જે કાર્ડ સ્ક્રીન પર રાખવા હોય તેને સિલેક્ટ (✓) રાખો</div>
+            
+            <div style="text-align: left; margin: 20px 0; display: flex; flex-direction: column; gap: 14px; font-size: 1.05em;">
+                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--text-main);">
+                    <input type="checkbox" id="chk-card-ac" onchange="toggleCard('card-ac', this.checked)" style="width: 20px; height: 20px; cursor: pointer;">
+                    <span data-i18n="ac_title">AC Starter Controller</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--text-main);">
+                    <input type="checkbox" id="chk-card-safety" onchange="toggleCard('card-safety', this.checked)" style="width: 20px; height: 20px; cursor: pointer;">
+                    <span data-i18n="safe_title">Safety Guard Relay</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--text-main);">
+                    <input type="checkbox" id="chk-card-genset" onchange="toggleCard('card-genset', this.checked)" style="width: 20px; height: 20px; cursor: pointer;">
+                    <span data-i18n="gen_title">Generator Monitor</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--text-main);">
+                    <input type="checkbox" id="chk-card-motor" onchange="toggleCard('card-motor', this.checked)" style="width: 20px; height: 20px; cursor: pointer;">
+                    <span data-i18n="mot_title">3 Phase Motor</span>
+                </label>
+            </div>
+
+            <button onclick="closeVisModal()" class="btn close-modal" data-i18n="vis_close">SAVE & CLOSE (સાચવો અને બંધ કરો)</button>
+        </div>
+       </div>
+       
     <!-- 12 Theme Selection Popup Modal -->
     <div class="modal-overlay" id="themeModal">
         <div class="modal-content">
@@ -296,13 +339,146 @@
         </div>
     </div>
 
-    <script>
+    <script> 
+        
         function openModal() {
             document.getElementById('themeModal').classList.add('active');
         }
         function closeModal() {
             document.getElementById('themeModal').classList.remove('active');
         }
+
+        // ૩ ભાષા માટેનું શબ્દભંડોળ (Translations Dictionary)
+        const translations = {
+            en: {
+                cat_title: "Product Catalog",
+                cat_btn: "OUR PRODUCT CATALOG",
+                ac_title: "AC Starter Controller",
+                ac_btn: "Open Controller",
+                safe_title: "Safety Guard Relay",
+                safe_btn: "Open Safety",
+                gen_title: "Generator Monitor",
+                gen_btn: "Open Genset",
+                mot_title: "3 Phase Motor",
+                mot_btn: "Open Motor",
+                sys_title: "System Settings",
+                btn_theme: "Change Theme",
+                btn_manage: "Manage Cards (Hide / Show)",
+                lbl_lang: "🌐 Select Language:",
+                vis_head: "👁️ Card Settings",
+                vis_sub: "Select which cards to keep on screen",
+                vis_close: "SAVE & CLOSE",
+                theme_head: "🎨 12 App Themes",
+                theme_sub: "Choose your favorite theme (Auto Saved)",
+                theme_close: "Close"
+            },
+            gu: {
+                cat_title: "પ્રોડક્ટ કેટલોગ",
+                cat_btn: "અમારો પ્રોડક્ટ કેટલોગ",
+                ac_title: "એસી સ્ટાર્ટર કંટ્રોલર",
+                ac_btn: "કંટ્રોલર ખોલો",
+                safe_title: "સેફ્ટી ગાર્ડ રીલે",
+                safe_btn: "સેફ્ટી ખોલો",
+                gen_title: "જનરેટર મોનિટર",
+                gen_btn: "જનરેટર ખોલો",
+                mot_title: "૩ ફેઝ મોટર",
+                mot_btn: "મોટર ખોલો",
+                sys_title: "સિસ્ટમ સેટિંગ્સ",
+                btn_theme: "થીમ બદલો",
+                btn_manage: "કાર્ડ મેનેજ કરો (હાઇડ / શૉ)",
+                lbl_lang: "🌐 ભાષા પસંદ કરો:",
+                vis_head: "👁️ કાર્ડ સેટિંગ્સ",
+                vis_sub: "જે કાર્ડ સ્ક્રીન પર રાખવા હોય તેને સિલેક્ટ (✓) રાખો",
+                vis_close: "સાચવો અને બંધ કરો (Close)",
+                theme_head: "🎨 ૧૨ એપ થીમ્સ",
+                theme_sub: "તમને ગમતી થીમ પસંદ કરો (ઓટો સેવ થશે)",
+                theme_close: "બંધ કરો (Close)"
+            },
+            hi: {
+                cat_title: "प्रोडक्ट कैटलॉग",
+                cat_btn: "हमारा प्रोडक्ट कैटलॉग",
+                ac_title: "एसी स्टार्टर कंट्रोलर",
+                ac_btn: "कंट्रोलर खोलें",
+                safe_title: "सेफ्टी गार्ड रिले",
+                safe_btn: "सेफ्टी खोलें",
+                gen_title: "जनरेटर मॉनिटर",
+                gen_btn: "जनरेटर खोलें",
+                mot_title: "3 फेज मोटर",
+                mot_btn: "मोटर खोलें",
+                sys_title: "सिस्टम सेटिंग्स",
+                btn_theme: "थीम बदलें",
+                btn_manage: "कार्ड प्रबंधित करें (छुपाएं / दिखाएं)",
+                lbl_lang: "🌐 भाषा चुनें:",
+                vis_head: "👁️ कार्ड सेटिंग्स",
+                vis_sub: "जो कार्ड स्क्रीन पर रखने हैं उन्हें चुनें (✓)",
+                vis_close: "सहेजें और बंद करें (Close)",
+                theme_head: "🎨 12 ऐप थीम्स",
+                theme_sub: "अपनी पसंदीदा थीम चुनें (ऑटो सेव होगी)",
+                theme_close: "बंद करें (Close)"
+            }
+        };
+
+        function changeLanguage(lang) {
+            if (!translations[lang]) lang = 'gu';
+            localStorage.setItem('shubh_app_lang', lang);
+
+            const sel = document.getElementById('langSelect');
+            if (sel) sel.value = lang;
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+
+            // થીમ મોડલનું લખાણ બદલવા માટે
+            const thHead = document.querySelector('#themeModal .modal-header');
+            if (thHead && translations[lang]['theme_head']) thHead.textContent = translations[lang]['theme_head'];
+            const thSub = document.querySelector('#themeModal .modal-sub');
+            if (thSub && translations[lang]['theme_sub']) thSub.textContent = translations[lang]['theme_sub'];
+            const thClose = document.querySelector('#themeModal .close-modal');
+            if (thClose && translations[lang]['theme_close']) thClose.textContent = translations[lang]['theme_close'];
+        }
+
+        function openVisModal() {
+            document.getElementById('visModal').classList.add('active');
+        }
+        function closeVisModal() {
+            document.getElementById('visModal').classList.remove('active');
+        }
+
+        function toggleCard(cardId, isChecked) {
+            const el = document.getElementById(cardId);
+            if (el) {
+                el.style.display = isChecked ? '' : 'none';
+            }
+            let saved = JSON.parse(localStorage.getItem('shubh_card_visibility') || '{}');
+            saved[cardId] = isChecked;
+            localStorage.setItem('shubh_card_visibility', JSON.stringify(saved));
+        }
+
+        function loadCardVisibility() {
+            let saved = JSON.parse(localStorage.getItem('shubh_card_visibility') || '{}');
+            const cardIds = ['card-ac', 'card-safety', 'card-genset', 'card-motor'];
+            cardIds.forEach(function(id) {
+                const isVisible = saved[id] !== false;
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.display = isVisible ? '' : 'none';
+                }
+                const chk = document.getElementById('chk-' + id);
+                if (chk) {
+                    chk.checked = isVisible;
+                }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            loadCardVisibility();
+            const savedLang = localStorage.getItem('shubh_app_lang') || 'gu';
+            changeLanguage(savedLang);
+        });
 
         function applyTheme(name) {
             let t = {};
