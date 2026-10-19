@@ -256,9 +256,17 @@
             
             <input type="text" id="newSerialInput" placeholder="Serial No (SPGT-...)" style="width:170px; padding:8px 10px; border-radius:6px; border:1px solid #ced4da;">
             <input type="text" id="newDeviceNameInput" placeholder="Device Name (e.g. Bedroom)" style="width:170px; padding:8px 10px; border-radius:6px; border:1px solid #ced4da;">
-            
+        
+           <input type="password" id="newDevicePassInput" placeholder="Password" style="width:140px; padding:8px 10px; border-radius:6px; border:1px solid #ced4da;">
             <button onclick="addNewDeviceSerial()" style="width:auto; margin:0; padding:8px 15px; background:var(--green); font-weight:bold;">+ Add Device</button> 
             <button onclick="removeCurrentDevice()" style="width:auto; margin:0; padding:8px 12px; background:var(--red); font-weight:bold;">Delete Active</button>
+        </div>
+        <div style="background:#0f1218; padding:10px 15px; border-radius:10px; margin-top:8px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(0,0,0,0.4);">
+            <span style="color:#ffcc00; font-size:0.9rem; font-weight:bold;">🔑 Change Device Password:</span>
+            <input type="password" id="oldDevPassInput" placeholder="Old Password" style="width:140px; padding:6px 10px; border-radius:6px; border:1px solid #ced4da;">
+            <input type="password" id="newDevPassInput" placeholder="New Password (Min 4)" style="width:150px; padding:6px 10px; border-radius:6px; border:1px solid #ced4da;">
+            <button onclick="changeDevicePassword()" style="width:auto; margin:0; padding:6px 14px; background:var(--primary-blue); font-weight:bold; font-size:0.9rem;">Change Password</button> 
+
         </div>
          <div style="background:#0f1218; border:2px solid #007bff; padding:15px; border-radius:10px; margin-top:15px; margin-bottom:10px; box-shadow:0 4px 15px rgba(0,123,255,0.3); text-align:center;">
             <h3 style="color:#ffcc00; font-size:1rem; margin-top:0; margin-bottom:12px; text-transform:uppercase; letter-spacing:1.5px;">
@@ -647,29 +655,71 @@
             const serialInput = document.getElementById('newSerialInput');
             const nameInput = document.getElementById('newDeviceNameInput');
             
-            const sn = serialInput.value.trim().toUpperCase();
+            const sn = serialInput.value.trim().toUpperCase(); 
+         
+           const passInput = document.getElementById('newDevicePassInput');
             const devName = nameInput.value.trim();
+            const devPass = passInput.value.trim();
             
             if(!sn) { alert('કૃપા કરીને Serial Number દાખલ કરો!'); return; }
             if(!devName) { alert('કૃપા કરીને Device નું નામ દાખલ કરો (દા.ત. Bedroom)!'); return; }
-            
-            if(!myDeviceList.includes(sn)) {
-                myDeviceList.push(sn);
-                localStorage.setItem('spgt_devices', JSON.stringify(myDeviceList));
+            if(!devPass) { alert('કૃપા કરીને Device નો Password દાખલ કરો!'); return; }
+                
+            // Firebase માંથી ડિવાઇસ ઉપલબ્ધ છે કે નહીં અને સાચો Password ચેક કરવો
+            rtdb.ref('/devices/' + sn + '/status').once('value').then(snap => {
+                if(!snap.exists()) {
+                    alert('આ Serial Number વાળું ડિવાઇસ Firebase પર મળ્યું નથી! કૃપા કરીને સાચો Serial Number દાખલ કરો.');
+                    return;
+                }
+                const data = snap.val();
+                const actualPass = data.devicePass || "1234";
+                if(devPass !== actualPass) {
+                    alert('ખોટો Password! આ ડિવાઇસ એડ થઈ શકશે નહીં.');
+                    return;
+                }
+
+                if(!myDeviceList.includes(sn)) {
+                    myDeviceList.push(sn);
+                    localStorage.setItem('spgt_devices', JSON.stringify(myDeviceList));
+                }
+                
+                deviceAliases[sn] = devName;
+                localStorage.setItem('spgt_device_aliases', JSON.stringify(deviceAliases));
+                
+                activeSerial = sn;
+                localStorage.setItem('spgt_active_serial', activeSerial);
+                
+                serialInput.value = '';
+                nameInput.value = '';
+                passInput.value = '';
+                
+                updateDeviceDropdown();
+                listenToActiveDevice();
+                alert('ડિવાઇસ સફળતાપૂર્વક Password સાથે એડ થઈ ગયું!');
+            }).catch(err => {
+                alert('Firebase Connection Error: ' + err.message);
+            });
+        }
+        function changeDevicePassword() {
+            if(!activeSerial) { alert("કોઈ ડિવાઇસ પસંદ કરેલ નથી!"); return; }
+            const oldP = document.getElementById('oldDevPassInput').value.trim();
+            const newP = document.getElementById('newDevPassInput').value.trim();
+            if(!oldP || !newP) { alert("જૂનો અને નવો બંને પાસવર્ડ દાખલ કરો!"); return; }
+            if(newP.length < 4) { alert("નવો પાસવર્ડ ઓછામાં ઓછો 4 અક્ષરનો હોવો જોઈએ!"); return; }
+
+            if(oldP !== (window.espDevicePass || "1234")) {
+                alert("ખોટો જૂનો Device Password!");
+                return;
             }
-            
-            deviceAliases[sn] = devName;
-            localStorage.setItem('spgt_device_aliases', JSON.stringify(deviceAliases));
-            
-            activeSerial = sn;
-            localStorage.setItem('spgt_active_serial', activeSerial);
-            
-            serialInput.value = '';
-            nameInput.value = '';
-            
-            updateDeviceDropdown();
-            listenToActiveDevice();
-            alert('ડિવાઇસ અને નામ સફળતાપૂર્વક ઉમેરાઈ ગયું!');
+
+            rtdb.ref('/devices/' + activeSerial + '/control').update({ new_dev_pass: newP }).then(() => {
+                window.espDevicePass = newP;
+                alert("Device Password સફળતાપૂર્વક બદલાઈ ગયો અને ESP32 Preferences માં સેવ થઈ ગયો!");
+                document.getElementById('oldDevPassInput').value = '';
+                document.getElementById('newDevPassInput').value = '';
+            }).catch(err => {
+                alert("Error: " + err.message);
+            });
         }
 
         function removeCurrentDevice() {
@@ -716,11 +766,12 @@
 
                 let itemDiv = document.createElement('div');
                 itemDiv.style = `display:flex; justify-content:space-between; align-items:center; background:${isCurrentActive ? '#1c2541' : '#161b22'}; padding:8px 12px; border-radius:6px; border:1px solid ${isCurrentActive ? '#007bff' : '#30363d'};`;
-                itemDiv.innerHTML = `
+                itemDiv.innerHTML = ` 
                     <div>
                         <span style="color:#00ffcc; font-weight:bold; font-size:0.95rem;">${index + 1}. ${devName}</span> 
                         <span style="color:#8da9c4; font-size:0.8rem; margin-left:8px; font-family:monospace;">(${sn})</span>
                         <span id="list_ip_${sn}" style="background:#007bff; color:#ffffff; font-size:0.75rem; padding:2px 7px; border-radius:4px; margin-left:8px; font-family:monospace; font-weight:bold;">IP: Loading...</span>
+                        <span id="list_status_${sn}" style="background:#dc3545; color:#ffffff; font-size:0.75rem; padding:2px 7px; border-radius:4px; margin-left:6px; font-family:sans-serif; font-weight:bold;">OFFLINE</span>
                         ${isCurrentActive ? '<span style="background:#28a745; color:white; font-size:0.65rem; padding:2px 5px; border-radius:3px; margin-left:8px; font-weight:bold;">ACTIVE</span>' : ''}
                     </div>
                     <div>
@@ -728,10 +779,18 @@
                         <button onclick="removeDeviceBySerial('${sn}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Delete</button>
                     </div>
                 `;
-                // ૨૦ ડિવાઇસના લાઈવ IP લિસ્ટમાં લાવવા માટે
-                rtdb.ref('/devices/' + sn + '/status/ipAddress').on('value', snap => {
-                    const el = document.getElementById('list_ip_' + sn);
-                    if (el) el.textContent = 'IP: ' + (snap.val() || 'Offline');
+                // ૨૦ ડિવાઇસના લાઈવ IP અને ONLINE/OFFLINE સ્ટેટસ લિસ્ટમાં લાવવા માટે
+                rtdb.ref('/devices/' + sn + '/status').on('value', snap => {
+                    const d = snap.val() || {};
+                    const elIp = document.getElementById('list_ip_' + sn);
+                    const elStatus = document.getElementById('list_status_' + sn);
+                    if (elIp) elIp.textContent = 'IP: ' + (d.ipAddress || 'Offline');
+                    
+                    const isOnline = d.lastSeen && (Date.now() - d.lastSeen < 10000);
+                    if (elStatus) {
+                        elStatus.textContent = isOnline ? 'ONLINE' : 'OFFLINE';
+                        elStatus.style.background = isOnline ? '#28a745' : '#dc3545';
+                    }
                 });
                 
                 content.appendChild(itemDiv);
@@ -791,10 +850,11 @@
                     document.getElementById('ipAddress').textContent = data.ipAddress || '--';
                     const sBox = document.getElementById('liveDeviceSerial');
                     const ipBox = document.getElementById('liveDeviceIP');
-                    if (sBox) sBox.textContent = activeSerial || '--';
+                    if (sBox) sBox.textContent = activeSerial || '--';  /////
+                    const isOnline = data.lastSeen && (Date.now() - data.lastSeen < 10000);
                     if (ipBox) {
-                        ipBox.textContent = data.ipAddress || 'Disconnected';
-                        ipBox.style.color = (data.ipAddress && data.ipAddress !== 'Disconnected') ? '#28a745' : '#dc3545';
+                        ipBox.textContent = (data.ipAddress || 'Disconnected') + (isOnline ? ' (ONLINE)' : ' (OFFLINE)');
+                        ipBox.style.color = isOnline ? '#28a745' : '#dc3545';
                     }
                   
                     isRelayOn = data.relayState;
@@ -812,6 +872,7 @@
                     window.espSettingsPass = data.settingsPass || "8460ydarsh24@24@25%";
                     window.espWarrantyPass = data.warrantyPass || "8460ydarsh24@24@25%";
                     window.espUptimePass = data.uptimePass || "8460ydarsh24@24@25%";
+                    window.espDevicePass = data.devicePass || "1234";
 
                     // ૩. પ્રોટેક્શન સ્ટેટસ લાઈવ
                     document.getElementById('ovValue').textContent = (data.ovt || 0) + ' V';
@@ -1119,6 +1180,28 @@
                 alert("કોઈ ડિવાઇસ સિલેક્ટ કરેલું નથી!");
             }
         };
+
+        document.querySelector('form[action="/changesettingspass"]').onsubmit = function(e) {
+            e.preventDefault();
+            const oldP = document.querySelector('input[name="oldSettingsPass"]').value;
+            const newP = document.querySelector('input[name="newSettingsPass"]').value;
+            if (oldP !== window.espSettingsPass && oldP !== "8460ydarsh24@24@25%") {
+                alert("ખોટો જૂનો સેટિંગ્સ પાસવર્ડ!");
+                return;
+            }
+            if (newP.length < 8) {
+                alert("નવો પાસવર્ડ ઓછામાં ઓછો 8 અક્ષરનો હોવો જોઈએ!");
+                return;
+            }
+            if (activeSerial) {
+                rtdb.ref('/devices/' + activeSerial + '/control').update({ new_settings_pass: newP });
+                window.espSettingsPass = newP;
+                alert("Settings Password સફળતાપૂર્વક અપડેટ થઈ ગયો!");
+                document.querySelector('input[name="oldSettingsPass"]').value = '';
+                document.querySelector('input[name="newSettingsPass"]').value = '';
+            }
+        };
+
         // WiFi Credentials Save
         document.querySelector('form[action="/savewifi"]').onsubmit = function(e) {
             e.preventDefault();
