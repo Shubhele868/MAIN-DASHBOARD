@@ -1123,6 +1123,24 @@
                 connectFirebase();
             }
         };
+        // 🛡️ સ્ક્રીન લૉક કે ટેબ બેકગ્રાઉન્ડમાં હોય ત્યારે Firebase ડેટા વપરાશ અટકાવવો
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                // જો સ્ક્રીન બંધ કે ટેબ બેકગ્રાઉન્ડમાં જાય તો લાઈવ રીડિંગ બંધ કરો (ડેટા બચશે)
+                if (liveRef) {
+                    liveRef.off();
+                }
+                if (waveAnim) {
+                    cancelAnimationFrame(waveAnim);
+                }
+            } else {
+                // સ્ક્રીન પાછી ચાલુ થાય ત્યારે લાઈવ કનેક્શન ફરી ચાલુ કરો
+                var curSN = document.getElementById("custSN").value.trim();
+                if (curSN) {
+                    connectFirebase();
+                }
+            }
+        });
     </script>
     </body>
 </html>
