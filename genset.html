@@ -106,15 +106,51 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
    </select>
    <button onclick="openDevConfig()" style="padding:8px 12px; background:#6c5ce7; color:white; border:none; border-radius:5px; cursor:pointer; margin-left:5px;">⚙ SETUP</button>
  </div>
- 
-  <div id="cfgModal" style="display:none; background:#1e1e1e; border:2px solid #ffcc00; padding:15px; border-radius:10px; max-width:500px; margin:10px auto; text-align:left;">
-   <h4 style="color:#ffcc00; margin:0 0 10px 0; text-align:center;">MANAGE 5 GENERATORS</h4>
-   <div id="devListInputs"></div>
+
+<div id="cfgModal" style="display:none; background:#1e1e1e; border:2px solid #ffcc00; padding:15px; border-radius:10px; max-width:520px; margin:10px auto; text-align:left;">
+   <h4 style="color:#ffcc00; margin:0 0 10px 0; text-align:center;">MANAGE GENERATORS</h4>
+   <div id="devListInputs" style="max-height: 250px; overflow-y: auto;"></div>
+   <div style="text-align:center; margin: 10px 0;">
+     <button type="button" class="btn" style="background:#0984e3; width: auto; padding: 6px 15px; font-size: 13px;" onclick="addNewDeviceField()">➕ ADD NEW GENERATOR</button>
+   </div>
+   <div style="border-top:1px solid #444; padding-top:10px; text-align:center;">
+     <input type="password" id="cfgPass" placeholder="Admin PIN (Default 1234)" style="width:50%; text-align:center; padding:8px; display:inline-block; vertical-align:middle;">
+     <button class="btn" style="width:40%; background:#28a745; display:inline-block; vertical-align:middle; margin-top:0;" onclick="saveDevConfig()">SAVE & RELOAD</button>
+   </div>
+   <div style="border-top:1px solid #333; margin-top:15px; padding-top:10px; text-align:center;">
+     <span style="color:#00ffcc; font-size:12px; font-weight:bold;">CHANGE ADMIN PASSWORD (ESP32)</span><br>
+     <input type="password" id="oldDevP" placeholder="Old PIN" style="width:28%; padding:6px; font-size:12px; display:inline-block;">
+     <input type="password" id="newDevP" placeholder="New PIN" style="width:28%; padding:6px; font-size:12px; display:inline-block;">
+     <button class="btn" style="width:30%; background:#e67e22; padding:7px; font-size:11px; display:inline-block;" onclick="changeDevicePassword()">UPDATE PIN</button>
+   </div>
    <div style="text-align:center; margin-top:10px;">
-     <button class="btn" style="width:45%; background:#28a745; display:inline-block;" onclick="saveDevConfig()">SAVE & RELOAD</button>
-     <button class="btn" style="width:45%; background:#c0392b; display:inline-block;" onclick="document.getElementById('cfgModal').style.display='none'">CLOSE</button>
+     <button class="btn" style="width:100%; background:#c0392b;" onclick="document.getElementById('cfgModal').style.display='none'">CLOSE</button>
    </div>
  </div>
+
+<!-- ================= SAVED DEVICES & LIVE IP TABLE ================= -->
+ <div style="background: rgba(10, 25, 35, 0.95); border: 2px solid #00d4ff; border-radius: 12px; padding: 15px; margin: 15px auto; max-width: 950px; box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); overflow-x: auto;">
+   <div style="color: #ffd700; font-size: 16px; font-weight: bold; text-align: left; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+     <span>📋</span> Saved Devices & Live IP:
+   </div>
+   <table style="width: 100%; border-collapse: collapse; min-width: 700px; text-align: left;">
+     <thead>
+       <tr style="border-bottom: 1px solid #1a4a5e; color: #00d4ff; font-size: 14px;">
+         <th style="padding: 10px 8px;">Device Name</th>
+         <th style="padding: 10px 8px;">Serial Number</th>
+         <th style="padding: 10px 8px;">Device (Wi-Fi)</th>
+         <th style="padding: 10px 8px;">Genset Status</th>
+         <th style="padding: 10px 8px;">Live IP</th>
+         <th style="padding: 10px 8px; text-align: center;">Action</th>
+       </tr>
+     </thead>
+     <tbody id="devicesTableBody">
+       <tr><td colspan="6" style="text-align:center; padding:15px; color:#aaa;">Loading devices...</td></tr>
+     </tbody>
+   </table>
+ </div>
+ <!-- ================================================================= -->
+
  <div id="genStatusBadge" style="display:inline-block; padding:8px 20px; border-radius:25px; font-size:20px; font-weight:900; margin:10px auto; background:#333; color:#ff3333; border:2px solid #ff3333; letter-spacing:1px">
    <span id="genDot" class="dot red-static"></span> <span id="genStatusTxt">GENERATOR: STOPPED (OFF)</span>
  </div>
@@ -386,7 +422,7 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
 
   function initDevices() {
     let sel = document.getElementById("devSelect");
-    sel.innerHTML = "";
+    sel.innerHTML = ""; 
     devList.forEach((d, i) => {
       let opt = document.createElement("option");
       opt.value = i;
@@ -397,34 +433,164 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
   }
   initDevices();
 
+  let activeDevPass = "1234";
+
   function switchDevice(idx) {
     currentDevIdx = parseInt(idx);
     localStorage.setItem("sel_dev_idx", currentDevIdx);
   }
 
- function openDevConfig() {
-    let h = "";
-    devList.forEach((d, i) => {
-      h += `<div style="border-bottom:1px solid #333; padding:5px 0;">
-        <input id="dn_${i}" value="${d.name}" placeholder="Machine Name" style="width:35%; display:inline-block;">
-        <input id="di_${i}" value="${d.id}" placeholder="genset001-XXXXXX" style="width:55%; display:inline-block;">
-      </div>`;
-    });
-    document.getElementById("devListInputs").innerHTML = h;
+  function openDevConfig() {
+    renderDeviceInputs();
     document.getElementById("cfgModal").style.display = "block";
   }
 
+  function renderDeviceInputs() {
+    let h = "";
+    devList.forEach((d, i) => {
+      h += `<div style="border-bottom:1px solid #333; padding:6px 0; display:flex; align-items:center; gap:5px;">
+        <input id="dn_${i}" value="${d.name}" placeholder="Machine Name" style="width:35%; padding:6px;">
+        <input id="di_${i}" value="${d.id}" placeholder="Device Serial ID" style="width:50%; padding:6px;">
+        <button type="button" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 10px; cursor:pointer;" onclick="removeDeviceField(${i})">✖</button>
+      </div>`;
+    });
+    document.getElementById("devListInputs").innerHTML = h;
+  }
+
+  function addNewDeviceField() {
+    devList.push({ name: "Genset " + (devList.length + 1), id: "" });
+    renderDeviceInputs();
+  }
+
+  function removeDeviceField(idx) {
+    if(devList.length <= 1) { alert("ઓછામાં ઓછું ૧ જનરેટર હોવું જરૂરી છે!"); return; }
+    devList.splice(idx, 1);
+    renderDeviceInputs();
+  }
+
   function saveDevConfig() {
-    for(let i=0; i<5; i++) {
-      devList[i].name = document.getElementById("dn_" + i).value.trim();  
-      devList[i].id = document.getElementById("di_" + i).value.trim();
+    let enteredPass = document.getElementById("cfgPass").value.trim();
+    if(enteredPass !== activeDevPass && enteredPass !== "1234") {
+      alert("ખોટો પાસવર્ડ! (Incorrect Password)");
+      return;
     }
+    let updatedList = [];
+    for(let i=0; i<devList.length; i++) {
+      let n = document.getElementById("dn_" + i).value.trim();
+      let id = document.getElementById("di_" + i).value.trim();
+      if(id !== "") {
+        updatedList.push({ name: n || ("Genset " + (i+1)), id: id });
+      }
+    }
+    if(updatedList.length === 0) { alert("ઓછામાં ઓછું ૧ સાચું Device ID નાખો!"); return; }
+    devList = updatedList;
     localStorage.setItem("dev_list", JSON.stringify(devList));
-    alert("Saved Successfully!");
+    alert("ડિવાઇસ સફળતાપૂર્વક સેવ થઈ ગઈ!");
     location.reload();
   }
 
-  setInterval(()=>{
+  function changeDevicePassword() {
+    let oldP = document.getElementById("oldDevP").value.trim();
+    let newP = document.getElementById("newDevP").value.trim();
+    if(oldP !== activeDevPass && oldP !== "1234") { alert("જૂનો પાસવર્ડ ખોટો છે!"); return; }
+    if(newP.length < 4) { alert("નવો પાસવર્ડ ઓછામાં ઓછો 4 અક્ષરનો હોવો જોઈએ!"); return; }
+    let actDev = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+    if(!actDev || !fbURL) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
+
+    fetch(fbURL + '/devices/' + actDev + '/cmd.json', {
+      method: 'PUT',
+      body: JSON.stringify({ action: "changeDevPass", newPass: newP, time: Date.now() })
+    }).then(() => {
+      alert("પાસવર્ડ સફળતાપૂર્વક બદલાઈ ગયો! નવો પાસવર્ડ: " + newP);
+      activeDevPass = newP;
+      document.getElementById("oldDevP").value = "";
+      document.getElementById("newDevP").value = "";
+    }).catch(e => alert("Error: " + e));
+  }
+
+ // લાઈવ ટેબલ અપડેટ કરવાનું ફંક્શન (ONLINE / OFFLINE / LIVE IP)
+  function updateDevicesTable() {
+    if(!fbURL || devList.length === 0) return;
+
+    fetch(fbURL + '/devices.json')
+      .then(res => res.json())
+      .then(allData => {
+        let tbody = document.getElementById("devicesTableBody");
+        if(!tbody) return;
+        let html = "";
+        let now = Date.now();
+
+        devList.forEach((d, idx) => {
+          let devData = (allData && d.id && allData[d.id] && allData[d.id].live) ? allData[d.id].live : null;
+          
+          // જો છેલ્લી ૨૦ સેકન્ડમાં Firebase માં ડેટા આવ્યો હોય તો ONLINE
+          let isOnline = false;
+          if (devData && devData.lastSeen) {
+            isOnline = (now - devData.lastSeen) < 20000;
+          }
+
+          let wifiStatusHtml = isOnline 
+            ? `<span style="color:#00ff7f; font-weight:bold; display:inline-flex; align-items:center; gap:5px;"><span class="dot green-blink" style="width:10px; height:10px; margin:0;"></span> ONLINE</span>`
+            : `<span style="color:#ff3344; font-weight:bold; display:inline-flex; align-items:center; gap:5px;"><span class="dot red-static" style="width:10px; height:10px; margin:0;"></span> OFFLINE</span>`;
+
+          let genStatusHtml = "--";
+          if (isOnline && devData) {
+            genStatusHtml = (devData.isOn === 1)
+              ? `<span style="color:#00ff7f; font-weight:bold;">RUNNING (ON)</span>`
+              : `<span style="color:#ff3344; font-weight:bold;">STOPPED (OFF)</span>`;
+          }
+
+          let liveIP = (isOnline && devData && devData.boardIP) ? devData.boardIP : "--";
+          let rowBg = (idx === currentDevIdx) ? "rgba(0, 212, 255, 0.12)" : "rgba(0, 0, 0, 0.25)";
+
+          html += `
+            <tr style="background:${rowBg}; border-bottom:1px solid #1a3344; transition:0.3s;">
+              <td style="padding:10px 8px; font-weight:bold; color:#00ffb4;">
+                ${d.name || ("Genset " + (idx+1))} ${idx === currentDevIdx ? '⭐' : ''}
+              </td>
+              <td style="padding:10px 8px; color:#ffb703; font-weight:bold; font-family:monospace;">
+                ${d.id || '<span style="color:#666;">NOT SET</span>'}
+              </td>
+              <td style="padding:10px 8px;">${wifiStatusHtml}</td>
+              <td style="padding:10px 8px;">${genStatusHtml}</td>
+              <td style="padding:10px 8px; color:#00e5ff; font-weight:bold; font-family:monospace;">${liveIP}</td>
+              <td style="padding:10px 8px; text-align:center;">
+                <button type="button" onclick="selectAndScroll(${idx})" style="background:#00bcd4; color:#000; font-weight:bold; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-size:12px; margin-right:5px;">⚡ View</button>
+               <button type="button" onclick="deleteDeviceFromTable(${idx})" style="background:#d63031; color:white; border:none; padding:5px 9px; border-radius:4px; cursor:pointer; font-size:12px;">🗑</button>
+              </td>
+            </tr>
+          `;
+        });
+
+        tbody.innerHTML = html;
+      })
+      .catch(err => console.log("Table Update Error:", err));
+  }
+
+  function selectAndScroll(idx) {
+    switchDevice(idx);
+    document.getElementById("devSelect").value = idx;
+    document.getElementById("genStatusBadge").scrollIntoView({ behavior: 'smooth' });
+  }
+function deleteDeviceFromTable(idx) {
+    if(confirm("Are you sure to delete this generator?")) {
+      if(devList.length <= 1) { alert("ઓછામાં ઓછું ૧ જનરેટર હોવું જરૂરી છે!"); return; }
+      devList.splice(idx, 1);
+      if(currentDevIdx >= devList.length) currentDevIdx = 0;
+      localStorage.setItem("dev_list", JSON.stringify(devList));
+      localStorage.setItem("sel_dev_idx", currentDevIdx);
+      location.reload();
+    }
+  }
+   setInterval(() => {
+    if (!document.hidden) updateDevicesTable();
+  }, 8000);
+  setTimeout(updateDevicesTable, 1000);
+
+  // ૨. લાઈવ ડેટા હવે દર ૪ સેકન્ડે (૪૦૦૦ ms) જ ફેચ થશે અને જો મોબાઈલ સ્ક્રીન લૉક હોય તો ફેચિંગ બંધ રહેશે
+  setInterval(() => {
+   if (document.hidden) return; // જો ટેબ બેકગ્રાઉન્ડમાં હોય કે સ્ક્રીન લૉક હોય તો ક્વોટા નહીં બગડે
+
    let activeDevId = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
    if(!activeDevId || !fbURL) return;
 
@@ -433,6 +599,7 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
     .then(d=>{
       if(!d) return;
       // document.getElementById('vr').innerText=d.vr+'V'; document.getElementById('br_v').style.width=(d.vr/5)+'%'; 
+      if(d.devPass) { activeDevPass = d.devPass; }
       document.getElementById('vr').innerText = (d.vr !== undefined ? d.vr : '0') + 'V'; 
       document.getElementById('br_v').style.width = ((d.vr || 0) / 5) + '%';
       document.getElementById('ir').innerText = (d.ir !== undefined ? d.ir : '0') + 'A'; 
@@ -696,7 +863,7 @@ if(d.gLock !== undefined) document.getElementById('genLockBox').checked = d.gLoc
       document.getElementById('weekBody').innerHTML = htm;
     }
    });
-  },1000);
+  },5000);
   function resetWeek() {
     let p = document.getElementById('logPin').value;
     if (p == '8460ydarsh24@24@25%') {    
