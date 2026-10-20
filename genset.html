@@ -107,36 +107,24 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
    <button onclick="openDevConfig()" style="padding:8px 12px; background:#6c5ce7; color:white; border:none; border-radius:5px; cursor:pointer; margin-left:5px;">⚙ SETUP</button>
  </div>
 
- <div id="cfgModal" style="display:none; background:#1e1e1e; border:2px solid #00d4ff; padding:15px; border-radius:12px; max-width:520px; margin:10px auto; text-align:left; box-shadow:0 0 20px rgba(0,212,255,0.4);">
-   <h3 style="color:#00d4ff; margin:0 0 12px 0; text-align:center;">⚙️ GENERATOR SETUP & MANAGE</h3>
-
-   <!-- ૧. નવું જનરેટર અને સિરિયલ નંબર નાખવા માટેનું સ્પષ્ટ ખાનું -->
-   <div style="background:#15181c; border:1px solid #444; border-radius:8px; padding:12px; margin-bottom:15px;">
-     <div style="color:#ffd700; font-weight:bold; font-size:14px; margin-bottom:6px;">➕ ADD NEW GENERATOR:</div>
-     <div style="font-size:12px; color:#aaa; margin-bottom:3px;">Generator Name:</div>
-     <input type="text" id="newDevName" placeholder="Genset Name (e.g. Genset 1 / Home)" style="width:95%; padding:8px; background:#222; color:#fff; border:1px solid #555; border-radius:5px; margin-bottom:8px;">
-     
-     <div style="font-size:12px; color:#aaa; margin-bottom:3px;">Device Serial Number:</div>
-     <input type="text" id="newDevSerial" placeholder="Device Serial ID (e.g. GENSET_V1-68FE71FA230C)" style="width:95%; padding:8px; background:#222; color:#00ffcc; font-weight:bold; border:1px solid #00d4ff; border-radius:5px; margin-bottom:10px;">
-     
-     <button type="button" class="btn" style="background:#28a745; width:100%; padding:10px; margin:0; font-size:14px; font-weight:bold;" onclick="addNewGeneratorDirect()">➕ ADD GENERATOR TO LIST</button>
+<div id="cfgModal" style="display:none; background:#1e1e1e; border:2px solid #ffcc00; padding:15px; border-radius:10px; max-width:520px; margin:10px auto; text-align:left;">
+   <h4 style="color:#ffcc00; margin:0 0 10px 0; text-align:center;">MANAGE GENERATORS</h4>
+   <div id="devListInputs" style="max-height: 250px; overflow-y: auto;"></div>
+   <div style="text-align:center; margin: 10px 0;">
+     <button type="button" class="btn" style="background:#0984e3; width: auto; padding: 6px 15px; font-size: 13px;" onclick="addNewDeviceField()">➕ ADD NEW GENERATOR</button>
    </div>
-
-   <!-- ૨. સેવ થયેલા જનરેટરનું લિસ્ટ -->
-   <div style="color:#00d4ff; font-weight:bold; font-size:13px; margin-bottom:6px;">📋 SAVED GENERATORS LIST:</div>
-   <div id="devListInputs" style="max-height: 200px; overflow-y: auto; background:#111; padding:8px; border-radius:6px; border:1px solid #333;"></div>
-   
-   <div style="display:flex; justify-content:space-between; gap:10px; margin-top:12px;">
-     <button type="button" class="btn" style="background:#d63031; flex:1; margin:0; padding:8px; font-size:12px;" onclick="deleteAllDevices()">🗑 DELETE ALL</button>
-     <button class="btn" style="background:#444; flex:1; margin:0; padding:8px; font-size:12px;" onclick="document.getElementById('cfgModal').style.display='none'">CLOSE</button>
+   <div style="border-top:1px solid #444; padding-top:10px; text-align:center;">
+     <input type="password" id="cfgPass" placeholder="Admin PIN (Default 1234)" style="width:50%; text-align:center; padding:8px; display:inline-block; vertical-align:middle;">
+     <button class="btn" style="width:40%; background:#28a745; display:inline-block; vertical-align:middle; margin-top:0;" onclick="saveDevConfig()">SAVE & RELOAD</button>
    </div>
-
-   <!-- ESP32 પાસવર્ડ બદલવા માટે -->
    <div style="border-top:1px solid #333; margin-top:15px; padding-top:10px; text-align:center;">
      <span style="color:#00ffcc; font-size:12px; font-weight:bold;">CHANGE ADMIN PASSWORD (ESP32)</span><br>
      <input type="password" id="oldDevP" placeholder="Old PIN" style="width:28%; padding:6px; font-size:12px; display:inline-block;">
      <input type="password" id="newDevP" placeholder="New PIN" style="width:28%; padding:6px; font-size:12px; display:inline-block;">
      <button class="btn" style="width:30%; background:#e67e22; padding:7px; font-size:11px; display:inline-block;" onclick="changeDevicePassword()">UPDATE PIN</button>
+   </div>
+   <div style="text-align:center; margin-top:10px;">
+     <button class="btn" style="width:100%; background:#c0392b;" onclick="document.getElementById('cfgModal').style.display='none'">CLOSE</button>
    </div>
  </div>
 
@@ -465,94 +453,50 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
     document.getElementById("cfgModal").style.display = "block";
   }
 
-  // સીધું જ નવું જનરેટર અને સિરિયલ નંબર એડ કરવાનું ફંક્શન
-  function addNewGeneratorDirect() {
-    let name = document.getElementById("newDevName").value.trim();
-    let serial = document.getElementById("newDevSerial").value.trim();
-
-    if(!serial) {
-      alert("કૃપા કરીને Device Serial Number દાખલ કરો!");
-      return;
-    }
-
-    devList.push({ 
-      name: name || ("Genset " + (devList.length + 1)), 
-      id: serial 
-    });
-
-    localStorage.setItem("dev_list", JSON.stringify(devList));
-    document.getElementById("newDevName").value = "";
-    document.getElementById("newDevSerial").value = "";
-    
-    renderDeviceInputs();
-    initDevices();
-    updateDevicesTable();
-    alert("જનરેટર સફળતાપૂર્વક લિસ્ટમાં ઉમેરાઈ ગયું!");
-  }
-
-  // સેવ થયેલા જનરેટર સ્ક્રીન પર બતાવવા
   function renderDeviceInputs() {
-    let box = document.getElementById("devListInputs");
-    if(!box) return;
-
-    if(devList.length === 0) {
-      box.innerHTML = `<div style="color:#888; text-align:center; padding:10px;">હાલમાં કોઈ જનરેટર સેવ નથી. ઉપરના ખાનામાં નામ અને સિરિયલ નંબર નાખીને ઉમેરો.</div>`;
-      return;
-    }
-
     let h = "";
     devList.forEach((d, i) => {
-      h += `
-        <div style="border-bottom:1px solid #222; padding:8px 4px; display:flex; align-items:center; justify-content:space-between; gap:5px;">
-          <div>
-            <div style="color:#00ffb4; font-weight:bold; font-size:13px;">${d.name || ("Genset " + (i+1))}</div>
-            <div style="color:#ffb703; font-family:monospace; font-size:12px;">${d.id}</div>
-          </div>
-          <button type="button" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:5px 10px; cursor:pointer; font-size:12px;" onclick="removeDeviceField(${i})">🗑 કાઢો</button>
-        </div>
-      `;
+      h += `<div style="border-bottom:1px solid #333; padding:6px 0; display:flex; align-items:center; gap:5px;">
+        <input id="dn_${i}" value="${d.name}" placeholder="Machine Name" style="width:35%; padding:6px;">
+        <input id="di_${i}" value="${d.id}" placeholder="Device Serial ID" style="width:50%; padding:6px;">
+        <button type="button" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 10px; cursor:pointer;" onclick="removeDeviceField(${i})">✖</button>
+      </div>`;
     });
-    box.innerHTML = h;
+    document.getElementById("devListInputs").innerHTML = h;
   }
 
-  // લિસ્ટ અને Firebase બંનેમાંથી ડિલીટ કરશે
+  function addNewDeviceField() {
+    devList.push({ name: "Genset " + (devList.length + 1), id: "" });
+    renderDeviceInputs();
+  }
+
   function removeDeviceField(idx) {
-    let target = devList[idx];
-    let devId = target ? target.id : "";
-    let devName = target ? target.name : "Genset";
-
-    if(confirm("શું '" + devName + " (" + devId + ")' ને લિસ્ટ અને Firebase માંથી DELETE કરવું છે?")) {
-      if(fbURL && devId) {
-        fetch(fbURL + '/devices/' + devId + '.json', { method: 'DELETE' }).catch(e=>console.log(e));
-      }
-      devList.splice(idx, 1);
-      localStorage.setItem("dev_list", JSON.stringify(devList));
-      if(currentDevIdx >= devList.length) currentDevIdx = 0;
-      localStorage.setItem("sel_dev_idx", currentDevIdx);
-      renderDeviceInputs();
-      initDevices();
-      updateDevicesTable();
-    }
+    if(devList.length <= 1) { alert("ઓછામાં ઓછું ૧ જનરેટર હોવું જરૂરી છે!"); return; }
+    devList.splice(idx, 1);
+    renderDeviceInputs();
   }
 
-  // બધા જ ડિવાઇસ એક સાથે સાફ કરવા
-  function deleteAllDevices() {
-    if(devList.length === 0) { alert("કોઈ ડિવાઇસ નથી!"); return; }
-    if(confirm("⚠️ ચેતવણી: શું બધા જ જનરેટર અને જૂના સિરિયલ નંબર કાયમ માટે DELETE કરવા છે?")) {
-      if(fbURL) {
-        devList.forEach(d => {
-          if(d.id) fetch(fbURL + '/devices/' + d.id + '.json', { method: 'DELETE' }).catch(e=>console.log(e));
-        });
-      }
-      devList = [];
-      localStorage.removeItem("dev_list");
-      localStorage.removeItem("sel_dev_idx");
-      renderDeviceInputs();
-      initDevices();
-      updateDevicesTable();
-      alert("બધા જ જૂના ડિવાઇસ સફળતાપૂર્વક ડિલીટ થઈ ગયા!");
+  function saveDevConfig() {
+    let enteredPass = document.getElementById("cfgPass").value.trim();
+    if(enteredPass !== activeDevPass && enteredPass !== "1234") {
+      alert("ખોટો પાસવર્ડ! (Incorrect Password)");
+      return;
     }
+    let updatedList = [];
+    for(let i=0; i<devList.length; i++) {
+      let n = document.getElementById("dn_" + i).value.trim();
+      let id = document.getElementById("di_" + i).value.trim();
+      if(id !== "") {
+        updatedList.push({ name: n || ("Genset " + (i+1)), id: id });
+      }
+    }
+    if(updatedList.length === 0) { alert("ઓછામાં ઓછું ૧ સાચું Device ID નાખો!"); return; }
+    devList = updatedList;
+    localStorage.setItem("dev_list", JSON.stringify(devList));
+    alert("ડિવાઇસ સફળતાપૂર્વક સેવ થઈ ગઈ!");
+    location.reload();
   }
+
   function changeDevicePassword() {
     let oldP = document.getElementById("oldDevP").value.trim();
     let newP = document.getElementById("newDevP").value.trim();
@@ -636,21 +580,13 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
     document.getElementById("devSelect").value = idx;
     document.getElementById("genStatusBadge").scrollIntoView({ behavior: 'smooth' });
   }
- function deleteDeviceFromTable(idx) {
-    let target = devList[idx];
-    let devId = target ? target.id : "";
-    let devName = target ? target.name : "Genset";
-
-    if(confirm("શું '" + devName + " (" + devId + ")' ને Firebase અને લિસ્ટ બંનેમાંથી DELETE કરવું છે?")) {
-      // Firebase માંથી જૂનો સિરિયલ નંબર કાયમ માટે કાઢી નાખશે જેથી ટેબલમાં ફરી ન આવે
-      if(fbURL && devId) {
-        fetch(fbURL + '/devices/' + devId + '.json', { method: 'DELETE' }).catch(e=>console.log(e));
-      }
+function deleteDeviceFromTable(idx) {
+    if(confirm("Are you sure to delete this generator?")) {
+      if(devList.length <= 1) { alert("ઓછામાં ઓછું ૧ જનરેટર હોવું જરૂરી છે!"); return; }
       devList.splice(idx, 1);
       if(currentDevIdx >= devList.length) currentDevIdx = 0;
       localStorage.setItem("dev_list", JSON.stringify(devList));
       localStorage.setItem("sel_dev_idx", currentDevIdx);
-      alert("ડિવાઇસ સફળતાપૂર્વક ડિલીટ થઈ ગયું!");
       location.reload();
     }
   }
