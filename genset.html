@@ -590,22 +590,22 @@ function deleteDeviceFromTable(idx) {
       location.reload();
     }
   }
-   setInterval(() => {
+ // જૂનો ૮ સેકન્ડ વાળો કોડ કાઢીને આ નવો ૨૫ સેકન્ડ વાળો કોડ મુકવો:
+  setInterval(() => {
     if (!document.hidden) updateDevicesTable();
-  }, 8000);
+  }, 15000);
   setTimeout(updateDevicesTable, 1000);
 
-  // ૨. લાઈવ ડેટા હવે દર ૪ સેકન્ડે (૪૦૦૦ ms) જ ફેચ થશે અને જો મોબાઈલ સ્ક્રીન લૉક હોય તો ફેચિંગ બંધ રહેશે
   setInterval(() => {
-   if (document.hidden) return; // જો ટેબ બેકગ્રાઉન્ડમાં હોય કે સ્ક્રીન લૉક હોય તો ક્વોટા નહીં બગડે
+    if (document.hidden) return; // સ્ક્રીન લૉક હોય તો ડેટા ડાઉનલોડ અટકશે
 
-   let activeDevId = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
-   if(!activeDevId || !fbURL) return;
+    let activeDevId = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+    if(!activeDevId || !fbURL) return;
 
-   fetch(fbURL + '/devices/' + activeDevId + '/live.json')
-    .then(r=>r.json())
-    .then(d=>{
-      if(!d) return;
+    fetch(fbURL + '/devices/' + activeDevId + '/live.json')
+     .then(r=>r.json())
+     .then(d=>{
+       if(!d) return;
       // document.getElementById('vr').innerText=d.vr+'V'; document.getElementById('br_v').style.width=(d.vr/5)+'%'; 
       if(d.devPass) { activeDevPass = d.devPass; }
       document.getElementById('vr').innerText = (d.vr !== undefined ? d.vr : '0') + 'V'; 
