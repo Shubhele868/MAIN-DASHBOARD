@@ -112,6 +112,7 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
    <div id="devListInputs" style="max-height: 250px; overflow-y: auto;"></div>
    <div style="text-align:center; margin: 10px 0;">
      <button type="button" class="btn" style="background:#0984e3; width: auto; padding: 6px 15px; font-size: 13px;" onclick="addNewDeviceField()">➕ ADD NEW GENERATOR</button>
+     <button type="button" class="btn" style="background:#d63031; width: auto; padding: 6px 15px; font-size: 13px; margin-left: 5px;" onclick="deleteAllDevices()">🗑 DELETE ALL</button>
    </div>
    <div style="border-top:1px solid #444; padding-top:10px; text-align:center;">
      <input type="password" id="cfgPass" placeholder="Admin PIN (Default 1234)" style="width:50%; text-align:center; padding:8px; display:inline-block; vertical-align:middle;">
@@ -453,27 +454,37 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
     document.getElementById("cfgModal").style.display = "block";
   }
 
-  function renderDeviceInputs() {
-    let h = "";
-    devList.forEach((d, i) => {
-      h += `<div style="border-bottom:1px solid #333; padding:6px 0; display:flex; align-items:center; gap:5px;">
-        <input id="dn_${i}" value="${d.name}" placeholder="Machine Name" style="width:35%; padding:6px;">
-        <input id="di_${i}" value="${d.id}" placeholder="Device Serial ID" style="width:50%; padding:6px;">
-        <button type="button" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 10px; cursor:pointer;" onclick="removeDeviceField(${i})">✖</button>
-      </div>`;
-    });
-    document.getElementById("devListInputs").innerHTML = h;
-  }
-
-  function addNewDeviceField() {
-    devList.push({ name: "Genset " + (devList.length + 1), id: "" });
-    renderDeviceInputs();
-  }
-
+  // ૧. સિંગલ ડિવાઇસ લિસ્ટ અને Firebase બંનેમાંથી કાયમ માટે ડિલીટ કરશે
   function removeDeviceField(idx) {
-    if(devList.length <= 1) { alert("ઓછામાં ઓછું ૧ જનરેટર હોવું જરૂરી છે!"); return; }
-    devList.splice(idx, 1);
-    renderDeviceInputs();
+    let target = devList[idx];
+    let devId = target ? target.id : "";
+    let devName = target ? target.name : "Genset";
+
+    if(confirm("શું '" + devName + " (" + devId + ")' ને લિસ્ટ અને Firebase માંથી કાયમ માટે DELETE કરવું છે?")) {
+      // Firebase માંથી પણ જૂનો સિરિયલ નંબર કાયમ માટે કાઢી નાખશે
+      if(fbURL && devId) {
+        fetch(fbURL + '/devices/' + devId + '.json', { method: 'DELETE' }).catch(e=>console.log(e));
+      }
+      devList.splice(idx, 1);
+      renderDeviceInputs();
+    }
+  }
+
+  // ૨. બધા જ ડિવાઇસ એક સાથે સાફ કરવા માટેનું નવું ફંક્શન
+  function deleteAllDevices() {
+    if(devList.length === 0) { alert("કોઈ ડિવાઇસ નથી!"); return; }
+    if(confirm("⚠️ ચેતવણી: શું બધા જ જનરેટર અને જૂના સિરિયલ નંબર Firebase તેમજ લિસ્ટમાંથી કાયમ માટે DELETE કરવા છે?")) {
+      if(fbURL) {
+        devList.forEach(d => {
+          if(d.id) fetch(fbURL + '/devices/' + d.id + '.json', { method: 'DELETE' }).catch(e=>console.log(e));
+        });
+      }
+      devList = [];
+      localStorage.removeItem("dev_list");
+      localStorage.removeItem("sel_dev_idx");
+      alert("બધા જ જૂના ડિવાઇસ સફળતાપૂર્વક ડિલીટ થઈ ગયા!");
+      location.reload();
+    }
   }
 
   function saveDevConfig() {
@@ -490,13 +501,11 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
         updatedList.push({ name: n || ("Genset " + (i+1)), id: id });
       }
     }
-    if(updatedList.length === 0) { alert("ઓછામાં ઓછું ૧ સાચું Device ID નાખો!"); return; }
     devList = updatedList;
     localStorage.setItem("dev_list", JSON.stringify(devList));
-    alert("ડિવાઇસ સફળતાપૂર્વક સેવ થઈ ગઈ!");
+    alert("ડિવાઇસ લિસ્ટ સફળતાપૂર્વક અપડેટ થઈ ગયું!");
     location.reload();
   }
-
   function changeDevicePassword() {
     let oldP = document.getElementById("oldDevP").value.trim();
     let newP = document.getElementById("newDevP").value.trim();
@@ -580,13 +589,21 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
     document.getElementById("devSelect").value = idx;
     document.getElementById("genStatusBadge").scrollIntoView({ behavior: 'smooth' });
   }
-function deleteDeviceFromTable(idx) {
-    if(confirm("Are you sure to delete this generator?")) {
-      if(devList.length <= 1) { alert("ઓછામાં ઓછું ૧ જનરેટર હોવું જરૂરી છે!"); return; }
+ function deleteDeviceFromTable(idx) {
+    let target = devList[idx];
+    let devId = target ? target.id : "";
+    let devName = target ? target.name : "Genset";
+
+    if(confirm("શું '" + devName + " (" + devId + ")' ને Firebase અને લિસ્ટ બંનેમાંથી DELETE કરવું છે?")) {
+      // Firebase માંથી જૂનો સિરિયલ નંબર કાયમ માટે કાઢી નાખશે જેથી ટેબલમાં ફરી ન આવે
+      if(fbURL && devId) {
+        fetch(fbURL + '/devices/' + devId + '.json', { method: 'DELETE' }).catch(e=>console.log(e));
+      }
       devList.splice(idx, 1);
       if(currentDevIdx >= devList.length) currentDevIdx = 0;
       localStorage.setItem("dev_list", JSON.stringify(devList));
       localStorage.setItem("sel_dev_idx", currentDevIdx);
+      alert("ડિવાઇસ સફળતાપૂર્વક ડિલીટ થઈ ગયું!");
       location.reload();
     }
   }
