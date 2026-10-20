@@ -440,8 +440,8 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
     });
   }
   initDevices();
-
-  let activeDevPass = "1234";
+/////////////////////////////
+let activeDevPass = localStorage.getItem("dev_mgr_pass") || "1234";
 
   function switchDevice(idx) {
     currentDevIdx = parseInt(idx);
@@ -470,15 +470,20 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
     renderDeviceInputs();
   }
 
-  function removeDeviceField(idx) {
-    if(devList.length <= 1) { alert("ઓછામાં ઓછું ૧ જનરેટર હોવું જરૂરી છે!"); return; }
-    devList.splice(idx, 1);
+ function removeDeviceField(idx) {
+    // છેલ્લું ૧ મશીન હોય તો પણ એરર નહીં આવે, ખાલી થઈ જશે
+    if(devList.length <= 1) {
+      devList = [{ name: "Genset 1", id: "" }];
+    } else {
+      devList.splice(idx, 1);
+    }
     renderDeviceInputs();
   }
 
   function saveDevConfig() {
     let enteredPass = document.getElementById("cfgPass").value.trim();
-    if(enteredPass !== activeDevPass && enteredPass !== "1234") {
+    // માત્ર નવો પાસવર્ડ જ ચાલશે, જૂનો 1234 ક્યારેય નહીં ચાલે
+    if(enteredPass !== activeDevPass) {
       alert("ખોટો પાસવર્ડ! (Incorrect Password)");
       return;
     }
@@ -490,32 +495,37 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
         updatedList.push({ name: n || ("Genset " + (i+1)), id: id });
       }
     }
-    if(updatedList.length === 0) { alert("ઓછામાં ઓછું ૧ સાચું Device ID નાખો!"); return; }
+    if(updatedList.length === 0) {
+      updatedList = [{ name: "Genset 1", id: "" }];
+    }
     devList = updatedList;
     localStorage.setItem("dev_list", JSON.stringify(devList));
-    alert("ડિવાઇસ સફળતાપૂર્વક સેવ થઈ ગઈ!");
+    alert("ડિવાઇસ સફળતાપૂર્વક અપડેટ થઈ ગઈ!");
     location.reload();
   }
 
   function changeDevicePassword() {
     let oldP = document.getElementById("oldDevP").value.trim();
     let newP = document.getElementById("newDevP").value.trim();
-    if(oldP !== activeDevPass && oldP !== "1234") { alert("જૂનો પાસવર્ડ ખોટો છે!"); return; }
+    // જૂનો પાસવર્ડ 1234 હવે સ્વીકારશે નહીં, હાલનો સાચો જ જોશે
+    if(oldP !== activeDevPass) { alert("જૂનો પાસવર્ડ ખોટો છે!"); return; }
     if(newP.length < 4) { alert("નવો પાસવર્ડ ઓછામાં ઓછો 4 અક્ષરનો હોવો જોઈએ!"); return; }
     let actDev = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
     if(!actDev || !fbURL) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
 
+    // Firebase અને ESP32 Preferences માટે કમાન્ડ
     fetch(fbURL + '/devices/' + actDev + '/cmd.json', {
       method: 'PUT',
       body: JSON.stringify({ action: "changeDevPass", newPass: newP, time: Date.now() })
     }).then(() => {
-      alert("પાસવર્ડ સફળતાપૂર્વક બદલાઈ ગયો! નવો પાસવર્ડ: " + newP);
+      // બ્રાઉઝરની પર્મેનન્ટ મેમરીમાં નવો પાસવર્ડ સેવ થશે
       activeDevPass = newP;
+      localStorage.setItem("dev_mgr_pass", newP);
+      alert("પાસવર્ડ સફળતાપૂર્વક બદલાઈ ગયો! નવો પાસવર્ડ: " + newP);
       document.getElementById("oldDevP").value = "";
       document.getElementById("newDevP").value = "";
     }).catch(e => alert("Error: " + e));
   }
-
  // લાઈવ ટેબલ અપડેટ કરવાનું ફંક્શન (ONLINE / OFFLINE / LIVE IP)
   function updateDevicesTable() {
     if(!fbURL || devList.length === 0) return;
@@ -579,26 +589,42 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
     switchDevice(idx);
     document.getElementById("devSelect").value = idx;
     document.getElementById("genStatusBadge").scrollIntoView({ behavior: 'smooth' });
-  }
-function deleteDeviceFromTable(idx) {
+  } 
+ function deleteDeviceFromTable(idx) {
     if(confirm("Are you sure to delete this generator?")) {
-      if(devList.length <= 1) { alert("ઓછામાં ઓછું ૧ જનરેટર હોવું જરૂરી છે!"); return; }
-      devList.splice(idx, 1);
-      if(currentDevIdx >= devList.length) currentDevIdx = 0;
+      if(devList.length <= 1) {
+        devList = [{ name: "Genset 1", id: "" }];
+        currentDevIdx = 0;
+      } else {
+        devList.splice(idx, 1);
+        if(currentDevIdx >= devList.length) currentDevIdx = 0;
+      }
       localStorage.setItem("dev_list", JSON.stringify(devList));
       localStorage.setItem("sel_dev_idx", currentDevIdx);
       location.reload();
     }
   }
- // જૂનો ૮ સેકન્ડ વાળો કોડ કાઢીને આ નવો ૨૫ સેકન્ડ વાળો કોડ મુકવો:
+
+  // મોબાઈલ અને લેપટોપ સ્ક્રીન OFF / લૉક ડિટેક્ટર
+  let isAppActive = true;
+  document.addEventListener("visibilitychange", () => {
+    isAppActive = (document.visibilityState === "visible" && !document.hidden);
+  });
+  window.addEventListener("pagehide", () => { isAppActive = false; });
+  window.addEventListener("pageshow", () => { isAppActive = true; });
+  window.addEventListener("blur", () => { isAppActive = false; });
+  window.addEventListener("focus", () => { isAppActive = true; });
+
+  // ૧૫ સેકન્ડ વાળું ટેબલ ટાઈમર (સ્ક્રીન OFF હોય ત્યારે બંધ રહેશે)
   setInterval(() => {
-    if (!document.hidden) updateDevicesTable();
+    if (!isAppActive || document.hidden || document.visibilityState === "hidden") return;
+    updateDevicesTable();
   }, 15000);
   setTimeout(updateDevicesTable, 1000);
 
+  // લાઈવ ડેટા ટાઈમર (સ્ક્રીન OFF થતાં ડેટા ડાઉનલોડ 100% રોકાઈ જશે)
   setInterval(() => {
-    if (document.hidden) return; // સ્ક્રીન લૉક હોય તો ડેટા ડાઉનલોડ અટકશે
-
+    if (!isAppActive || document.hidden || document.visibilityState === "hidden") return;
     let activeDevId = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
     if(!activeDevId || !fbURL) return;
 
