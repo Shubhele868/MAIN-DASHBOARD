@@ -209,6 +209,17 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
   <div class="st-item">ENGINE TEMP: <span id="stTemp">--</span></div>
   <div class="st-item">BELT STATUS: <span id="stBelt">--</span></div>
  </div>
+
+ <!-- START NEW CODE: બેટરી સ્ટેટસ બોક્સની ઉપર પાવર રિલે કંટ્રોલ બોક્સ -->
+ <div class="box" style="border-top: 8px solid #00ffcc; background: linear-gradient(145deg, #16222a, #1a1a1a); text-align: center;">
+   <h3 style="color:#00ffcc; margin-top:0;">⚡ POWER RELAY CONTROL</h3>
+   <div style="font-size: 14px; color: #aaa; margin-bottom: 10px;">Bypass GEB Mains & Keep Power Relay ON</div>
+   <label style="color:#ffffff; font-weight:bold; font-size:18px; cursor:pointer; display:inline-flex; align-items:center; gap:10px;">
+     <input type="checkbox" id="powerBypassBox" onchange="togglePowerBypass(this.checked)" style="width:25px; height:25px; cursor:pointer; accent-color: #00ffcc;"> 
+     <span id="bypassTxt" style="color:#00ffcc;">BYPASS OFF (AUTO)</span>
+   </label>
+ </div>
+
 <div class="box">
   <h3 style="color:#00ff00">BATTERY STATUS</h3>
   <div class="batt-ring" id="br" style="--v: 0">
@@ -669,6 +680,18 @@ let activeDevPass = localStorage.getItem("dev_mgr_pass") || "1234";
     document.getElementById('bp').innerText=d.bt+'%';
     document.getElementById('br').style.setProperty('--v', d.bt);
     document.getElementById('bv').innerText=d.bv+'V DC';
+     // પાવર બાયપાસ ચેકબોક્સ અને ટેક્સ્ટ અપડેટ કરવા માટે
+    if(d.pBypass !== undefined) {
+      document.getElementById('powerBypassBox').checked = d.pBypass;
+      let bTxt = document.getElementById('bypassTxt');
+      if(d.pBypass) {
+        bTxt.innerText = "BYPASS ON (ALWAYS ON)";
+        bTxt.style.color = "#00ff00";
+      } else {
+        bTxt.innerText = "BYPASS OFF (AUTO)";
+        bTxt.style.color = "#ffcc00";
+      }
+    }
     let dot = document.getElementById('chgDot');
     let txt = document.getElementById('chgTxt'); 
     let src = document.getElementById('chgSrc');  
@@ -981,6 +1004,15 @@ function toggleGenLock(val) {
         method: 'PUT',
         body: JSON.stringify({ action: "setGenLock", val: (val ? 1 : 0), time: Date.now() })
       }).then(() => alert("Generator " + (val ? "LOCKED (Engine Start Blocked!)" : "UNLOCKED (Normal Mode)")));
+    }
+  }
+  function togglePowerBypass(val) {
+    let actDev = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+    if(actDev && fbURL) {
+      fetch(fbURL + '/devices/' + actDev + '/cmd.json', {
+        method: 'PUT',
+        body: JSON.stringify({ action: "powerBypass", val: (val ? 1 : 0), time: Date.now() })
+      }).then(() => console.log("Power Bypass toggled: " + val));
     }
   }
   function resetCnt(){
