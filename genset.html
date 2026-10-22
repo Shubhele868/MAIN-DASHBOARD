@@ -350,7 +350,15 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
      <label style="color:#ff3333; font-weight:bold; font-size:18px;">
        <input type="checkbox" id="mLock" onchange="lockMode(this.checked)" style="width:25px; height:25px; vertical-align:middle;"> 
        MANUAL LOCK (No Auto Mode)
+     </label> 
+     </div> 
+      <!-- નવું બીજું બોક્સ: mLock ની બહાર સ્વતંત્ર રીતે મૂકવું -->
+   <div style="border:2px solid #00d4ff; padding:10px; margin-bottom:10px; border-radius:8px; background:#1a1a1a; text-align:left;">
+     <label style="color:#00d4ff; font-weight:bold; font-size:17px; cursor:pointer;">
+       <input type="checkbox" id="bpAutoLockBox" onchange="toggleBypassAutoLockFirebase(this.checked)" style="width:25px; height:25px; vertical-align:middle;"> 
+       🔒 LOCK POWER BYPASS IN AUTO MODE
      </label>
+     <div style="font-size:12px; color:#aaa; margin-top:4px;">(આ ટીક હશે તો AUTO મોડમાં પાવર બાયપાસ કામ નહીં કરે)</div>
    </div>
     <div style="border:2px solid #e74c3c; padding:10px; margin-bottom:10px; border-radius:8px; background:#2c0b0e; text-align:left;">
      <label style="color:#ff4757; font-weight:bold; font-size:18px;">
@@ -358,6 +366,7 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
        🔒 GENERATOR LOCK (ENGINE START OFF)
      </label>
    </div>
+
    <div style="overflow-x:auto;">
     <table style="width:100%; border-collapse: collapse; margin-top:15px; background:#1a1a1a; border-radius:8px;">
       <tr style="color:#aaa; font-size:12px; border-bottom:1px solid #444;">
@@ -692,6 +701,20 @@ let activeDevPass = localStorage.getItem("dev_mgr_pass") || "1234";
         bTxt.style.color = "#ffcc00";
       }
     }
+     if(d.bpALock !== undefined) {
+      let lockBox = document.getElementById('bpAutoLockBox');
+      if(lockBox) lockBox.checked = d.bpALock;
+      let pBox = document.getElementById('powerBypassBox');
+      if(pBox) {
+        if(d.bpALock && d.auto) {
+          pBox.disabled = true;
+          pBox.style.cursor = "not-allowed";
+        } else {
+          pBox.disabled = false;
+          pBox.style.cursor = "pointer";
+        }
+      }
+    }
     let dot = document.getElementById('chgDot');
     let txt = document.getElementById('chgTxt'); 
     let src = document.getElementById('chgSrc');  
@@ -863,7 +886,7 @@ if(d.wfName) document.getElementById('curWifi').innerText = d.wfName;
       let htm = "";
       d.logs.forEach(l => {
         if(l.dt && l.dt !== "") {
-          htm += `<tr><td>${l.dt}</td><td style="color:#00ff00; font-weight:bold;">${l.rt}</td><td>${l.on}</td><td>${l.off}</td></tr>`;
+            htm += `<tr><td>${l.dt}</td><td style="color:#00ff00; font-weight:bold;">${l.rt}</td><td>${l.on}</td><td>${l.off}</td></tr>`;
         }
       });
       document.getElementById('weekBody').innerHTML = htm;
@@ -1006,7 +1029,22 @@ function toggleGenLock(val) {
       }).then(() => alert("Generator " + (val ? "LOCKED (Engine Start Blocked!)" : "UNLOCKED (Normal Mode)")));
     }
   }
+ function toggleBypassAutoLockFirebase(val) {
+    let actDev = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
+    if(actDev && fbURL) {
+      fetch(fbURL + '/devices/' + actDev + '/cmd.json', {
+        method: 'PUT',
+        body: JSON.stringify({ action: "setBypassAutoLock", val: (val ? 1 : 0), time: Date.now() })
+      }).then(() => alert("Bypass Auto Lock: " + (val ? "ENABLED (LOCKED)" : "DISABLED (UNLOCKED)")));
+    }
+  }
   function togglePowerBypass(val) {
+    let pBox = document.getElementById('powerBypassBox');
+    if (pBox && pBox.disabled) {
+      alert("⚠ AUTO મોડમાં પાવર બાયપાસ લોક કરેલ છે! Calibration માંથી અનલોક કરો.");
+      pBox.checked = !val;
+      return;
+    }
     let actDev = devList[currentDevIdx] ? devList[currentDevIdx].id : "";
     if(actDev && fbURL) {
       fetch(fbURL + '/devices/' + actDev + '/cmd.json', {
