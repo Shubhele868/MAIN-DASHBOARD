@@ -1123,20 +1123,38 @@
                 connectFirebase();
             }
         };
-        // 🛡️ સ્ક્રીન લૉક કે ટેબ બેકગ્રાઉન્ડમાં હોય ત્યારે Firebase ડેટા વપરાશ અટકાવવો
+        // 🚀 સ્ક્રીન બંધ (Sleep) થાય અથવા લેપટોપ/મોબાઈલ લોક થાય ત્યારે પણ કનેક્શન જીવંત રાખતું હાર્ટબીટ ફંક્શન
+        let heartbeatInterval;
+        function startBackgroundHeartbeat() {
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            heartbeatInterval = setInterval(function() {
+                if (formattedSN) {
+                    db.ref("devices/" + formattedSN + "/live/serverTime").set(firebase.database.ServerValue.TIMESTAMP);
+                }
+            }, 20000); // દર ૨૦ સેકન્ડે બેકગ્રાઉન્ડ પિંગ
+        }
+
+        // પેજ લોડ વખતે (બધા જ ફંક્શન્સ એક જ જગ્યાએ સુરક્ષિત રીતે લોડ થશે)
+        window.onload = function() {
+            var saved = localStorage.getItem("my_device_sn") || (savedDevices.length > 0 ? savedDevices[0].sn : "");
+            renderDeviceList(saved);
+            monitorAllDevicesStatus();
+            if(saved) {
+                document.getElementById("custSN").value = saved;
+                connectFirebase();
+            }
+            startBackgroundHeartbeat(); // 👈 બેકગ્રાઉન્ડ સ્લીપ પ્રિવેન્શન શરૂ
+        };
+
+        // 🛡️ સ્ક્રીન લૉક કે ટેબ બેકગ્રાઉન્ડમાં હોય ત્યારે મેમરી સેવિંગ અને ઓટો-રીકનેક્ટ
         document.addEventListener("visibilitychange", function() {
             if (document.hidden) {
-                // જો સ્ક્રીન બંધ કે ટેબ બેકગ્રાઉન્ડમાં જાય તો લાઈવ રીડિંગ બંધ કરો (ડેટા બચશે)
-                if (liveRef) {
-                    liveRef.off();
-                }
                 if (waveAnim) {
                     cancelAnimationFrame(waveAnim);
                 }
             } else {
-                // સ્ક્રીન પાછી ચાલુ થાય ત્યારે લાઈવ કનેક્શન ફરી ચાલુ કરો
                 var curSN = document.getElementById("custSN").value.trim();
-                if (curSN) {
+                if (curSN && (!liveRef || !formattedSN)) {
                     connectFirebase();
                 }
             }
