@@ -102,11 +102,12 @@
         <input type="password" id="inputPass" placeholder="ડિવાઇસ પાસવર્ડ" style="flex:1;min-width:100px;padding:8px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;font-size:13px;">
         <button type="button" onclick="saveNewDevice()" style="padding:8px 15px;background:#00bcd4;color:#000;font-weight:bold;border:none;border-radius:6px;cursor:pointer;">➕ Add / Save</button>
       </div> 
-
-      <!-- પાસવર્ડ બદલવા માટેનું સેક્શન -->
+        
+        <!-- પાસવર્ડ બદલવા માટેનું સેક્શન (જૂનો પાસવર્ડ + નવો પાસવર્ડ) -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#131d27;padding:8px;border-radius:6px;border:1px solid #333;">
         <span style="font-size:12px;color:#ffb800;font-weight:bold;">🔑 Change Password:</span>
-        <input type="password" id="newDevPass" placeholder="નવો પાસવર્ડ નાખો" style="flex:1;min-width:130px;padding:6px;background:#252632;color:#fff;border:1px solid #555;border-radius:6px;font-size:12px;">
+        <input type="password" id="oldDevPass" placeholder="જૂનો પાસવર્ડ નાખો" style="flex:1;min-width:110px;padding:6px;background:#252632;color:#fff;border:1px solid #ff9800;border-radius:6px;font-size:12px;">
+        <input type="password" id="newDevPass" placeholder="નવો પાસવર્ડ નાખો" style="flex:1;min-width:110px;padding:6px;background:#252632;color:#fff;border:1px solid #00bcd4;border-radius:6px;font-size:12px;">
         <button type="button" onclick="changeDevicePassword()" style="padding:6px 12px;background:#ff9800;color:#000;font-weight:bold;border:none;border-radius:6px;cursor:pointer;font-size:12px;">💾 Update Password</button>
       </div>
 
@@ -653,28 +654,43 @@ async function renderDeviceTable() {
     fetchFirebaseData();
   }
 
-  // --- ૨. પાસવર્ડ બદલવો (૪ કે ૮ આંકડા) - ESP32 Preferences અને Firebase માં કાયમી સેવ થશે ---
+  // --- ૨. પાસવર્ડ બદલવો (પહેલાં જૂનો પાસવર્ડ ચેક થશે, પછી જ નવો સેવ થશે) ---
   async function changeDevicePassword() {
     if (!activeSerial) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
+    
+    var oldP = document.getElementById('oldDevPass').value.trim();
     var newP = document.getElementById('newDevPass').value.trim();
-    if (!newP) { alert("કૃપા કરીને નવો પાસવર્ડ દાખલ કરો!"); return; }
-    if (newP.length < 4) { alert("પાસવર્ડ ઓછામાં ઓછો ૪ આંકડાનો હોવો જોઈએ!"); return; }
+
+    if (!oldP) { alert("કૃપા કરીને પહેલાં જૂનો પાસવર્ડ નાખો!"); return; }
+    if (!newP) { alert("કૃપા કરીને નવો પાસવર્ડ નાખો!"); return; }
+    if (newP.length < 4) { alert("નવો પાસવર્ડ ઓછામાં ઓછો ૪ આંકડાનો હોવો જોઈએ!"); return; }
 
     try {
-      // ૧. ESP32 ને Preferences Library માં કાયમી સેવ કરવા કમાન્ડ મોકલો
+      // ૧. Firebase માંથી ડિવાઇસનો વર્તમાન સાચો પાસવર્ડ ચકાસો
+      var res = await fetch(FIREBASE_URL + "/devices/" + activeSerial + ".json");
+      var d = await res.json();
+      var currentActualPass = (d && d.device_pass) ? d.device_pass : "1234";
+
+      if (oldP !== currentActualPass) {
+        alert("❌ જૂનો પાસવર્ડ ખોટો છે! પાસવર્ડ બદલાશે નહીં.");
+        return;
+      }
+
+      // ૨. જૂનો પાસવર્ડ સાચો છે, હવે ESP32 ને કમાન્ડ મોકલો (ESP32 Preferences માં સેવ કરશે)
       await fetch(FIREBASE_URL + "/devices/" + activeSerial + "/cmd.json", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "SET_DEV_PASS", pass: newP, timeStamp: Date.now() })
+        body: JSON.stringify({ action: "SET_DEV_PASS", old_pass: oldP, new_pass: newP, pass: newP, timeStamp: Date.now() })
       });
 
-      // ૨. Firebase માં પણ તરત અપડેટ કરો
+      // ૩. Firebase ક્લાઉડ પર પણ નવો પાસવર્ડ અપડેટ કરો
       await fetch(FIREBASE_URL + "/devices/" + activeSerial + ".json", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ device_pass: newP })
       });
-      
+
+      // ૪. બ્રાઉઝરની લોકલ મેમરીમાં પાસવર્ડ અપડેટ કરો
       for (var i = 0; i < deviceList.length; i++) {
         if (deviceList[i].serial === activeSerial) {
           deviceList[i].pass = newP;
@@ -682,10 +698,12 @@ async function renderDeviceTable() {
         }
       }
       saveToStorage();
+
+      document.getElementById('oldDevPass').value = '';
       document.getElementById('newDevPass').value = '';
-      alert("✅ નવો પાસવર્ડ (" + newP + ") ESP32 Preferences મેમરી અને Firebase માં કાયમી સેવ થઈ ગયો!");
+      alert("✅ પાસવર્ડ સફળતાપૂર્વક બદલાઈ ગયો! ESP32 ની કાયમી મેમરીમાં સેવ થઈ ગયો છે.");
     } catch (e) {
-      alert("❌ પાસવર્ડ અપડેટ કરવામાં ભૂલ આવી!");
+      alert("❌ પાસવર્ડ બદલવામાં ભૂલ આવી! કનેક્શન તપાસો.");
     }
   }
 
@@ -878,6 +896,33 @@ async function renderDeviceTable() {
     liveTimer = setInterval(fetchFirebaseData, 2000);
   }
 
+ // --- સ્માર્ટ સ્ક્રીન ડિટેક્શન: સ્ક્રીન બંધ / મિનિમાઇઝ થાય ત્યારે Firebase ડાઉનલોડ ૧૦૦% બંધ ---
+  document.addEventListener("visibilitychange", function() {
+    if (document.hidden) {
+      // ૧. જ્યારે મોબાઈલની સ્ક્રીન લોક/ઓફ થાય અથવા PC માં ટેબ બદલાય
+      clearInterval(liveTimer);
+      liveTimer = null;
+      console.log("⏸️ Screen Off / Tab Hidden: Firebase ડેટા ડાઉનલોડ સંપૂર્ણ બંધ થયો (0% Data Usage).");
+    } else {
+      // ૨. જ્યારે સ્ક્રીન પાછી ચાલુ થાય ત્યારે જ ડેટા ડાઉનલોડ ફરી શરૂ થશે
+      if (autoRef && !liveTimer) {
+        console.log("▶️ Screen On: Firebase ડેટા ડાઉનલોડ ફરી ચાલુ થયો.");
+        startSimulation();
+      }
+    }
+  });
+
+  // વિન્ડો બ્લર (Window Blur/Focus) સેફ્ટી ગાર્ડ
+  window.addEventListener("blur", function() {
+    clearInterval(liveTimer);
+    liveTimer = null;
+  });
+  window.addEventListener("focus", function() {
+    if (autoRef && !liveTimer) {
+      startSimulation();
+    }
+  });
+ 
   // --- બટન અને વોઇસ કમાન્ડ વડે મોટર START / STOP કરવાનો ક્લાઉડ કમાન્ડ ---
   async function setMotor(state) {
     if (!activeSerial) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
