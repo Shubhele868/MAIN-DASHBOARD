@@ -893,10 +893,31 @@
                     document.getElementById('mBill').textContent = '₹ ' + (data.mBill || 0).toFixed(2);
                     document.getElementById('dUsage').textContent = (data.dUsage || 0).toFixed(2);
                     document.getElementById('lBill').textContent = '₹ ' + (data.lBill || 0).toFixed(2);
-                    if(data.b_start) document.getElementById('billStartDate').value = data.b_start;
-                    if(data.b_end) document.getElementById('billEndDate').value = data.b_end;
-                    if(data.b_etime) document.getElementById('billEndTime').value = data.b_etime;
-                    if(data.b_eampm) document.getElementById('billEndAmpm').value = data.b_eampm; 
+                    function formatForDateInput(dStr) {
+                        if (!dStr) return '';
+                        let p = dStr.split(/[\/\-]/);
+                        if (p.length === 3) {
+                            if (p[0].length === 4) return `${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;
+                            if (p[2].length === 4) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+                        }
+                        return '';
+                    }
+                    const fbStartDateInput = document.getElementById('billStartDate');
+                    const fbEndDateInput = document.getElementById('billEndDate');
+                    
+                    // જો યુઝર નવી તારીખ સિલેક્ટ કરતો હોય તો સેવ ન થાય ત્યાં સુધી Firebase ઓવરરાઈટ નહીં કરે
+                    if (!window.isDateEditingFb) {
+                        if (data.b_start) fbStartDateInput.value = formatForDateInput(data.b_start);
+                        if (data.b_end) fbEndDateInput.value = formatForDateInput(data.b_end);
+                        if (data.b_etime && document.activeElement !== document.getElementById('billEndTime')) {
+                            document.getElementById('billEndTime').value = data.b_etime;
+                        }
+                        if (data.b_eampm && document.activeElement !== document.getElementById('billEndAmpm')) {
+                            document.getElementById('billEndAmpm').value = data.b_eampm;
+                        }
+                    }
+                    fbStartDateInput.oninput = () => { window.isDateEditingFb = true; };
+                    fbEndDateInput.oninput = () => { window.isDateEditingFb = true; };
                     // ૫. સેટિંગ્સ ડિફોલ્ટ વેલ્યુ લોડિંગ
                      if (document.activeElement !== document.getElementById('quickPrice')) {
                         document.getElementById('quickPrice').value = data.unitPrice !== undefined ? data.unitPrice : 1.0;
@@ -1042,7 +1063,7 @@
                     document.getElementById('lBill').textContent = "₹ 0.00";
                     document.getElementById('billStartDate').value = "";
                     document.getElementById('billEndDate').value = "";
-
+                    window.isDateEditingFb = false;
                     alert("All Analytics Data Reset to 0 Successfully!");
                 }
             }
@@ -1096,11 +1117,18 @@
                 }
             }
         }
-          function saveBillingCycle() {
+          function saveBillingCycle() { 
             const s = document.getElementById('billStartDate').value;
             const e = document.getElementById('billEndDate').value;
             const tm = document.getElementById('billEndTime').value;
             const ampm = document.getElementById('billEndAmpm').value;
+
+            // જો કોઈ તારીખ કે સમય પસંદ કરવાનું ભૂલી જાય તો ભૂલથી ખાલી સેવ ન થાય તે માટે ચેક
+            if (!s || !e || !tm) {
+                alert("કૃપા કરીને Start Date, End Date અને Time પસંદ કરો!");
+                return;
+            }
+
             if(activeSerial) { 
                 rtdb.ref('/devices/' + activeSerial + '/control').update({ 
                     b_start: s, 
@@ -1108,6 +1136,7 @@
                     b_etime: tm,
                     b_eampm: ampm
                 }); 
+                window.isDateEditingFb = false; // સેવ થઈ ગયું, હવે નવો ડેટા આવી શકશે
                 alert("Billing Dates અને Time (AM/PM) સેવ થઈ ગયા!"); 
             }
         }
@@ -1246,7 +1275,7 @@
                 document.getElementById('mBill').textContent = '₹ ' + data.monthlyBill.toFixed(2);
                 document.getElementById('dUsage').textContent = data.todayUnits.toFixed(2);
                 document.getElementById('lBill').textContent = '₹ ' + data.lastBill.toFixed(2);  
-                 function toIsoDate(dStr) {
+                 function toIsoDate(dStr) { 
                     if(!dStr) return '';
                     let p = dStr.split(/[\/\-]/);
                     if(p.length === 3) {
@@ -1327,7 +1356,7 @@
             // ESP32 ના UPTIME_RESET_PASSWORD સાથે મેચ થશે
             if (pass === window.espUptimePass) {
                 if(activeSerial) rtdb.ref('/devices/' + activeSerial + '/control').update({ action: 'reset_uptime' });
-                alert("Uptime Reset થઈ ગયું!");
+              alert("Uptime Reset થઈ ગયું!");
                 closeOverlays();
             } else {
                 alert("ખોટો Uptime પાસવર્ડ!");
@@ -1335,11 +1364,17 @@
         }
         function toggleControlPermission() {
             const chk = document.getElementById('ctrlPermCheckbox').checked;
-            const pass = prompt("Enter Password to Change Permission:");
+            const pass = prompt("Enter Control/Settings Password to Change Permission:");
             if (pass !== null && pass !== "") {
-                if (activeSerial) {
-                    rtdb.ref('/devices/' + activeSerial + '/control').update({ set_ctrl_perm: chk, pass: pass });
-                    alert("Permission Updated!");
+                // પાસવર્ડ સાચો છે કે નહીં તે ચકાસવું
+                if (pass === window.espCtrlPass || pass === window.espSettingsPass) {
+                    if (activeSerial) {
+                        rtdb.ref('/devices/' + activeSerial + '/control').update({ set_ctrl_perm: chk, pass: pass });
+                        alert("Permission Updated Successfully!");
+                    }
+                } else {
+                    alert("ખોટો Password! Permission બદલાશે નહીં.");
+                    document.getElementById('ctrlPermCheckbox').checked = !chk;
                 }
             } else {
                 document.getElementById('ctrlPermCheckbox').checked = !chk;
@@ -1354,9 +1389,15 @@
             const newP = document.getElementById("newCtrlPassInput").value;
             if (!oldP || !newP) return alert("બંને ખાના ભરો!");
             if (newP.length < 4) return alert("નવો પાસવર્ડ ઓછામાં ઓછો 4 અક્ષરનો હોવો જોઈએ!");
+            // જૂનો પાસવર્ડ સાચો હોય તો જ નવો પાસવર્ડ સેવ થાય
+            if (oldP !== window.espCtrlPass && oldP !== window.espSettingsPass) {
+                alert("ખોટો જૂનો Control Password!");
+                return;
+            }
             if (activeSerial) {
                 rtdb.ref('/devices/' + activeSerial + '/control').update({ new_ctrl_pass: newP, pass: oldP });
-                alert("Control Password Updated!");
+                window.espCtrlPass = newP;
+                alert("Control Password Updated Successfully!");
                 document.getElementById("oldCtrlPassInput").value = "";
                 document.getElementById("newCtrlPassInput").value = "";
                 document.getElementById("ctrlPassChangeFields").style.display = "none";
