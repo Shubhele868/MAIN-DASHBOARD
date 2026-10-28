@@ -177,7 +177,12 @@ input{padding:10px; margin:5px; width:80%; background:#333; color:white; border:
 <div class="box" style="background: linear-gradient(145deg, #222, #1a1a1a); border: 2px solid #00ffcc; text-align: center;">
    <h3 style="color:#00ffcc; margin-top:0;">🎙 MULTILINGUAL VOICE CONTROL</h3>
    <p style="font-size:13px; color:#aaa; margin:5px 0;">(Supports Gujarati, Hindi & English)</p>
-   
+    <!-- ભાષા પસંદ કરવા માટેનું ડ્રોપડાઉન -->
+   <select id="voiceLangSelect" style="padding: 6px 12px; background: #333; color: #00ffcc; border: 1px solid #00ffcc; border-radius: 6px; font-weight: bold; margin-bottom: 8px;">
+     <option value="hi-IN" selected>हिन्दी (Hindi)</option>
+     <option value="gu-IN">ગુજરાતી (Gujarati)</option>
+     <option value="en-IN">English (India)</option>
+   </select><br>
    <button onclick="toggleVoiceRecording()" id="micBtn" style="background: #e74c3c; color: white; border: none; border-radius: 50%; width: 70px; height: 70px; font-size: 30px; cursor: pointer; box-shadow: 0 0 15px rgba(231,76,60,0.6); transition: 0.3s; margin: 10px 0;">🎙</button>
    
    <div id="voiceStatus" style="font-size: 15px; font-weight: bold; color: #ffcc00; margin-top: 5px;">Click Mic & Speak (e.g. Start / Gen On)</div>
@@ -1155,8 +1160,10 @@ function toggleGenLock(val) {
     }
 
     recognition = new SpeechRecognition();
-    recognition.lang = 'en-IN'; // Indian English / Gujarati / Hindi મિક્સ સપોર્ટ માટે શ્રેષ્ઠ
-    recognition.interimResults = false;
+    
+    recognition.interimResults = false;// ડ્રોપડાઉનમાંથી પસંદ કરેલી સાચી ભાષા (hi-IN, gu-IN અથવા en-IN) આપોઆપ સેટ થશે
+    let selLang = document.getElementById('voiceLangSelect') ? document.getElementById('voiceLangSelect').value : 'hi-IN';
+    recognition.lang = selLang;
     recognition.maxAlternatives = 1;
 
     recognition.onstart = function() {
@@ -1171,31 +1178,66 @@ function toggleGenLock(val) {
       let speechResult = event.results[0][0].transcript.toLowerCase().trim();
       document.getElementById('voiceText').innerText = speechResult;
       
-      // ૧. ENGINE START / ON કરવા માટેના ત્રણેય ભાષાના શબ્દો
+      // ૧. ENGINE STOP / OFF કમાન્ડ (સેફ્ટી માટે હંમેશાં પહેલાં ચેક થશે)
       if (
-        speechResult.includes('on') || 
-        speechResult.includes('start') || 
-        speechResult.includes('star') || 
-        speechResult.includes('चालू') || 
-        speechResult.includes('ચાલુ') || 
-        speechResult.includes('શરૂ') ||
-        speechResult.includes('chalu') ||
-        speechResult.includes('sharu')
-      ) {
-        document.getElementById('voiceStatus').innerText = "✔ Command Detected: START ENGINE";
-        controlGenVoice('on');
-      } 
-      // ૨. ENGINE STOP / OFF કરવા માટેના ત્રણેય ભાષાના શબ્દો
-      else if (
-        speechResult.includes('off') || 
-        speechResult.includes('stop') || 
-        speechResult.includes('stap') || 
+        speechResult.includes('बंद') || 
+        speechResult.includes('बन्द') || 
+        speechResult.includes('बंद करो') || 
+        speechResult.includes('जनरेटर बंद') || 
+        speechResult.includes('इंजन रोको') || 
+        speechResult.includes('रोको') || 
+        speechResult.includes('रोक दो') || 
+        speechResult.includes('स्टॉप करो') || 
+        speechResult.includes('स्टॉप') || 
+        speechResult.includes('ऑफ') || 
         speechResult.includes('બંધ') || 
-        speechResult.includes('बंद') ||
-        speechResult.includes('bandh')
+        speechResult.includes('બંધ કરો') || 
+        speechResult.includes('જનરેટર બંધ') || 
+        speechResult.includes('એન્જિન બંધ') || 
+        speechResult.includes('રોકો') || 
+        speechResult.includes('stop') || 
+        speechResult.includes('off') || 
+        speechResult.includes('stap') || 
+        speechResult.includes('band') || 
+        speechResult.includes('bandh') || 
+        speechResult.includes('roko') || 
+        speechResult.includes('rok') || 
+        speechResult.includes('shut') || 
+        speechResult.includes('turn off') || 
+        speechResult.includes('switch off')
       ) {
         document.getElementById('voiceStatus').innerText = "✔ Command Detected: STOP ENGINE";
         controlGenVoice('off');
+      } 
+      // ૨. ENGINE START / ON કમાન્ડ
+      else if (
+        speechResult.includes('चालू') || 
+        speechResult.includes('चालू करो') || 
+        speechResult.includes('जनरेटर चालू') || 
+        speechResult.includes('इंजन चालू') || 
+        speechResult.includes('शुरू') || 
+        speechResult.includes('शुरू करो') || 
+        speechResult.includes('स्टार्ट करो') || 
+        speechResult.includes('स्टार्ट') || 
+        speechResult.includes('चलाओ') || 
+        speechResult.includes('ચાલુ') || 
+        speechResult.includes('ચાલુ કરો') || 
+        speechResult.includes('શરૂ') || 
+        speechResult.includes('શરૂ કરો') || 
+        speechResult.includes('start') || 
+        speechResult.includes('star') || 
+        speechResult.includes('chalu') || 
+        speechResult.includes('shuru') || 
+        speechResult.includes('sharu') || 
+        speechResult.includes('chalao') || 
+        speechResult.includes('turn on') || 
+        speechResult.includes('switch on') || 
+        speechResult.includes('gen on') || 
+        speechResult.includes('engine on') || 
+        speechResult === 'on'
+      ) {
+        document.getElementById('voiceStatus').innerText = "✔ Command Detected: START ENGINE";
+        controlGenVoice('on');
       } 
       else {
         document.getElementById('voiceStatus').innerText = "❓ Not recognized. Say 'Start' or 'Stop'";
