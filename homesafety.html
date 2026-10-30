@@ -444,11 +444,15 @@
         let liveRef = null;
         let isEditingBilling = false; // તારીખ ટાઈપ કરતી વખતે લાઈવ ડેટા ભૂંસી ન નાખે તે માટેનું લોક
          let isEditingWifi = false;    // Wi-Fi પાસવર્ડ ટાઈપ કરતી વખતે જૂનો પાસવર્ડ પાછો ન આવે તે માટેનું લોક
+         let isEditingMain = false;    // Main Settings (Current & Price) માટેનું લોક
+         let isEditingCalib = false;   // Calibration સેટિંગ્સ માટેનું લોક
          function connectFirebase() {
             var rawSN = document.getElementById("custSN").value.trim();
             if(!rawSN) { alert("કૃપા કરીને Device Serial Number દાખલ કરો!"); return; }
             isEditingBilling = false;
             isEditingWifi = false; // નવું ડિવાઇસ કનેક્ટ થાય ત્યારે Wi-Fi લોક રીસેટ થશે
+            isEditingMain = false;  // નવું ડિવાઇસ આવે ત્યારે લોક રીસેટ
+            isEditingCalib = false; // નવું ડિવાઇસ આવે ત્યારે લોક રીસેટ
             // ૧. સીરીયલ નંબર ઓટો-ફોર્મેટ
             var cleanSN = rawSN.toUpperCase();
             if (!cleanSN.startsWith("SN:")) {
@@ -649,24 +653,17 @@
                     setVal("st_acgas", d.acGasStatus || "🟢 NORMAL OK");
                     setVal("st_acmotor", d.acMotorStatus || "🟢 NORMAL OK");  
                     setVal("st_appliance", d.applianceStatus || "🟢 NORMAL OK");
-                    setVal("st_pf_status", d.pfStatus || "🟢 NORMAL OK");
+                    setVal("st_pf_status", d.pfStatus || "🟢 NORMAL OK"); /////////
 
-                    // જૂના આંકડા પાછા આવી જતા અટકાવવા માટેનું સિક્યોર લોજિક
-                    var maxInp = document.getElementById('c_main_max_c');
-                    var prcInp = document.getElementById('c_main_price');
-                    if(d.maxCurrentLimit !== undefined && document.activeElement !== maxInp) {
-                        if(!maxInp.value || maxInp.dataset.saved !== "true") maxInp.value = d.maxCurrentLimit;
-                    }
-                    if(d.energyPrice !== undefined && document.activeElement !== prcInp) {
-                        if(!prcInp.value || prcInp.dataset.saved !== "true") prcInp.value = d.energyPrice;
-                    } 
-
-                   if(d.underloadBypass !== undefined) {
-                        document.getElementById('c_main_underload').checked = !d.underloadBypass;
+                    // ૧. Main Settings લોક (ટાઈપ કરતી વખતે કે સેવ કરતી વખતે જૂનો ડેટા પાછો નહીં આવે)
+                    if (!isEditingMain) {
+                        if(d.maxCurrentLimit !== undefined) document.getElementById('c_main_max_c').value = d.maxCurrentLimit;
+                        if(d.energyPrice !== undefined) document.getElementById('c_main_price').value = d.energyPrice;
+                        if(d.underloadBypass !== undefined) document.getElementById('c_main_underload').checked = !d.underloadBypass;
                     }
 
-                    // Calibration Inputs (ફક્ત એક જ વાર લોડ થશે જેથી ટાઈપ કરતી વખતે કે સેવ કર્યા પછી જૂનું ન થાય)
-                    if(!window.calibLoaded) {
+                    // ૨. Calibration Settings લોક (ટાઈપ કરતી વખતે કે સેવ કરતી વખતે જૂનો ડેટા પાછો નહીં આવે)
+                    if (!isEditingCalib) {
                         if(d.min_v !== undefined) document.getElementById('c_min_v').value = d.min_v;
                         if(d.max_v !== undefined) document.getElementById('c_max_v').value = d.max_v;
                         if(d.volt_cal !== undefined) document.getElementById('c_volt_cal').value = d.volt_cal;
@@ -674,9 +671,8 @@
                         if(d.curr_cal !== undefined) document.getElementById('c_curr_cal').value = d.curr_cal;
                         if(d.noise_c !== undefined) document.getElementById('c_noise_c').value = d.noise_c;
                         if(d.max_allowed_c !== undefined) document.getElementById('c_max_allowed_c').value = d.max_allowed_c;
-                        if(d.min_v !== undefined) window.calibLoaded = true;
-                         if(d.leak_prot !== undefined) document.getElementById('c_leak_prot').checked = d.leak_prot;
-                         if(d.relay_lock !== undefined) document.getElementById('c_relay_lock').checked = d.relay_lock;
+                        if(d.leak_prot !== undefined) document.getElementById('c_leak_prot').checked = d.leak_prot;
+                        if(d.relay_lock !== undefined) document.getElementById('c_relay_lock').checked = d.relay_lock;
                     }
                     // Real-Time Trend Graph Update
                     updateTrendData(liveV, liveC, liveH);
@@ -747,7 +743,7 @@
                 price: price, 
                 underload_byp: !isUnderloadChecked // Checkbox Checked = Bypass False (Trip ON)
             };
-
+            isEditingMain = false;
             document.getElementById('c_main_max_c').dataset.saved = "true";
             document.getElementById('c_main_price').dataset.saved = "true";
             sendCommand("SET_MAIN:" + JSON.stringify(mainData), "Main Settings (Over Current & Price) સેવ થઈ ગયા છે અને મેમરીમાં સ્ટોર થયા!");
@@ -784,7 +780,7 @@
                 noise_c: document.getElementById('c_noise_c').value,
                 max_allowed_c: document.getElementById('c_max_allowed_c').value
             };
-
+            isEditingCalib = false;
             var cmdStr = "SET_CALIB:" + JSON.stringify(calData);
             sendCommand(cmdStr, "Calibration Settings સેવ થઈ ગયા છે! ESP32 રીસ્ટાર્ટ થઈ રહ્યું છે...");
         }
@@ -1236,7 +1232,17 @@
             if(activeSN) dropdown.value = activeSN;
         }
         // પેજ લોડ વખતે
-        window.onload = function() {
+           window.onload = function() {
+            // ઇનપુટમાં ક્લિક કરો કે ટાઈપ કરો ત્યારે આપમેળે લોક લાગી જશે
+            ['c_main_max_c', 'c_main_price'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if(el) { el.onfocus = function(){ isEditingMain = true; }; el.oninput = function(){ isEditingMain = true; }; }
+            });
+            ['c_min_v','c_max_v','c_volt_cal','c_earth_v_cal','c_curr_cal','c_noise_c','c_max_allowed_c'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if(el) { el.onfocus = function(){ isEditingCalib = true; }; el.oninput = function(){ isEditingCalib = true; }; }
+            });
+
             var saved = localStorage.getItem("my_device_sn") || (savedDevices.length > 0 ? savedDevices[0].sn : "");
             renderDeviceList(saved);
             monitorAllDevicesStatus();
