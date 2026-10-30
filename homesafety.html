@@ -373,15 +373,15 @@
          <!-- 📶 CLOUD WI-FI & PASSWORD SETTINGS (UNLOCK CALIBRATION NI UPER) -->
         <div class="form-container">
             <div class="form-card" style="background: #1e2c3d; border-left: 5px solid #00bfff; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
-                <h3 style="color: #00bfff;">📶 Cloud Wi-Fi & Password Settings</h3>
+                <h3 style="color: #00bfff;">📶 Cloud Wi-Fi & Password Settings</h3>  
                 <div class="form-group">
                     <label>Wi-Fi Name (SSID):</label>
-                    <input type="text" id="cloudWifiSSID" placeholder="Wi-Fi SSID દાખલ કરો">
+                    <input type="text" id="cloudWifiSSID" placeholder="Wi-Fi SSID દાખલ કરો" onfocus="isEditingWifi=true;" oninput="isEditingWifi=true;">
                 </div>
                 <div class="form-group">
                     <label>Wi-Fi Password:</label>
                     <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="password" id="cloudWifiPass" placeholder="Wi-Fi Password દાખલ કરો" style="flex: 1; margin: 0;">
+                        <input type="password" id="cloudWifiPass" placeholder="Wi-Fi Password દાખલ કરો" style="flex: 1; margin: 0;" onfocus="isEditingWifi=true;" oninput="isEditingWifi=true;">
                         <button type="button" onclick="toggleWifiPassVisibility()" id="btn_toggle_pass" class="btn" style="width: auto; margin: 0; padding: 10px 14px; background: #37474f; font-size: 0.95em;">👁️ Show</button>
                     </div>
                 </div>
@@ -443,11 +443,12 @@
         let trendHistory = []; 
         let liveRef = null;
         let isEditingBilling = false; // તારીખ ટાઈપ કરતી વખતે લાઈવ ડેટા ભૂંસી ન નાખે તે માટેનું લોક
-
+         let isEditingWifi = false;    // Wi-Fi પાસવર્ડ ટાઈપ કરતી વખતે જૂનો પાસવર્ડ પાછો ન આવે તે માટેનું લોક
          function connectFirebase() {
             var rawSN = document.getElementById("custSN").value.trim();
             if(!rawSN) { alert("કૃપા કરીને Device Serial Number દાખલ કરો!"); return; }
             isEditingBilling = false;
+            isEditingWifi = false; // નવું ડિવાઇસ કનેક્ટ થાય ત્યારે Wi-Fi લોક રીસેટ થશે
             // ૧. સીરીયલ નંબર ઓટો-ફોર્મેટ
             var cleanSN = rawSN.toUpperCase();
             if (!cleanSN.startsWith("SN:")) {
@@ -506,11 +507,9 @@
                         topSnEl.style.borderColor = "#00e676";
                     }
                   // ESP32 ના સેવ થયેલ Wi-Fi નામ અને પાસવર્ડ લાઈવ ઇનપુટમાં બતાવવા
-                    if(d.saved_ssid && document.activeElement !== document.getElementById("cloudWifiSSID")) {
-                        document.getElementById("cloudWifiSSID").value = d.saved_ssid;
-                    }
-                    if(d.saved_pass && document.activeElement !== document.getElementById("cloudWifiPass")) {
-                        document.getElementById("cloudWifiPass").value = d.saved_pass;
+                    if (!isEditingWifi) {
+                        if(d.saved_ssid !== undefined) document.getElementById("cloudWifiSSID").value = d.saved_ssid;
+                        if(d.saved_pass !== undefined) document.getElementById("cloudWifiPass").value = d.saved_pass;
                     }
                     // 🌐 લાઈવ IP અને WiFi Name અપડેટ
                     if(d.ip) {
@@ -1146,6 +1145,7 @@
             if(!newS) { alert("Wi-Fi SSID ખાલી હોઈ શકે નહીં!"); return; }
 
             if(confirm("શું તમે સાચે જ Wi-Fi સેટિંગ્સ બદલીને ESP32 રીસ્ટાર્ટ કરવા માંગો છો?\nSSID: " + newS)) {
+                isEditingWifi = true; // સેવ બટન દબાવ્યા પછી પણ નવો પાસવર્ડ સ્ક્રીન પર જળવાઈ રહેશે
                 sendCommand("SET_WIFI:" + newS + "|||" + newP, "Wi-Fi Settings ESP32 Preferences માં સેવ થઈ ગઈ છે અને ESP32 રીસ્ટાર્ટ થઈ રહ્યું છે...");
             }
         }
