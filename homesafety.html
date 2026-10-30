@@ -211,6 +211,25 @@
                         <div id="disp_last_bill" style="color: #ffd600; font-size: 1.6em; font-weight: bold; margin-top: 5px;">₹ 0.00</div>
                     </div>
                 </div>
+                 <!-- REAL TIME MONITORING & ANALYTICS DATES & BUTTONS -->
+                <div style="margin-top: 15px; background: #101a26; padding: 12px; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center;"> 
+                    <span style="font-size: 0.85em; color: #ccc; font-weight: bold;">📅 Bill Cycle Range:</span>
+                    <input type="date" id="c_start_date" style="background: #1d2b3a; color: #fff; border: 1px solid #3c4f65; padding: 5px; border-radius: 5px; font-size: 0.85em;"> 
+                    <span style="color: #ccc;">to</span> 
+                    <input type="date" id="c_end_date" style="background: #1d2b3a; color: #fff; border: 1px solid #3c4f65; padding: 5px; border-radius: 5px; font-size: 0.85em;">
+                    <span style="font-size: 0.85em; color: #ccc; font-weight: bold;">⏰ Time:</span>
+                    <input type="time" id="c_end_time" value="09:00" style="background: #1d2b3a; color: #fff; border: 1px solid #3c4f65; padding: 5px; border-radius: 5px; font-size: 0.85em;">
+                    <select id="c_end_ampm" style="background: #1d2b3a; color: #fff; border: 1px solid #3c4f65; padding: 5px; border-radius: 5px; font-size: 0.85em;">
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                    </select>
+                    <span id="disp_cycle_bill_preview" style="font-size: 0.85em; color: #76ff03; font-weight: bold; margin-left: 5px;">Cycle Bill: ₹ 0.00</span>
+                    <button type="button" onclick="saveBillingDatesCloud()" class="btn" style="width: auto; padding: 6px 15px; font-size: 0.85em; background: linear-gradient(145deg, #00bfff, #0077b6); margin: 0;">Set Billing Cycle</button>
+                </div>
+                <div style="margin-top: 10px; text-align: center;">
+                    <button type="button" onclick="resetAnalyticsCloud()" class="btn" style="width: auto; background: linear-gradient(145deg, #ff5252, #d50000); padding: 6px 15px; font-size: 0.85em; margin: 0 5px;">🔄 Reset Real-Time Analytics (0.0)</button>
+                    <button type="button" onclick="saveCurrentBillCloud()" class="btn" style="width: auto; background: linear-gradient(145deg, #00e676, #00a152); padding: 6px 15px; font-size: 0.85em; margin: 0 5px;">💾 Save Current Bill & Start Next Cycle</button>
+                </div>
             </div>
 
             <!-- GRAPHS BUTTONS -->
@@ -351,6 +370,24 @@
                 <button onclick="systemRestartCloud()" class="btn" style="background: linear-gradient(145deg, #e65100, #bf360c); border: none;">🔄 System Restart (ESP32 રીસ્ટાર્ટ કરો)</button>
             </div>
         </div>
+         <!-- 📶 CLOUD WI-FI & PASSWORD SETTINGS (UNLOCK CALIBRATION NI UPER) -->
+        <div class="form-container">
+            <div class="form-card" style="background: #1e2c3d; border-left: 5px solid #00bfff; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+                <h3 style="color: #00bfff;">📶 Cloud Wi-Fi & Password Settings</h3>
+                <div class="form-group">
+                    <label>Wi-Fi Name (SSID):</label>
+                    <input type="text" id="cloudWifiSSID" placeholder="Wi-Fi SSID દાખલ કરો">
+                </div>
+                <div class="form-group">
+                    <label>Wi-Fi Password:</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="password" id="cloudWifiPass" placeholder="Wi-Fi Password દાખલ કરો" style="flex: 1; margin: 0;">
+                        <button type="button" onclick="toggleWifiPassVisibility()" id="btn_toggle_pass" class="btn" style="width: auto; margin: 0; padding: 10px 14px; background: #37474f; font-size: 0.95em;">👁️ Show</button>
+                    </div>
+                </div>
+                <button type="button" onclick="changeWifiCloud()" class="btn" style="background: linear-gradient(145deg, #00bfff, #0077b6); font-weight: bold; margin-top: 10px;">💾 Save Wi-Fi & Restart ESP32</button>
+            </div>
+        </div>
           <!-- UNLOCK CALIBRATION & SECURITY SETTINGS (CLOUD) -->
         <div class="form-container" id="login_form">
             <div class="form-card" style="background: #2e3b4a; border-left: 5px solid #ffcc00; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
@@ -467,7 +504,13 @@
                         topSnEl.style.color = "#ffffff";
                         topSnEl.style.borderColor = "#00e676";
                     }
-
+                  // ESP32 ના સેવ થયેલ Wi-Fi નામ અને પાસવર્ડ લાઈવ ઇનપુટમાં બતાવવા
+                    if(d.saved_ssid && document.activeElement !== document.getElementById("cloudWifiSSID")) {
+                        document.getElementById("cloudWifiSSID").value = d.saved_ssid;
+                    }
+                    if(d.saved_pass && document.activeElement !== document.getElementById("cloudWifiPass")) {
+                        document.getElementById("cloudWifiPass").value = d.saved_pass;
+                    }
                     // 🌐 લાઈવ IP અને WiFi Name અપડેટ
                     if(d.ip) {
                         document.getElementById("disp_ip").innerText = d.ip;
@@ -479,7 +522,8 @@
                     liveC = d.current || 0;
                     liveH = d.motorHealth || 0;
 
-                    document.getElementById("disp_v").innerText = liveV.toFixed(1) + " V";
+                     // ⚡ ૧.૫V સ્ટેબલ વોલ્ટેજ લાઈવ ડિસ્પ્લે લૉજિક
+                    document.getElementById("disp_v").innerText = (Number(liveV) || 0).toFixed(1) + " V";
                     document.getElementById("disp_c").innerText = liveC.toFixed(2) + " A";
                     document.getElementById("disp_ev").innerText = (d.earthVoltage || 0).toFixed(1) + " V";
                     document.getElementById("disp_pf").innerText = (d.pf || 0.95).toFixed(2);
@@ -522,6 +566,22 @@
                     document.getElementById("disp_today_kwh").innerHTML = (d.todayKWh || 0).toFixed(3) + ' <span style="font-size:0.5em;color:#aaa;">kWh</span>';
                     document.getElementById("disp_last_bill").innerText = "₹ " + (d.lastBill || 0).toFixed(2);
                     
+                    if(d.startDate !== undefined && document.activeElement !== document.getElementById("c_start_date")) {
+                        document.getElementById("c_start_date").value = d.startDate;
+                    }
+                    if(d.endDate !== undefined && document.activeElement !== document.getElementById("c_end_date")) {
+                        document.getElementById("c_end_date").value = d.endDate;
+                    }
+                    if(d.endTime !== undefined && document.activeElement !== document.getElementById("c_end_time")) {
+                        document.getElementById("c_end_time").value = d.endTime || "09:00";
+                    }
+                    if(d.endAmPm !== undefined && document.activeElement !== document.getElementById("c_end_ampm")) {
+                        document.getElementById("c_end_ampm").value = d.endAmPm || "AM";
+                    }
+                    var cycleBillPreview = ((d.todayKWh || 0) * (d.energyPrice || 10)).toFixed(2);
+                    var prevEl = document.getElementById("disp_cycle_bill_preview");
+                    if(prevEl) prevEl.innerText = "Cycle Bill: ₹ " + cycleBillPreview;
+
                     if (d.buzzerVolume !== undefined) {
                         var volSlider = document.getElementById("volSlider");
                         var volVal = document.getElementById("volVal");
@@ -647,6 +707,31 @@
         function toggleBuzzerCloud() { sendCommand("TOGGLE_BUZZER", "Buzzer Toggle Command મોકલાઈ ગયો છે!"); }
         function toggleEarthBypassCloud() { sendCommand("TOGGLE_EARTH_BYPASS", "Earth Bypass Toggle Command મોકલાઈ ગયો છે!"); }
         function toggleUnderloadBypassCloud() { sendCommand("TOGGLE_UNDERLOAD_BYPASS", "Underload / Free Run Bypass Command મોકલાઈ ગયો છે!"); }
+       
+        function saveBillingDatesCloud() {
+            var sDate = document.getElementById("c_start_date").value;
+            var eDate = document.getElementById("c_end_date").value;
+            var eTime = document.getElementById("c_end_time").value;
+            var eAmPm = document.getElementById("c_end_ampm").value;
+            if(!sDate || !eDate) { alert("કૃપા કરીને Start Date અને End Date પસંદ કરો!"); return; }
+            var payload = "SET_BILLING_CYCLE:" + sDate + "|||" + eDate + "|||" + eTime + "|||" + eAmPm;
+            sendCommand(payload, "Billing Cycle Dates ESP32 માં સેવ થઈ ગઈ છે!");
+        }
+
+          function resetAnalyticsCloud() {
+            if(confirm("તમામ Real-Time Analytics ડેટા (0.0) રીસેટ કરવો છે?")) {
+                document.getElementById("c_start_date").value = "";
+                document.getElementById("c_end_date").value = "";
+                sendCommand("RESET_ANALYTICS", "Real-Time Analytics Data 0.0 થઈ ગયું છે!");
+            }
+        }
+
+        function saveCurrentBillCloud() {
+            if(confirm("ચાલુ બિલ લાસ્ટ મંથમાં સેવ કરીને નવી સાયકલ શરૂ કરવી છે?")) {
+                sendCommand("SAVE_CURRENT_BILL", "Current Bill Saved to Last Month & Next Cycle Started!");
+            }
+        }
+
         function saveMainSettingsCloud() {
             var maxC = document.getElementById('c_main_max_c').value;
             var price = document.getElementById('c_main_price').value; 
@@ -887,7 +972,9 @@
             document.getElementById("disp_ip").innerText = "Not Connected";
             document.getElementById("disp_ssid").innerText = "Not Connected";
             document.getElementById("deviceDropdown").value = "";
-
+          if(document.getElementById("c_start_date")) document.getElementById("c_start_date").value = "";
+            if(document.getElementById("c_end_date")) document.getElementById("c_end_date").value = "";
+            if(document.getElementById("disp_cycle_bill_preview")) document.getElementById("disp_cycle_bill_preview").innerText = "Cycle Bill: ₹ 0.00";
             renderDeviceList("");
             document.getElementById("custSN").focus();
         }
@@ -1026,7 +1113,33 @@
                 document.getElementById("newDevPass").value = "";
             });
         }
+       // 👁️ Wi-Fi પાસવર્ડ Show / Hide (જોવા અને છુપાવવા) માટેનું ફંક્શન
+        function toggleWifiPassVisibility() {
+            var passInput = document.getElementById("cloudWifiPass");
+            var btn = document.getElementById("btn_toggle_pass");
+            if (passInput.type === "password") {
+                passInput.type = "text";
+                btn.innerText = "🙈 Hide";
+                btn.style.background = "#ff9800";
+            } else {
+                passInput.type = "password";
+                btn.innerText = "👁️ Show";
+                btn.style.background = "#37474f";
+            }
+        }
 
+        // 📶 ક્લાઉડમાંથી Wi-Fi અને Password મોકલી ESP32 રીસ્ટાર્ટ કરવાનું ફંક્શન
+        function changeWifiCloud() {
+            if(!formattedSN) { alert("કૃપા કરીને પહેલા સિલેક્ટ કરેલું ડિવાઇસ કનેક્ટ કરો!"); return; }
+            var newS = document.getElementById("cloudWifiSSID").value.trim();
+            var newP = document.getElementById("cloudWifiPass").value.trim();
+
+            if(!newS) { alert("Wi-Fi SSID ખાલી હોઈ શકે નહીં!"); return; }
+
+            if(confirm("શું તમે સાચે જ Wi-Fi સેટિંગ્સ બદલીને ESP32 રીસ્ટાર્ટ કરવા માંગો છો?\nSSID: " + newS)) {
+                sendCommand("SET_WIFI:" + newS + "|||" + newP, "Wi-Fi Settings ESP32 Preferences માં સેવ થઈ ગઈ છે અને ESP32 રીસ્ટાર્ટ થઈ રહ્યું છે...");
+            }
+        }
         // ડિવાઇસ Delete કરવું
         function deleteDevice(index) {
             var dev = savedDevices[index];
@@ -1123,38 +1236,20 @@
                 connectFirebase();
             }
         };
-        // 🚀 સ્ક્રીન બંધ (Sleep) થાય અથવા લેપટોપ/મોબાઈલ લોક થાય ત્યારે પણ કનેક્શન જીવંત રાખતું હાર્ટબીટ ફંક્શન
-        let heartbeatInterval;
-        function startBackgroundHeartbeat() {
-            if (heartbeatInterval) clearInterval(heartbeatInterval);
-            heartbeatInterval = setInterval(function() {
-                if (formattedSN) {
-                    db.ref("devices/" + formattedSN + "/live/serverTime").set(firebase.database.ServerValue.TIMESTAMP);
-                }
-            }, 20000); // દર ૨૦ સેકન્ડે બેકગ્રાઉન્ડ પિંગ
-        }
-
-        // પેજ લોડ વખતે (બધા જ ફંક્શન્સ એક જ જગ્યાએ સુરક્ષિત રીતે લોડ થશે)
-        window.onload = function() {
-            var saved = localStorage.getItem("my_device_sn") || (savedDevices.length > 0 ? savedDevices[0].sn : "");
-            renderDeviceList(saved);
-            monitorAllDevicesStatus();
-            if(saved) {
-                document.getElementById("custSN").value = saved;
-                connectFirebase();
-            }
-            startBackgroundHeartbeat(); // 👈 બેકગ્રાઉન્ડ સ્લીપ પ્રિવેન્શન શરૂ
-        };
-
-        // 🛡️ સ્ક્રીન લૉક કે ટેબ બેકગ્રાઉન્ડમાં હોય ત્યારે મેમરી સેવિંગ અને ઓટો-રીકનેક્ટ
+        // 🛡️ સ્ક્રીન લૉક કે ટેબ બેકગ્રાઉન્ડમાં હોય ત્યારે Firebase ડેટા વપરાશ અટકાવવો
         document.addEventListener("visibilitychange", function() {
             if (document.hidden) {
+                // જો સ્ક્રીન બંધ કે ટેબ બેકગ્રાઉન્ડમાં જાય તો લાઈવ રીડિંગ બંધ કરો (ડેટા બચશે)
+                if (liveRef) {
+                    liveRef.off();
+                }
                 if (waveAnim) {
                     cancelAnimationFrame(waveAnim);
                 }
             } else {
+                // સ્ક્રીન પાછી ચાલુ થાય ત્યારે લાઈવ કનેક્શન ફરી ચાલુ કરો
                 var curSN = document.getElementById("custSN").value.trim();
-                if (curSN && (!liveRef || !formattedSN)) {
+                if (curSN) {
                     connectFirebase();
                 }
             }
