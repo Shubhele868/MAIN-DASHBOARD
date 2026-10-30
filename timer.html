@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8">
+  <title>Tulsi-Van Pro Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f0f2f5; }
+    .header { text-align: center; padding: 15px; background: linear-gradient(135deg, #4a90e2, #50e3c2); color: white; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .header h1 { margin: 0; font-size: 2em; }
+    .header .sub-header { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 0 20px; }
+    .farm-name { font-size: 1.2em; font-weight: bold; color: #ffffff; }
+    .division-id { font-size: 1.2em; font-weight: bold; color: #ff4d4d; }
+    .current-time { font-size: 1.8em; text-align: center; margin: 20px 0; color: #333; font-weight: bold; }
+    .btn-refresh, .btn-edit { background: #555; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin: 5px; }
+    .card { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .card h2, .card h3, .card h4 { color: #4a90e2; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; margin-top: 0; }
+    .status { font-size: 1.3em; margin: 15px 0; }
+    .status-dot { font-size: 2.5em; font-weight: bold; vertical-align: middle; line-height: 1; }
+    .on { color: #4CAF50; font-weight: bold; }
+    .off { color: #f44336; font-weight: bold; }
+    .manual { color: #2196F3; font-weight: bold; }
+    .emergency { color: #ff9800; font-weight: bold; }
+    .tripped { color: #D32F2F; font-weight: bold; animation: blink 1s linear infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .bypassed { color: #757575; font-weight: bold; }
+    .bypass-active { color: #ff9800; font-weight: bold; }
+    .btn { padding: 12px 20px; margin: 8px 5px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1em; flex-grow: 1; }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; }
+    .btn-on { background: #4CAF50; color: white; }
+    .btn-off { background: #f44336; color: white; }
+    .btn-auto { background: #2196F3; color: white; }
+    .btn-reset { background: #555; color: white; }
+    .btn-emergency { background: #ff9800; color: white; font-size: 1.2em; width: 100%; padding: 15px; margin-top: 10px; }
+    .schedule-item { margin: 10px 0; padding: 15px; background: #f9f9f9; border-radius: 8px; font-size: 1.2em; font-weight: bold; }
+    .power-info { background: #e3f2fd; padding: 15px; border-left: 5px solid #2196F3; border-radius: 8px; margin-top: 15px; font-size: 1.2em; color: #0d47a1; text-align: center; }
+    .footer-card { text-align: center; padding: 20px; margin-top: 30px; background: linear-gradient(135deg, #333, #555); color: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .firmware-info { padding: 20px; margin-top: 20px; background: linear-gradient(to right, #2c3e50, #4ca1af); color: white; border-radius: 10px; font-family: 'Courier New', monospace; }
+    .firmware-info pre { white-space: pre-wrap; margin: 0; font-size: 1.1em; }
+    #edit-details-form { display: none; background: #fff3e0; padding: 15px; border-radius: 8px; margin-top: 15px; }
+    #edit-details-form label { font-weight: bold; }
+    #edit-details-form input { width: calc(100% - 18px); padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    #edit-details-form button { background: #ff9800; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; }
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); }
+    .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 400px; border-radius: 10px; text-align: center; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .close-button { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
+    .modal-input { width: calc(100% - 24px); padding: 10px; margin-bottom: 20px; font-size: 1.1em; border: 1px solid #ccc; border-radius: 5px; }
+    .modal-button { width: 100%; background: #4CAF50; color: white; padding: 12px; font-size: 1em; border: none; border-radius: 5px; cursor: pointer; }
+    
+    /* 3D Warranty Card Styles */
+    #warranty-display-area { perspective: 1500px; padding: 20px 0; text-align: center; }
+    .warranty-card-3d {
+      background: linear-gradient(135deg, #667eea, #764ba2); color: white;
+      box-shadow: 0px 15px 35px rgba(0, 0, 0, 0.3); border-radius: 24px;
+      width: 90%; max-width: 480px; margin: 0 auto;
+      transform: rotateY(-20deg) rotateX(15deg);
+      transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s;
+      position: relative; overflow: hidden; display: inline-block;
+    }
+    .warranty-card-3d:hover { transform: rotateY(0) rotateX(0) translateY(-10px); box-shadow: 0px 25px 45px rgba(0, 0, 0, 0.4); }
+    .warranty-card-3d .details { padding: 30px 40px; text-align: left; }
+    .warranty-card-3d .card-header h3 { font-size: 22px; color: #fff; margin: 0 0 20px 0; padding-bottom: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.4); }
+    .warranty-card-3d .info-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 16px; }
+    .warranty-card-3d .info-label { font-weight: 300; }
+    .warranty-card-3d .info-value { font-weight: 600; }
+    .warranty-card-3d .info-value.expired-text { color: #ffdddd; }
+    .btn-warranty-toggle { background: #ff9800; color: white; width: auto; padding: 10px 20px; display: inline-block; margin-top: 10px; border: none; border-radius: 5px; cursor: pointer; }
+
+    /* Settings Page Styles */
+    .day-btn { width: auto; padding: 10px 15px; margin: 5px; border-radius: 20px; background: white; font-size: 0.9em; border: 1px solid #ccc; cursor: pointer; }
+    .day-btn.active { background: #4CAF50; color: white; border-color: #4CAF50; }
+    .mode-selector input, .radio-group input, .checkbox-group input { width: auto; margin-right: 10px; vertical-align: middle; }
+    .radio-group, .checkbox-group { margin-bottom: 15px; }
+    .checkbox-group label { vertical-align: middle; }
+    .lock-btn { background-color: #f44336; float: right; width: auto; padding: 5px 10px; font-size: 0.8em; border: none; border-radius: 4px; color: white; cursor: pointer; }
+    hr { border: 1px solid #f0f2f5; margin: 20px 0; }
+    .settings-input, .settings-select { padding: 12px; margin: 8px 0; width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 5px; font-size: 1em; }
+    .settings-btn { padding: 12px; margin: 8px 0; width: 100%; box-sizing: border-box; border: none; border-radius: 5px; font-size: 1em; cursor: pointer; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<!-- ⬅️ મુખ્ય મેનુ પર પાછા જવા માટેનું બટન (Back to Main Menu Button) -->
+  <div style="margin-bottom: 15px; text-align: left;">
+    <a href="index.html" style="text-decoration: none;">
+      <button type="button" style="background: linear-gradient(135deg, #1c2541, #0b132b); color: #ffffff; border: 2px solid #007bff; padding: 12px 22px; border-radius: 12px; font-weight: bold; font-size: 1em; cursor: pointer; box-shadow: 0 4px 15px rgba(0,123,255,0.3); display: inline-flex; align-items: center; gap: 8px;">
+        ⬅️ Back to Main Menu (મુખ્ય મેનુ)
+      </button>
+    </a>
+  </div>
+
+ <!-- ડિવાઇસ મેનેજમેન્ટ બાર (SERIAL + NAME + PASS + ADD + DELETE) -->
+<div style="background: #2c3e50; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+  <h3 style="margin: 0 0 10px 0; font-size: 1.1em; color: #50e3c2;">Device Connection & Setup</h3>
+  <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+    <input type="text" id="devSerial" placeholder="Device Serial (દા.ત. SPGT-0012ABCD)" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 0.95em; flex: 1 1 160px; text-transform: uppercase; box-sizing: border-box;">
+    <input type="text" id="devName" placeholder="Device Name (દા.ત. મારું ખેતર / ટ્યુબવેલ)" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 0.95em; flex: 1 1 160px; box-sizing: border-box;">
+    <input type="password" id="devPass" placeholder="Password (દા.ત. 123456)" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 0.95em; flex: 1 1 160px; box-sizing: border-box;">
+    <button type="button" onclick="addAndConnectDevice()" style="background: #27ae60; color: white; padding: 10px 18px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">ADD / CONNECT</button>
+    <button type="button" onclick="deleteActiveDevice()" style="background: #e74c3c; color: white; padding: 10px 18px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">DELETE</button>
+  </div>
+  <div id="activeDevTag" style="margin-top: 10px; font-size: 0.9em; color: #f1c40f; font-weight: bold;">કોઈ ડિવાઇસ કનેક્ટેડ નથી (ડેટા જોવા માટે Serial No અને Pass નાખી Add કરો)</div>
+</div>
+
+<div id="main-dashboard-wrapper">
+<!-- ======================================================== -->
+<!-- ભાગ ૧: મુખ્ય ડેશબોર્ડ (MAIN DASHBOARD HEADER & CLOCK) -->
+<!-- ======================================================== -->
+<div class="header">
+  <h1>Shakti Prime Globle Technologis</h1>
+  <div style="font-size:1.4em; font-weight:bold; margin-top:5px; letter-spacing: 1px;">Timer Setting</div>
+  <div style="font-size:1.1em; font-weight:bold; margin-top:5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">Model No: AL4M-401</div>
+  <div class="sub-header">
+    <div class="farm-name" id="farmNameVal">Tulsi-Van Farm</div>
+    <div class="division-id" id="divisionIdVal">DIV-01</div>
+  </div>
+</div>
+
+<div class="current-time">Wednesday, 28/10/2026 09:15:30 PM</div>
+
+<div style="text-align: center; margin: 15px 0;">
+  <div style='padding:10px; background-color:#fff3e0; border:1px solid #ffcc80; border-radius:8px; margin-bottom:15px;'>
+    <strong>AP Mode Active.</strong> Connect to 'Tulsi-Van-Setup' WiFi.<br>IP Address: <strong>192.168.4.1</strong>
+  </div>
+  
+  <form action="/synctime" method="POST" id="timeform" style="display:inline-block;">
+    <input type="hidden" name="time" id="time_val">
+    <button type="submit" class="btn-refresh" onclick="document.getElementById('time_val').value = Math.floor(Date.now() / 1000);">Sync Time</button>
+  </form>
+  
+  <form action="/toggleformat" method="POST" style="display: inline;">
+    <button type="submit" class="btn-refresh">Switch to 24H</button>
+  </form>
+  
+  <form action="/togglerefresh" method="POST" style="display: inline;">
+    <button type="submit" class="btn-refresh">Auto Refresh ON</button>
+  </form>
+  
+  <button id="edit-details-btn" class="btn-edit">Edit Details</button>
+
+  <div id="edit-details-form">
+    <form action="/saveuidetails" method="POST">
+      <label for="fname">Farm Name:</label>
+      <input type="text" id="fname" name="farmName" value="Tulsi-Van Farm"><br>
+      <label for="divId">Division ID:</label>
+      <input type="text" id="divId" name="divisionId" value="DIV-01"><br>
+      <button type="submit">Save Details</button>
+    </form>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- ભાગ ૨: રીલે કંટ્રોલ પેનલ (RELAY CONTROL PANEL) -->
+<!-- ======================================================== -->
+<div class="card">
+  <h2>RELAY CONTROL PANEL</h2>
+  <div class="status">
+    <p>
+      <span class="status-dot" style="color:#4CAF50;">&bull;</span> 
+      <strong>Relay Status:</strong> 
+      <span class='on'>ON Timer <span style='animation: blink 1.2s linear infinite; font-weight: bold;'>(HYBRID ASTRO)</span></span>
+    </p>
+  </div>
+
+  <div class='bypass-active' style='margin-bottom:10px;'>OC Protection Bypass Active: 0s remaining</div>
+
+  <div class="power-info">
+    <strong>Live Current: </strong>2.45 A  |  <span class='on'>Protection: ENABLED</span>
+  </div>
+
+  <div style="margin-top: 10px;">
+    Next Change in: <strong>03h 45m 12s</strong><br>
+    <small>on 28/10/2026, 11:00:00 PM</small>
+  </div>
+  
+  <p>Next State: <strong><span class='off'>OFF</span></strong></p>
+  
+  <div class='controls'>
+    <button class='btn btn-on' type='button' onclick='sendCloudRelayCmd(1)'>MANUAL ON</button>
+    <button class='btn btn-off' type='button' onclick='sendCloudRelayCmd(0)'>MANUAL OFF</button>
+    <button class='btn btn-auto' type='button' onclick='sendCloudRelayCmd(-1)'>RESET & AUTO</button>
+    <button class='btn btn-reset' type='button' onclick='resetCloudTimer()'>RESET TIMER</button>
+  </div>
+  
+  <form action='/emergency' method='POST'>
+    <button class='btn btn-emergency' type='submit'>EMERGENCY STOP</button>
+  </form>
+</div>
+
+<!-- ======================================================== -->
+<!-- ભાગ ૩: સિસ્ટમ મોડ અને સેન્સર સ્ટેટસ -->
+<!-- ======================================================== -->
+<div class='card'>
+  <h2>System Mode & Sensor Status</h2>
+  <p><strong>Active System Mode:</strong> <span style='color:#2196F3; font-weight:bold;'>Mode 5: Astronomical Hybrid Solar Calendar</span></p>
+  <div style='background:#efebe9; padding:15px; border-left:5px solid #795548; border-radius:8px; margin-top:10px; font-size:1.1em; color:#4e342e;'>
+    <strong>Sunlight Intensity:</strong> <span style='font-weight:bold; color:#2e7d32;'>42%</span> (Raw value: 1720)
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- ભાગ ૪: 7-દિવસ ઓટો લર્નિંગ રિપોર્ટ (MODE 4 REPORT) -->
+<!-- ======================================================== -->
+<div class='card'>
+  <h3>7-Day Auto-Learning Report</h3>
+  <table style='width:100%; border-collapse: collapse; margin-top:10px; font-size:0.95em;'>
+    <tr style='background-color:#795548; color:white; text-align:left;'>
+      <th style='padding:8px; border: 1px solid #ddd;'>Date</th>
+      <th style='padding:8px; border: 1px solid #ddd;'>Sunset (ON)</th>
+      <th style='padding:8px; border: 1px solid #ddd;'>Sunrise (OFF)</th>
+    </tr>
+    <tr style='background-color:#f9f9f9;'><td style='padding:8px; border: 1px solid #ddd;'>27/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:18 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:34 AM</td></tr>
+    <tr style='background-color:#ffffff;'><td style='padding:8px; border: 1px solid #ddd;'>26/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:19 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:33 AM</td></tr>
+    <tr style='background-color:#f9f9f9;'><td style='padding:8px; border: 1px solid #ddd;'>25/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:20 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:32 AM</td></tr>
+    <tr style='background-color:#ffffff;'><td style='padding:8px; border: 1px solid #ddd;'>24/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:21 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:31 AM</td></tr>
+    <tr style='background-color:#f9f9f9;'><td style='padding:8px; border: 1px solid #ddd;'>23/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:22 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:30 AM</td></tr>
+    <tr style='background-color:#ffffff;'><td style='padding:8px; border: 1px solid #ddd;'>22/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:23 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:30 AM</td></tr>
+    <tr style='background-color:#f9f9f9;'><td style='padding:8px; border: 1px solid #ddd;'>21/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:24 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:29 AM</td></tr>
+  </table>
+
+  <form action='/clearldrreport' method='POST' style='margin-top: 15px;' onsubmit="return confirm('Are you sure you want to clear 7-Day Auto Learning Report?');">
+    <button type='submit' style='background-color:#d32f2f; color:white; padding:12px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold;'>CLEAR 7-DAY REPORT DATA</button>
+  </form>
+
+  <div style='background:#efebe9; padding:12px; border-left:5px solid #795548; border-radius:8px; margin-top:15px; font-size:1em;'>
+    <strong>1) 7-Day Sensor Average:</strong><br>
+    ON Time: <span style='color:#2e7d32; font-weight:bold;'>06:21 PM</span> | OFF Time: <span style='color:#c62828; font-weight:bold;'>06:31 AM</span>
+  </div>
+
+  <div style='background:#fffde7; padding:12px; border-left:5px solid #fbc02d; border-radius:8px; margin-top:10px; font-size:1em;'>
+    <strong>2) Astronomical Solar Calendar (This Month):</strong><br>
+    ON Time (Sunset): <span style='color:#2e7d32; font-weight:bold;'>06:20 PM</span> | OFF Time (Sunrise): <span style='color:#c62828; font-weight:bold;'>06:35 AM</span>
+  </div>
+
+  <div style='background:#e1f5fe; padding:12px; border-left:5px solid #0288d1; border-radius:8px; margin-top:10px; font-size:1.05em; border:1px solid #b3e5fc;'>
+    <strong>3) Final Calculated Active Time (Target Set Time):</strong><br>
+    Final ON Time: <span style='color:#2e7d32; font-weight:bold;'>06:20 PM</span><br>
+    Final OFF Time: <span style='color:#c62828; font-weight:bold;'>06:33 AM</span><br>
+    <small style='color:#555;'>Operating Mode: <b>Hybrid Mode (Sensor + Calendar Avg)</b></small>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- ભાગ ૫: ૧૨ મહિનાનું સંપૂર્ણ સોલર કેલેન્ડર (MODE 5 CALENDAR) -->
+<!-- ======================================================== -->
+<div class='card'>
+  <h3>Astronomical Solar Calendar (Mode 5)</h3>
+  <p><strong>Current Month:</strong> 10 (Wed)</p>
+  <div style='background:#efebe9; padding:15px; border-left:5px solid #009688; border-radius:8px; margin-bottom:15px;'>
+    <strong>This Month Astronomical Target:</strong><br>
+    Astro Sunset (ON): <span style='color:#2e7d32; font-weight:bold;'>06:20 PM</span><br>
+    Astro Sunrise (OFF): <span style='color:#c62828; font-weight:bold;'>06:35 AM</span><br>
+    <small style='color:#555;'>Operation: <b>Hybrid (7-Day Avg + Monthly Calendar Avg)</b></small>
+  </div>
+
+  <details style='background: #eceff1; border: 1px solid #b0bec5; border-radius: 5px; padding: 10px; text-align: left;' open>
+    <summary style='font-weight: bold; cursor: pointer; color: #37474f; outline: none; padding: 5px;'>View Complete 12-Month Solar Calendar</summary>
+    <table style='width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.9em; background: #ffffff;'>
+      <tr style='background: #607d8b; color: white;'>
+        <th style='padding: 6px; border: 1px solid #ccc; text-align: center;'>Month</th>
+        <th style='padding: 6px; border: 1px solid #ccc; text-align: center;'>Sunrise (OFF)</th>
+        <th style='padding: 6px; border: 1px solid #ccc; text-align: center;'>Sunset (ON)</th>
+      </tr>
+      <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>1 (Jan)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>07:15 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:15 PM</td></tr>
+      <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>2 (Feb)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>07:05 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:35 PM</td></tr>
+      <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>3 (Mar)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:45 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:50 PM</td></tr>
+      <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>4 (Apr)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:15 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>07:05 PM</td></tr>
+      <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>5 (May)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>05:55 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>07:20 PM</td></tr>
+      <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>6 (Jun)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>05:50 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>07:30 PM</td></tr>
+      <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>7 (Jul)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:00 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>07:30 PM</td></tr>
+      <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>8 (Aug)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:15 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>07:10 PM</td></tr>
+      <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>9 (Sep)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:25 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:45 PM</td></tr>
+      <tr style='background-color:#e1f5fe; font-weight:bold;'><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>10 (Oct)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:35 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:20 PM</td></tr>
+      <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>11 (Nov)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:55 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:05 PM</td></tr>
+      <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>12 (Dec)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>07:15 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:05 PM</td></tr>
+    </table>
+  </details>
+</div>
+
+<!-- ======================================================== -->
+<!-- ભાગ ૬: ચાલુ શેડ્યુલ (CURRENT SCHEDULE) -->
+<!-- ======================================================== -->
+<div class='card'>
+  <h2>CURRENT SCHEDULE</h2>
+  <p><strong>Current Mode:</strong> Weekly Recurring Schedule</p>
+  <div class='schedule-item'><strong>ON Time:</strong> 06:30 PM</div>
+  <div class='schedule-item'><strong>OFF Time:</strong> 06:00 AM</div>
+  <div style="margin-top:15px;">
+    <a href='#settings-section'><button style="width:100%; background-color:#607D8B; color:white; padding:12px; font-size:1em; border:none; border-radius:5px; cursor:pointer;">CHANGE SETTINGS</button></a>
+  </div>
+</div>
+
+<div style="margin-top:10px;">
+  <button onclick="confirmRestart()" style="width:100%; background-color:#e74c3c; color:white; padding:12px; font-size:1em; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">RESTART ESP32</button>
+</div>
+
+<!-- ======================================================== -->
+<!-- ભાગ ૭: વોરંટી સ્ટેટસ 3D કાર્ડ (WARRANTY STATUS) -->
+<!-- ======================================================== -->
+<div class='card'>
+  <h2>Warranty Status</h2>
+  <div id="warranty-display-area"></div>
+  <p style="margin-top:20px;">To set or edit warranty, go to the management page.</p>
+  <a href='#warranty-management-section'><button style="width:100%; background-color:#9C27B0; color:white; padding:12px; font-size:1em; border:none; border-radius:5px; cursor:pointer;">MANAGE WARRANTY DETAILS</button></a>
+</div>
+
+<!-- ======================================================== -->
+<!-- ભાગ ૮: મેન્યુઅલ ટાઈમ અને તારીખ સેટઅપ -->
+<!-- ======================================================== -->
+<div class='card'>
+  <h2>Manual Time & Date Setup</h2>
+  <p style='color:#666;'><small>Note: This setting works in both WiFi and AP Mode.</small></p>
+  <form action='/savemanualtime' method='POST'>
+    <div style='display:flex; gap:5px; margin-bottom:10px;'>
+      <input type='number' name='d' placeholder='DD' min='1' max='31' value="28" required style='width:30%; padding:10px; border:1px solid #ccc; border-radius:4px;'>
+      <input type='number' name='mo' placeholder='MM' min='1' max='12' value="10" required style='width:30%; padding:10px; border:1px solid #ccc; border-radius:4px;'>
+      <input type='number' name='y' placeholder='YYYY' min='2025' max='2099' value="2026" required style='width:40%; padding:10px; border:1px solid #ccc; border-radius:4px;'>
+    </div>
+    <div style='display:flex; gap:5px; align-items:center;'>
+      <input type='number' name='h' placeholder='HH' min='1' max='12' value="9" required style='width:18%; padding:10px; border:1px solid #ccc; border-radius:4px;'> :
+      <input type='number' name='mi' placeholder='MM' min='0' max='59' value="15" required style='width:18%; padding:10px; border:1px solid #ccc; border-radius:4px;'> :
+      <input type='number' name='s' placeholder='SS' min='0' max='59' value="30" required style='width:18%; padding:10px; border:1px solid #ccc; border-radius:4px;'>
+      <select name='ap' style='width:20%; padding:10px; border-radius:5px; background:#fff; border:1px solid #ccc;'>
+        <option value='AM'>AM</option>
+        <option value='PM' selected>PM</option>
+      </select>
+      <select name='dow' style='width:26%; padding:10px; border-radius:5px; background:#fff; border:1px solid #ccc;'>
+        <option value='0'>Sunday</option>
+        <option value='1'>Monday</option>
+        <option value='2'>Tuesday</option>
+        <option value='3' selected>Wednesday</option>
+        <option value='4'>Thursday</option>
+        <option value='5'>Friday</option>
+        <option value='6'>Saturday</option>
+      </select>
+    </div>
+    <button type='submit' style='width:100%; background-color:#2c3e50; color:white; padding:14px; font-size:1em; border:none; border-radius:5px; cursor:pointer; margin-top:15px; font-weight:bold;'>UPDATE RTC TIME</button>
+  </form>
+</div>
+
+<!-- ======================================================== -->
+<!-- ભાગ ૯: ડિવાઇસ ઍક્સેસ (DEVICE ACCESS - AP PASSWORD) -->
+<!-- ======================================================== -->
+<div class='card'>
+  <h3>Device Access</h3>
+  <form action="/changeappass" method="POST" id="apPassForm">
+    <h4>Change Access Point Password</h4>
+    <p>Leave new password blank for an open network. This password is used when the device cannot connect to WiFi. Minimum 8 characters.</p>
+    <label for="oldApPass">Old Password:</label>
+    <input type="password" id="oldApPass" name="oldApPass" style="width:calc(100% - 18px); padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;"><br>
+    <label for="newApPass">New Password:</label>
+    <input type="password" id="newApPass" name="newApPass" style="width:calc(100% - 18px); padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;"><br>
+    <button type="submit" style='background-color:#8e44ad; color:white; width:100%; padding:10px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;'>Change AP Password</button>
+  </form>
+</div>
+
+<!-- વાઇફાઇ રીસેટ બટન -->
+<a href="/wifireset" onclick="return confirm('Are you sure you want to reset WiFi credentials? System will reboot and enter Setup Mode (QR Code).');" style="width:100%; text-decoration: none;">
+  <button id="wifiResetBtn" style="width:100%; margin-top: 5px; margin-bottom: 25px; background-color: #f39c12; padding: 12px; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer;">WiFi Reset & Setup (QR)</button>
+</a>
+
+<!-- ========================================================================= -->
+<!-- ભાગ ૧૦: સંપૂર્ણ સેટિંગ્સ પેજ (COMPLETE SETTINGS SECTION - handleSettings) -->
+<!-- ========================================================================= -->
+<div id="settings-section">
+  <div style="background:#2c3e50; color:white; padding:12px; border-radius:8px; text-align:center; margin-bottom:15px; font-size:1.3em; font-weight:bold;">
+    ⚙️ COMPLETE SETTINGS & CONFIGURATION
+  </div>
+
+  <div class="card">
+    <h2>Schedule Mode</h2>
+    <form action="/togglemode" method="POST">
+      <div class="mode-selector">
+        <input type="radio" id="weeklyMode" name="scheduleMode" value="weekly" checked>
+        <label for="weeklyMode">Weekly Recurring Schedule</label>
+      </div>
+      <div class="mode-selector">
+        <input type="radio" id="dateMode" name="scheduleMode" value="date">
+        <label for="dateMode">One-Time Date Schedule</label>
+      </div>
+    </form>
+  </div>
+
+  <!-- અઠવાડિક શેડ્યુલ સેટિંગ્સ -->
+  <div id="weekly-form" class="card">
+    <h3>Weekly Schedule Settings</h3>
+    <form action="/saveweekly" method="POST">
+      <label>ON Time (HH:MM):</label>
+      <input type="time" name="onTime" class="settings-input" value="18:30">
+      <label>OFF Time (HH:MM):</label>
+      <input type="time" name="offTime" class="settings-input" value="06:00">
+      <button type="submit" class="settings-btn" style="background:#4CAF50; color:white;">Save Weekly Time</button>
+    </form>
+    <div style="margin-top: 10px;">
+      <form action='/savedays' method='POST' style='display:inline-block'><input type='hidden' name='day' value='0'><button type='submit' class='day-btn active'>Sun</button></form>
+      <form action='/savedays' method='POST' style='display:inline-block'><input type='hidden' name='day' value='1'><button type='submit' class='day-btn active'>Mon</button></form>
+      <form action='/savedays' method='POST' style='display:inline-block'><input type='hidden' name='day' value='2'><button type='submit' class='day-btn active'>Tue</button></form>
+      <form action='/savedays' method='POST' style='display:inline-block'><input type='hidden' name='day' value='3'><button type='submit' class='day-btn active'>Wed</button></form>
+      <form action='/savedays' method='POST' style='display:inline-block'><input type='hidden' name='day' value='4'><button type='submit' class='day-btn active'>Thu</button></form>
+      <form action='/savedays' method='POST' style='display:inline-block'><input type='hidden' name='day' value='5'><button type='submit' class='day-btn active'>Fri</button></form>
+      <form action='/savedays' method='POST' style='display:inline-block'><input type='hidden' name='day' value='6'><button type='submit' class='day-btn active'>Sat</button></form>
+    </div>
+  </div>
+
+  <!-- વન-ટાઇમ ડેટ શેડ્યુલ સેટિંગ્સ -->
+  <div id="date-form" class="card" style="display:none;">
+    <h3>One-Time Date Schedule Settings</h3>
+    <form action="/savedate" method="POST">
+      <label>Start Date:</label><input type="date" name="startDate" class="settings-input" value="2026-10-28">
+      <label>Start Time:</label><input type="time" name="startTime" class="settings-input" value="18:30">
+      <label>End Date:</label><input type="date" name="endDate" class="settings-input" value="2026-10-29">
+      <label>End Time:</label><input type="time" name="endTime" class="settings-input" value="06:00">
+      <button type="submit" class="settings-btn" style="background:#4CAF50; color:white;">Save One-Time Schedule</button>
+    </form>
+  </div>
+
+  <!-- LDR અને સિસ્ટમ મોડ સેટિંગ્સ -->
+  <div class="card">
+    <h3>LDR & Mode Settings</h3>
+    <form action="/saveldr" method="POST">
+      <label for="ldrMode"><b>Select System Mode:</b></label> 
+      <select name="ldrMode" id="ldrMode" class="settings-select">
+        <option value="1">Mode 1: Only Timer</option>
+        <option value="2">Mode 2: Only LDR Sensor (Based)</option>
+        <option value="3">Mode 3: LDR + Timer (Combined)</option>
+        <option value="4">Mode 4: 7-Day Auto Learning Adaptive</option>
+        <option value="5" selected>Mode 5: Astronomical Hybrid Solar Calendar</option>
+      </select>
+      <br><br>
+      <label for="ldrDark"><b>LDR Dark Threshold (Turn ON below this value):</b> (0 to 4095)</label>
+      <input type="number" name="ldrDark" id="ldrDark" value="1200" class="settings-input">
+      <label for="ldrLight"><b>LDR Light Threshold (Turn OFF above this value):</b> (0 to 4095)</label>
+      <input type="number" name="ldrLight" id="ldrLight" value="2400" class="settings-input">
+      
+      <div style="margin: 15px 0; background-color: #efebe9; padding: 10px; border-radius: 5px;">
+        <input type="checkbox" name="useHybridLdr" id="useHybridLdr" value="1" checked style="width: auto; vertical-align: middle; margin-right: 8px;">
+        <label for="useHybridLdr" style="font-weight: bold; vertical-align: middle; cursor: pointer;">Enable Solar Calendar Hybrid Mode (7-Day Avg + Sun Calendar Avg)</label>
+      </div>
+
+      <details style="background: #eceff1; border: 1px solid #b0bec5; border-radius: 5px; padding: 10px; margin-top: 10px; text-align: left;">
+        <summary style="font-weight: bold; cursor: pointer; color: #37474f; outline: none; padding: 5px;">Show Astronomical Solar Calendar (Indian Region)</summary>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.9em; background: #ffffff;">
+          <tr style="background: #607d8b; color: white;"><th style="padding: 6px; border: 1px solid #ccc; text-align: center;">Month</th><th style="padding: 6px; border: 1px solid #ccc; text-align: center;">Sunrise (OFF)</th><th style="padding: 6px; border: 1px solid #ccc; text-align: center;">Sunset (ON)</th></tr>
+          <tr><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">1 (Jan)</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">07:15 AM</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:15 PM</td></tr>
+          <tr><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">2 (Feb)</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">07:05 AM</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:35 PM</td></tr>
+          <tr><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">3 (Mar)</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:45 AM</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:50 PM</td></tr>
+          <tr><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">4 (Apr)</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:15 AM</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">07:05 PM</td></tr>
+          <tr><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">5 (May)</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">05:55 AM</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">07:20 PM</td></tr>
+          <tr><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">6 (Jun)</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">05:50 AM</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">07:30 PM</td></tr>
+          <tr><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">7 (Jul)</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:00 AM</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">07:30 PM</td></tr>
+          <tr><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">8 (Aug)</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:15 AM</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">07:10 PM</td></tr>
+          <tr><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">9 (Sep)</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:25 AM</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:45 PM</td></tr>
+          <tr><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">10 (Oct)</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:35 AM</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:20 PM</td></tr>
+          <tr><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">11 (Nov)</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:55 AM</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:05 PM</td></tr>
+          <tr><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">12 (Dec)</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">07:15 AM</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:05 PM</td></tr>
+        </table>
+      </details>
+
+      <button type="submit" style="background-color:#009688; color:white; padding:12px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold; margin-top:10px;">Save LDR Settings</button>
+    </form>
+  </div>
+
+  <!-- પાવર અને સિક્યોરિટી સેટિંગ્સ પાસવર્ડ અનલોક -->
+  <div id="power-password-section" class="card">
+    <h3>Power & Security Settings</h3>
+    <p>This section is password protected (Default: <b>1234</b>).</p>
+    <input type="password" id="power_password" placeholder="Enter Password" class="settings-input">
+    <button onclick="checkPowerPassword()" class="settings-btn" style="background:#2196F3; color:white;">Unlock Settings</button>
+  </div>
+
+  <!-- પાવર અને સિક્યોરિટી સેટિંગ્સ ફોર્મ -->
+  <div id="power-settings-section" class="card" style="display:none;">
+    <h3><button class="lock-btn" onclick="hidePowerSettings()">Lock</button>Power & Security Settings</h3>
+    <form action='/savepower' method='POST'>
+      <h4>Power Protection</h4>
+      <div class="radio-group">
+        <label><b>Current Protection:</b></label><br>
+        <input type="radio" id="protOn" name="protection" value="1" checked><label for="protOn">Enabled</label>   
+        <input type="radio" id="protOff" name="protection" value="0"><label for="protOff">Disabled (Bypass)</label>
+      </div>
+
+      <label for='oc'><b>Over-Current Limit (Amps):</b> (0 to disable)</label>
+      <input type='number' step='0.1' name='oc' id='oc' value='10.0' class="settings-input">
+      
+      <label for='ocBypass'><b>Over-Current Bypass Duration (Seconds):</b></label>
+      <input type='number' step='1' name='ocBypass' id='ocBypass' value='5' class="settings-input">
+      
+      <label for='ccal'><b>Current Sensor Calibration Factor (Amps/Volt):</b></label>
+      <input type='number' step='0.1' name='ccal' id='ccal' value='30.0' class="settings-input">
+      
+      <label for='offset'><b>DC Offset (ADC Value):</b></label>
+      <input type='number' step='0.1' name='offset' id='offset' value='1850.0' class="settings-input">
+      
+      <hr>
+      <h4>Button & RainMaker App Control</h4>
+      <label for='maxBtnOc'><b>Max OC Limit via Buttons (Amps):</b></label>
+      <input type='number' step='0.1' name='maxBtnOc' id='maxBtnOc' value='25.0' class="settings-input">
+      
+      <div class='radio-group'>
+        <label><b>Button OC Setting:</b></label><br>
+        <input type="radio" id="btnLockOn" name="btnOcLock" value="1"><label for="btnLockOn">Locked</label>   
+        <input type="radio" id="btnLockOff" name="btnOcLock" value="0" checked><label for="btnLockOff">Unlocked</label>
+      </div>
+
+      <div class='checkbox-group'>
+        <label><b>Allow Editing in RainMaker App:</b> (Requires restart to apply)</label><br>
+        <input type='checkbox' name='rmEditOcP' value='1' id='rmEditOcP' checked><label for='rmEditOcP'>OC Protection</label><br>
+        <input type='checkbox' name='rmEditOcL' value='1' id='rmEditOcL' checked><label for='rmEditOcL'>OC Limit</label><br>
+        <input type='checkbox' name='rmEditOcC' value='1' id='rmEditOcC' checked><label for='rmEditOcC'>Current Calibration</label>
+      </div>
+
+      <hr>
+      <h4>Allowed System Modes (Main UI Visibility)</h4>
+      <div class='checkbox-group'>
+        <input type='checkbox' name='enM1' value='1' id='enM1' checked><label for='enM1'>(1) MODE 1: ONLY TIMER</label><br>
+        <input type='checkbox' name='enM2' value='1' id='enM2' checked><label for='enM2'>(2) MODE 2: ONLY LDR SENSOR (BASED)</label><br>
+        <input type='checkbox' name='enM3' value='1' id='enM3' checked><label for='enM3'>(3) MODE 3: LDR + TIMER (COMBINED)</label><br>
+        <input type='checkbox' name='enM4' value='1' id='enM4' checked><label for='enM4'>(4) MODE 4: 7-DAY AUTO LEARNING ADAPTIVE</label><br>
+        <input type='checkbox' name='enM5' value='1' id='enM5' checked><label for='enM5'>(5) MODE 5: ASTRONOMICAL HYBRID SOLAR CALENDAR</label>
+      </div>
+
+      <hr>
+      <h4>Password Management</h4>
+      <label for='powerPwd'><b>Power Settings Password:</b></label>
+      <input type='password' name='powerPwd' id='powerPwd' value='1234' class="settings-input">
+      <label for='warrantyPwd'><b>Warranty Page Password:</b></label>
+      <input type='password' name='warrantyPwd' id='warrantyPwd' value='1234' class="settings-input">
+      <label for='uiPwd'><b>UI Details (Farm/Div) Password:</b></label>
+      <input type='password' name='uiPwd' id='uiPwd' value='1234' class="settings-input">
+
+      <button type='submit' style='background-color:#607D8B; color:white; padding:12px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold; margin-top:15px;'>Save All Power & Security Settings</button>
+    </form>
+  </div>
+
+  <!-- વાઇફાઇ સેટિંગ્સ (WIFI SETTINGS) -->
+  <div class="card">
+    <h3>WiFi Settings</h3>
+    <form action='/savewifi' method='POST'>
+      <label>SSID (Network Name):</label>
+      <input type='text' name='ssid' value='Tulsi-Van-WiFi' class="settings-input">
+      <label>Password:</label>
+      <input type='password' name='password' value='12345678' class="settings-input">
+      <button type='submit' style='background-color:#ff9800; color:white;' class="settings-btn">Save WiFi & Restart</button>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- ભાગ ૧૧: સંપૂર્ણ વોરંટી મેનેજમેન્ટ સેક્શન (handleWarranty FORM & MANAGEMENT) -->
+<!-- ========================================================================= -->
+<div id="warranty-management-section">
+  <div style="background:#9C27B0; color:white; padding:12px; border-radius:8px; text-align:center; margin-bottom:15px; font-size:1.3em; font-weight:bold;">
+    🛡️ WARRANTY / GUARANTEE MANAGEMENT
+  </div>
+
+  <div class="card">
+    <h2 id="formTitle">Add / Edit Warranty / Guarantee</h2>
+    <div style="margin: 15px 0;">
+      <label for="purchaseDate">Purchase Date:</label>
+      <input type="date" id="purchaseDate" class="settings-input" value="2026-01-01">
+    </div>
+    <div style="margin: 15px 0;">
+      <label for="duration">Duration:</label>
+      <input type="number" id="duration" placeholder="Enter duration" value="1" class="settings-input">
+    </div>
+    <div style="margin: 15px 0;">
+      <label for="durationType">Duration Type:</label>
+      <select id="durationType" class="settings-select">
+        <option value="months">Months</option>
+        <option value="years" selected>Years</option>
+      </select>
+    </div>
+    <div style="margin: 15px 0;">
+      <label for="warrantyType">Type:</label>
+      <select id="warrantyType" class="settings-select">
+        <option value="Warranty" selected>Warranty</option>
+        <option value="Guarantee">Guarantee</option>
+      </select>
+    </div>
+    <button class="settings-btn" style="background:#4CAF50; color:white;" onclick="saveWarrantyDataDirect()">Save Warranty Details</button>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- ભાગ ૧૨: ફૂટર અને ફર્મવેર ઇન્ફોર્મેશન (FOOTER & FIRMWARE) -->
+<!-- ======================================================== -->
+<div class="footer-card">
+  <h3>ShaktiPrime-Globle Technologis</h3>
+  <p>Email: info.shaktiprime@gmail.com</p>
+  <p>Contact: 9979227523</p>
+</div>
+
+<div class="firmware-info">
+<pre>SPGT-Timer name   : Shakti Prime AutoLux 4M Pro (2026 Edition)
+Brand             : Shakti Prime AutoLux 4M Pro
+Model             : AL4M-401
+Version           : V4.0.1
+Device            : ESP32
+Author            : ShaktiPrime-Globle Technologis
+Date              : 29-Jul-2026(Released on this Date)</pre>
+</div>
+
+<!-- મોડલ પોપઅપ -->
+<div id="password-modal" class="modal">
+  <div class="modal-content">
+    <span class="close-button" onclick="this.parentElement.parentElement.style.display='none'">&times;</span>
+    <div id="modal-content-inner"></div>
+  </div>
+</div>
+</div>
+<!-- ======================================================== -->
+<!-- ભાગ ૧૩: સંપૂર્ણ જાવાસ્ક્રિપ્ટ લોજિક (ALL JAVASCRIPT CODE) -->
+<!-- ======================================================== -->
+<script>
+const uiDetailsPassword = "1234";
+const warrantyPassword = "1234";
+const powerSettingsPassword = "1234"; 
+const firebaseConfig = {
+   apiKey: "AIzaSyBntGgRZdhKhLAalvhVf_zNrpx78VNgDFY",
+  databaseURL: "https://timer-relay-al5m-501-default-rtdb.asia-southeast1.firebasedatabase.app/"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let activeSerial = "";
+let liveListenerRef = null;
+
+// ૧. ADD & CONNECT DEVICE LOGIC
+function addAndConnectDevice() {
+  const sn = document.getElementById("devSerial").value.trim().toUpperCase();
+  const name = document.getElementById("devName").value.trim();
+  const pass = document.getElementById("devPass").value.trim();
+
+  if(!sn || !pass) {
+    alert("કૃપા કરીને Serial Number અને Password બંને નાખો!");
+    return;
+  }
+  connectDevice(sn, name, pass);
+}
+
+// ૨. CONNECT & SYNC LOGIC
+function connectDevice(sn, name, pass) {
+  document.getElementById("activeDevTag").innerText = "કનેક્ટ થઈ રહ્યું છે: " + sn + "...";
+
+  db.ref("devices/" + sn).once("value").then((snapshot) => {
+    if(!snapshot.exists()) {
+      alert("આ Serial Number (" + sn + ") વાળું ડિવાઇસ મળ્યું નથી!");
+      clearUIData();
+      return;
+    }
+
+    const data = snapshot.val();
+    if(data.pass !== pass) {
+      alert("ખોટો પાસવર્ડ! કૃપા કરીને સાચો પાસવર્ડ નાખો.");
+      clearUIData();
+      return;
+    }
+
+    activeSerial = sn;
+    localStorage.setItem("spgt_sn", sn);
+    localStorage.setItem("spgt_name", name);
+    localStorage.setItem("spgt_pass", pass);
+
+    document.getElementById("activeDevTag").innerText = "કનેક્ટેડ: " + sn + (name ? " (" + name + ")" : "");
+    const divElem = document.getElementById("divisionIdVal");
+    const farmElem = document.getElementById("farmNameVal");
+    if(divElem) divElem.innerText = "Serial: " + sn;
+    if(farmElem) farmElem.innerText = name ? name : (data.placeName || "Tulsi-Van Farm");
+
+    if(name && name !== data.placeName) {
+      db.ref("devices/" + sn + "/placeName").set(name);
+    }
+
+    if(liveListenerRef) liveListenerRef.off();
+    startLiveSync(sn);
+
+  }).catch((err) => {
+    alert("કનેક્શન એરર: " + err.message);
+  });
+}
+
+// ૩. FIREBASE LIVE DATA LISTENER (લોકલ વેબના તમામ ૧૦૦% ફીચર્સ ગીથબ પર લાઈવ થશે)
+function startLiveSync(sn) {
+  liveListenerRef = db.ref("devices/" + sn);
+  liveListenerRef.on("value", (snapshot) => {
+    const data = snapshot.val();
+    if(!data) return;
+
+    // ૧. લાઈવ RTC ઘડિયાળ અને તારીખ અપડેટ
+    if(data.rtcTimeStr) {
+      const clockElem = document.querySelector(".current-time");
+      if(clockElem) clockElem.innerText = data.rtcTimeStr;
+    }
+
+    // ૨. લાઈવ કરંટ & ઓવર કરંટ પ્રોટેક્શન
+    if(data.current !== undefined) {
+      const pInfo = document.querySelector(".power-info");
+      const protText = data.protEnabled ? "<span class='on'>Protection: ENABLED</span>" : "<span class='bypassed'>Protection: DISABLED</span>";
+      if(pInfo) pInfo.innerHTML = "<strong>Live Current: </strong>" + Number(data.current).toFixed(2) + " A  |  " + protText;
+    }
+
+    // ૩. રીલે સ્ટેટસ & સિસ્ટમ મોડ
+    const rDot = document.querySelector(".status-dot");
+    const rText = document.querySelector(".status strong + span");
+    if(rDot && rText && data.relayStatus !== undefined) {
+      let modeName = "(TIMER)";
+      if(data.mode === 2) modeName = "(LDR)";
+      else if(data.mode === 3) modeName = "(LDR+TIMER)";
+      else if(data.mode === 4) modeName = "(7DAY AUTO)";
+      else if(data.mode === 5) modeName = "(HYBRID ASTRO)";
+
+      if(data.isTripped) {
+        rDot.style.color = "#D32F2F";
+        rText.className = "tripped";
+        rText.innerHTML = "OVER-CURRENT TRIP!";
+      } else if(data.emergencyStop) {
+        rDot.style.color = "#ff9800";
+        rText.className = "emergency";
+        rText.innerHTML = "EMERGENCY STOP";
+      } else if(data.manualOverride) {
+        rDot.style.color = data.relayStatus ? "#4CAF50" : "#f44336";
+        rText.className = "manual";
+        rText.innerHTML = "MANUAL <span class='" + (data.relayStatus ? "on" : "off") + "'>" + (data.relayStatus ? "ON" : "OFF") + "</span>";
+      } else if(data.relayStatus) {
+        rDot.style.color = "#4CAF50";
+        rText.className = "on";
+        rText.innerHTML = "ON Timer <span style='animation: blink 1.2s linear infinite; font-weight: bold;'>" + modeName + "</span>";
+      } else {
+        rDot.style.color = "#f44336";
+        rText.className = "off";
+        rText.innerHTML = "OFF Timer <span style='font-weight: bold;'>" + modeName + "</span>";
+      }
+    }
+
+    // ૪. LDR સૂર્યપ્રકાશ (Light Intensity %)
+    if(data.ldrValue !== undefined) {
+      let ldrPercent = Math.round((data.ldrValue / 4095) * 100);
+      if(ldrPercent < 0) ldrPercent = 0;
+      if(ldrPercent > 100) ldrPercent = 100;
+      const ldrBox = document.querySelector(".card:nth-of-type(3) div");
+      if(ldrBox) {
+        ldrBox.innerHTML = "<strong>Sunlight Intensity:</strong> <span style='font-weight:bold; color:#2e7d32;'>" + ldrPercent + "%</span> (Raw value: " + data.ldrValue + ")";
+      }
+    }
+
+    // ૫. શેડ્યુલ ટાઈમર ડિસ્પ્લે (ON & OFF Time)
+    if(data.onHour !== undefined && data.offHour !== undefined) {
+      const pad = (n) => (n < 10 ? '0' : '') + n;
+      const onStr = pad(data.onHour) + ":" + pad(data.onMinute);
+      const offStr = pad(data.offHour) + ":" + pad(data.offMinute);
+      const schItems = document.querySelectorAll(".schedule-item");
+      if(schItems.length >= 2) {
+        schItems[0].innerHTML = "<strong>ON Time:</strong> " + onStr;
+        schItems[1].innerHTML = "<strong>OFF Time:</strong> " + offStr;
+      }
+    }
+
+    // ૬. નેક્સ્ટ સ્વિચિંગ કાઉન્ટડાઉન
+    if(data.nextSwitchTime !== undefined && data.nextSwitchTime > 0) {
+      const nextDate = new Date(data.nextSwitchTime * 1000);
+      const nextBox = document.querySelector(".card:nth-of-type(2) div[style*='margin-top: 10px']");
+      if(nextBox) {
+        nextBox.innerHTML = "Next Switch on: <strong>" + nextDate.toLocaleTimeString() + "</strong><br><small>" + nextDate.toLocaleDateString() + "</small>";
+      }
+      const nextStateBox = document.querySelector(".card:nth-of-type(2) p strong");
+      if(nextStateBox) {
+        nextStateBox.innerHTML = data.nextState ? "<span class='on'>ON</span>" : "<span class='off'>OFF</span>";
+      }
+    }
+  });
+}
+
+// ગીથબ વેબ પેજના તમામ ફોર્મ બટનો માટે ક્લાઉડ ફંક્શન્સ:
+function sendCloudTimerSettings() {
+  if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
+  const onTime = document.querySelector("input[name='onTime']").value;
+  const offTime = document.querySelector("input[name='offTime']").value;
+  if(!onTime || !offTime) { alert("સમય પસંદ કરો!"); return; }
+  db.ref("devices/" + activeSerial + "/setTimerCmd").set(onTime + "-" + offTime);
+  alert("શેડ્યુલ ટાઈમ ESP32 પર અપડેટ થઈ ગયો!");
+}
+
+function sendCloudLdrSettings() {
+  if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
+  const modeVal = parseInt(document.getElementById("ldrMode").value);
+  const darkVal = parseInt(document.getElementById("ldrDark").value);
+  const lightVal = parseInt(document.getElementById("ldrLight").value);
+  db.ref("devices/" + activeSerial + "/setModeCmd").set(modeVal);
+  db.ref("devices/" + activeSerial + "/setLdrDarkCmd").set(darkVal);
+  db.ref("devices/" + activeSerial + "/setLdrLightCmd").set(lightVal);
+  alert("LDR સેટિંગ્સ ESP32 પર અપડેટ થઈ ગઈ!");
+}
+
+function sendCloudPowerSettings() {
+  if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
+  const ocVal = parseFloat(document.getElementById("oc").value);
+  const protVal = document.getElementById("protOn").checked ? 1 : 0;
+  db.ref("devices/" + activeSerial + "/setOcLimitCmd").set(ocVal);
+  db.ref("devices/" + activeSerial + "/setProtEnCmd").set(protVal);
+  alert("પાવર પ્રોટેક્શન સેટિંગ્સ અપડેટ થઈ ગઈ!");
+}
+
+function triggerCloudRestart() {
+  if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
+  if(confirm("શું તમે ESP32 રીસ્ટાર્ટ કરવા માંગો છો?")) {
+    db.ref("devices/" + activeSerial + "/restartCmd").set(1);
+    alert("રીસ્ટાર્ટ કમાન્ડ મોકલાઈ ગયો! 5 સેકન્ડમાં ESP32 રીબૂટ થશે.");
+  }
+}
+
+function triggerClearLdrReport() {
+  if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
+  if(confirm("શું તમે 7-ડે ઓટો લર્નિંગ ડેટા ક્લીયર કરવા માંગો છો?")) {
+    db.ref("devices/" + activeSerial + "/clearLdrCmd").set(1);
+    alert("ડેટા ક્લીયર કમાન્ડ મોકલાઈ ગયો!");
+  }
+}
+
+// ૪. DELETE BUTTON LOGIC
+function deleteActiveDevice() {
+  if(!confirm("શું તમે આ ડિવાઇસને લિસ્ટમાંથી હટાવવા માંગો છો?")) return;
+
+  if(liveListenerRef) liveListenerRef.off();
+  activeSerial = "";
+  localStorage.removeItem("spgt_sn");
+  localStorage.removeItem("spgt_name");
+  localStorage.removeItem("spgt_pass");
+
+  document.getElementById("devSerial").value = "";
+  document.getElementById("devName").value = "";
+  document.getElementById("devPass").value = "";
+
+  clearUIData();
+  alert("ડિવાઇસ સફળતાપૂર્વક હટાવી દેવામાં આવ્યું છે!");
+}
+
+function clearUIData() {
+  document.getElementById("activeDevTag").innerText = "કોઈ ડિવાઇસ કનેક્ટેડ નથી (ડેટા જોવા માટે Serial No અને Pass નાખો)";
+  const divElem = document.getElementById("divisionIdVal");
+  const farmElem = document.getElementById("farmNameVal");
+  if(divElem) divElem.innerText = "Serial: --";
+  if(farmElem) farmElem.innerText = "Device Name: --";
+
+  const rDot = document.querySelector(".status-dot");
+  const rText = document.querySelector(".status strong + span");
+  if(rDot) rDot.style.color = "#95a5a6";
+  if(rText) {
+    rText.className = "off";
+    rText.innerText = "DISCONNECTED";
+  }
+
+  const pInfo = document.querySelector(".power-info");
+  if(pInfo) pInfo.innerHTML = "<strong>Live Current: </strong>-- A  |  <span>Protection: --</span>";
+}
+
+function sendCloudRelayCmd(cmdVal) {
+  if(!activeSerial) {
+    alert("પહેલાં Serial No અને Password નાખીને Add/Connect કરો!");
+    return;
+  }
+  db.ref("devices/" + activeSerial + "/remoteRelayCmd").set(cmdVal).then(() => {
+    alert("કમાન્ડ સફળતાપૂર્વક મોકલાયો!");
+  });
+}
+
+function resetCloudTimer() {
+  if(!activeSerial) {
+    alert("પહેલાં Serial No અને Password નાખીને Add/Connect કરો!");
+    return;
+  }
+  if(confirm("શું તમે ખરેખર ટાઈમર રીસેટ કરવા માંગો છો?")) {
+    db.ref("devices/" + activeSerial + "/resetTimerCmd").set(1);
+    alert("રીસેટ કમાન્ડ મોકલાઈ ગયો!");
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {  
+  // પેજ ખુલતાં જ સેવ થયેલું ડિવાઇસ હોય તો આપમેળે કનેક્ટ થશે
+  const savedSN = localStorage.getItem("spgt_sn");
+  const savedName = localStorage.getItem("spgt_name");
+  const savedPass = localStorage.getItem("spgt_pass");
+
+  if(savedSN && savedPass) {
+    document.getElementById("devSerial").value = savedSN;
+    document.getElementById("devName").value = savedName || "";
+    document.getElementById("devPass").value = savedPass;
+    connectDevice(savedSN, savedName, savedPass);
+  } else {
+    clearUIData();
+  }
+  const modal = document.getElementById('password-modal');
+  const editButton = document.getElementById('edit-details-btn');
+  
+  if(editButton) {
+    editButton.onclick = function() {
+      const modalContent = document.getElementById('modal-content-inner');
+      modalContent.innerHTML = `<h3>Enter Password</h3><p>Please enter the password to edit details (Default: 1234):</p><input type="password" id="details-password-input" class="modal-input" required><button id="details-password-submit" class="modal-button">Submit</button>`;
+      modal.style.display = 'block';
+      document.getElementById('details-password-input').focus();
+      document.getElementById('details-password-submit').onclick = function() {
+        const passInput = document.getElementById('details-password-input');
+        if (passInput.value === uiDetailsPassword) {
+            modal.style.display = 'none';
+            document.getElementById('edit-details-form').style.display = 'block';
+        } else {
+            alert('Incorrect password!');
+        }
+        passInput.value = '';
+      };
+    };
+  }
+
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = 'none';
+    }
+  };
+
+  // શેડ્યુલ મોડ ટોગલ (Weekly vs Date)
+  function toggleModeDisplay(){
+    var isDateMode = document.querySelector('input[name="scheduleMode"]:checked').value === 'date';
+    document.getElementById('weekly-form').style.display = isDateMode ? 'none' : 'block';
+    document.getElementById('date-form').style.display = isDateMode ? 'block' : 'none';
+  }
+  toggleModeDisplay();
+  var radios = document.querySelectorAll('input[name="scheduleMode"]');
+  radios.forEach(radio => radio.addEventListener('change', function() { toggleModeDisplay(); }));
+
+  // વોરંટી ડિફોલ્ટ લોડિંગ
+  if (!localStorage.getItem("purchaseDate")) {
+    const pd = new Date("2026-01-01");
+    const ed = new Date("2027-01-01");
+    localStorage.setItem("purchaseDate", pd.toString());
+    localStorage.setItem("expiryDate", ed.toString());
+    localStorage.setItem("type", "Warranty");
+    localStorage.setItem("warranty_visible", "true");
+  }
+
+  loadWarrantyStatus();
+});
+
+function confirmAndExecuteReset() { 
+  if(confirm("Are you sure you want to reset WiFi credentials? System will reboot and enter Setup Mode (QR Code).")) { 
+    window.location.href = "/wifireset"; 
+  }
+}
+
+function loadWarrantyStatus() {
+  const displayArea = document.getElementById('warranty-display-area');
+  if (!localStorage.getItem("purchaseDate")) {
+    displayArea.innerHTML = "<p>No warranty information has been set.</p>";
+    return;
+  }
+  if (localStorage.getItem("warranty_visible") === "true") {
+    renderWarrantyCard();
+  } else {
+    renderShowButton();
+  }
+}
+
+function renderWarrantyCard() {
+  const displayArea = document.getElementById('warranty-display-area');
+  const pd = new Date(localStorage.getItem("purchaseDate"));
+  const ed = new Date(localStorage.getItem("expiryDate"));
+  const type = localStorage.getItem("type");
+  const today = new Date();
+  let daysLeft = Math.ceil((ed - today) / (1000 * 60 * 60 * 24));
+  if (daysLeft < 0) daysLeft = 0;
+  
+  let cardHTML = `
+    <div class="warranty-card-3d">
+      <div class="details">
+        <div class="card-header"><h3>${type} Details</h3></div>
+        <div class="info-row"><span class="info-label">Purchase Date:</span><span class="info-value">${pd.toDateString()}</span></div>
+        <div class="info-row"><span class="info-label">Expiry Date:</span><span class="info-value">${ed.toDateString()}</span></div>
+        <div class="info-row"><span class="info-label">Days Left:</span><span class="info-value ${daysLeft <= 0 ? 'expired-text' : ''}">${daysLeft}</span></div>
+      </div>
+    </div><br>
+    <button class="btn-warranty-toggle" onclick="promptAndHide()">Hide Details</button>
+  `;
+  displayArea.innerHTML = cardHTML;
+}
+
+function renderShowButton() {
+  document.getElementById('warranty-display-area').innerHTML = '<button class="btn-warranty-toggle" onclick="promptAndShow()">Show Warranty Details</button>';
+}
+
+function showPasswordModal(title, paragraph, buttonText, callback) {
+  const modal = document.getElementById('password-modal');
+  const modalContent = document.getElementById('modal-content-inner');
+  modalContent.innerHTML = `<h3>${title}</h3><p>${paragraph}</p><input type="password" id="generic-password-input" class="modal-input"><button id="generic-password-submit" class="modal-button">${buttonText}</button>`;
+  modal.style.display = 'block';
+  const passInput = document.getElementById('generic-password-input');
+  passInput.focus();
+  document.getElementById('generic-password-submit').onclick = function() {
+    callback(passInput.value);
+  };
+}
+
+function promptAndShow() {
+  showPasswordModal('Enter Password', 'Enter password to show details (Default: 1234):', 'Show', function(pass) {
+    if (pass === warrantyPassword) {
+      localStorage.setItem("warranty_visible", "true");
+      renderWarrantyCard();
+      document.getElementById('password-modal').style.display = 'none';
+    } else if (pass !== null) {
+      alert("Incorrect password!");
+    }
+  });
+}
+
+function promptAndHide() {
+  showPasswordModal('Enter Password', 'Enter password to hide details (Default: 1234):', 'Hide', function(pass) {
+    if (pass === warrantyPassword) {
+      localStorage.setItem("warranty_visible", "false");
+      renderShowButton();
+      document.getElementById('password-modal').style.display = 'none';
+    } else if (pass !== null) {
+      alert("Incorrect password!");
+    }
+  });
+}
+
+function confirmRestart() {
+  if (confirm("Are you sure you want to restart ESP32?")) {
+    window.location.href = "/webrestart";
+  }
+}
+
+function checkPowerPassword() {
+  if (document.getElementById('power_password').value === powerSettingsPassword) {
+    document.getElementById('power-password-section').style.display = 'none';
+    document.getElementById('power-settings-section').style.display = 'block';
+  } else {
+    alert('Incorrect Password! (Default: 1234)');
+  }
+}
+
+function hidePowerSettings() {
+  document.getElementById('power-settings-section').style.display = 'none';
+  document.getElementById('power-password-section').style.display = 'block';
+  document.getElementById('power_password').value = '';
+}
+
+function saveWarrantyDataDirect() {
+  const purchaseDate = document.getElementById("purchaseDate").value;
+  const duration = parseInt(document.getElementById("duration").value);
+  const durationType = document.getElementById("durationType").value;
+  const type = document.getElementById("warrantyType").value;
+  if (!purchaseDate || !duration || isNaN(duration)) { alert("Please fill all fields correctly."); return; }
+  const date = new Date(purchaseDate);
+  let expiry = new Date(date);
+  if (durationType === "months") { expiry.setMonth(expiry.getMonth() + duration); } else { expiry.setFullYear(expiry.getFullYear() + duration); }
+  localStorage.setItem("purchaseDate", date.toString());
+  localStorage.setItem("expiryDate", expiry.toString());
+  localStorage.setItem("type", type);
+  localStorage.setItem("warranty_visible", "true"); 
+  renderWarrantyCard();
+  alert("Warranty Details Saved Successfully!");
+}
+</script>
+
+</body>
+</html>
