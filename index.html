@@ -230,6 +230,11 @@
                 <h3 data-i18n="mot_title">3 Phase Motor</h3>
                 <a href="motor.html" class="btn" data-i18n="mot_btn">Open Motor</a>
             </div>
+           
+            <div class="card" id="card-timer">
+                <h3 data-i18n="timer_title">TIMER-AL5M-501</h3>
+                <a href="timer.html" class="btn" data-i18n="timer_btn">Open Timer</a>
+            </div>
 
             <div class="card">
                 <h3 style="color: var(--accent-color);" data-i18n="sys_title">System Settings</h3>
@@ -271,6 +276,10 @@
                 <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--text-main);">
                     <input type="checkbox" id="chk-card-motor" onchange="toggleCard('card-motor', this.checked)" style="width: 20px; height: 20px; cursor: pointer;">
                     <span data-i18n="mot_title">3 Phase Motor</span>
+                </label>
+                 <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--text-main);">
+                    <input type="checkbox" id="chk-card-timer" onchange="toggleCard('card-timer', this.checked)" style="width: 20px; height: 20px; cursor: pointer;">
+                    <span data-i18n="timer_title">TIMER-AL5M-501</span>
                 </label>
             </div>
 
@@ -361,6 +370,8 @@
                 gen_btn: "Open Genset",
                 mot_title: "3 Phase Motor",
                 mot_btn: "Open Motor",
+                 timer_title: "TIMER-AL5M-501",
+                timer_btn: "Open Timer",
                 sys_title: "System Settings",
                 btn_theme: "Change Theme",
                 btn_manage: "Manage Cards (Hide / Show)",
@@ -383,6 +394,8 @@
                 gen_btn: "જનરેટર ખોલો",
                 mot_title: "૩ ફેઝ મોટર",
                 mot_btn: "મોટર ખોલો",
+                  timer_title: "TIMER-AL5M-501",
+                timer_btn: "ટાઈમર ખોલો",
                 sys_title: "સિસ્ટમ સેટિંગ્સ",
                 btn_theme: "થીમ બદલો",
                 btn_manage: "કાર્ડ મેનેજ કરો (હાઇડ / શૉ)",
@@ -405,6 +418,8 @@
                 gen_btn: "जनरेटर खोलें",
                 mot_title: "3 फेज मोटर",
                 mot_btn: "मोटर खोलें",
+                 timer_title: "TIMER-AL5M-501",
+                timer_btn: "टाइमर खोलें",
                 sys_title: "सिस्टम सेटिंग्स",
                 btn_theme: "थीम बदलें",
                 btn_manage: "कार्ड प्रबंधित करें (छुपाएं / दिखाएं)",
@@ -460,7 +475,7 @@
 
         function loadCardVisibility() {
             let saved = JSON.parse(localStorage.getItem('shubh_card_visibility') || '{}');
-            const cardIds = ['card-ac', 'card-safety', 'card-genset', 'card-motor'];
+            const cardIds = ['card-ac', 'card-safety', 'card-genset', 'card-motor', 'card-timer'];
             cardIds.forEach(function(id) {
                 const isVisible = saved[id] !== false;
                 const el = document.getElementById(id);
