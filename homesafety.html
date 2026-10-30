@@ -213,13 +213,13 @@
                 </div>
                  <!-- REAL TIME MONITORING & ANALYTICS DATES & BUTTONS -->
                 <div style="margin-top: 15px; background: #101a26; padding: 12px; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center;"> 
-                    <span style="font-size: 0.85em; color: #ccc; font-weight: bold;">📅 Bill Cycle Range:</span>
-                    <input type="date" id="c_start_date" style="background: #1d2b3a; color: #fff; border: 1px solid #3c4f65; padding: 5px; border-radius: 5px; font-size: 0.85em;"> 
+                    <span style="font-size: 0.85em; color: #ccc; font-weight: bold;">📅 Bill Cycle Range:</span> 
+                      <input type="date" id="c_start_date" onfocus="isEditingBilling=true;" onchange="isEditingBilling=true;" style="background: #1d2b3a; color: #fff; border: 1px solid #3c4f65; padding: 5px; border-radius: 5px; font-size: 0.85em;"> 
                     <span style="color: #ccc;">to</span> 
-                    <input type="date" id="c_end_date" style="background: #1d2b3a; color: #fff; border: 1px solid #3c4f65; padding: 5px; border-radius: 5px; font-size: 0.85em;">
+                    <input type="date" id="c_end_date" onfocus="isEditingBilling=true;" onchange="isEditingBilling=true;" style="background: #1d2b3a; color: #fff; border: 1px solid #3c4f65; padding: 5px; border-radius: 5px; font-size: 0.85em;">
                     <span style="font-size: 0.85em; color: #ccc; font-weight: bold;">⏰ Time:</span>
-                    <input type="time" id="c_end_time" value="09:00" style="background: #1d2b3a; color: #fff; border: 1px solid #3c4f65; padding: 5px; border-radius: 5px; font-size: 0.85em;">
-                    <select id="c_end_ampm" style="background: #1d2b3a; color: #fff; border: 1px solid #3c4f65; padding: 5px; border-radius: 5px; font-size: 0.85em;">
+                    <input type="time" id="c_end_time" onfocus="isEditingBilling=true;" onchange="isEditingBilling=true;" value="09:00" style="background: #1d2b3a; color: #fff; border: 1px solid #3c4f65; padding: 5px; border-radius: 5px; font-size: 0.85em;">
+                    <select id="c_end_ampm" onfocus="isEditingBilling=true;" onchange="isEditingBilling=true;" style="background: #1d2b3a; color: #fff; border: 1px solid #3c4f65; padding: 5px; border-radius: 5px; font-size: 0.85em;">
                         <option value="AM">AM</option>
                         <option value="PM">PM</option>
                     </select>
@@ -442,11 +442,12 @@
         let waveAnim = null;
         let trendHistory = []; 
         let liveRef = null;
+        let isEditingBilling = false; // તારીખ ટાઈપ કરતી વખતે લાઈવ ડેટા ભૂંસી ન નાખે તે માટેનું લોક
 
          function connectFirebase() {
             var rawSN = document.getElementById("custSN").value.trim();
             if(!rawSN) { alert("કૃપા કરીને Device Serial Number દાખલ કરો!"); return; }
-
+            isEditingBilling = false;
             // ૧. સીરીયલ નંબર ઓટો-ફોર્મેટ
             var cleanSN = rawSN.toUpperCase();
             if (!cleanSN.startsWith("SN:")) {
@@ -566,17 +567,20 @@
                     document.getElementById("disp_today_kwh").innerHTML = (d.todayKWh || 0).toFixed(3) + ' <span style="font-size:0.5em;color:#aaa;">kWh</span>';
                     document.getElementById("disp_last_bill").innerText = "₹ " + (d.lastBill || 0).toFixed(2);
                     
-                    if(d.startDate !== undefined && document.activeElement !== document.getElementById("c_start_date")) {
-                        document.getElementById("c_start_date").value = d.startDate;
-                    }
-                    if(d.endDate !== undefined && document.activeElement !== document.getElementById("c_end_date")) {
-                        document.getElementById("c_end_date").value = d.endDate;
-                    }
-                    if(d.endTime !== undefined && document.activeElement !== document.getElementById("c_end_time")) {
-                        document.getElementById("c_end_time").value = d.endTime || "09:00";
-                    }
-                    if(d.endAmPm !== undefined && document.activeElement !== document.getElementById("c_end_ampm")) {
-                        document.getElementById("c_end_ampm").value = d.endAmPm || "AM";
+                    // જો યુઝર જાતે તારીખ કે ટાઈમ સિલેક્ટ કરતો હોય તો લાઈવ ડેટા તેને ઓવરરાઈટ/ક્લિયર નહીં કરે
+                    if (!isEditingBilling) {
+                        if(d.startDate !== undefined) {
+                            document.getElementById("c_start_date").value = d.startDate;
+                        }
+                        if(d.endDate !== undefined) {
+                            document.getElementById("c_end_date").value = d.endDate;
+                        }
+                        if(d.endTime !== undefined) {
+                            document.getElementById("c_end_time").value = d.endTime || "09:00";
+                        }
+                        if(d.endAmPm !== undefined) {
+                            document.getElementById("c_end_ampm").value = d.endAmPm || "AM";
+                        }
                     }
                     var cycleBillPreview = ((d.todayKWh || 0) * (d.energyPrice || 10)).toFixed(2);
                     var prevEl = document.getElementById("disp_cycle_bill_preview");
@@ -714,12 +718,14 @@
             var eTime = document.getElementById("c_end_time").value;
             var eAmPm = document.getElementById("c_end_ampm").value;
             if(!sDate || !eDate) { alert("કૃપા કરીને Start Date અને End Date પસંદ કરો!"); return; }
+            isEditingBilling = false; // સેવ બટન દબાવ્યા પછી ફરીથી લાઈવ સિંક ચાલુ થશે
             var payload = "SET_BILLING_CYCLE:" + sDate + "|||" + eDate + "|||" + eTime + "|||" + eAmPm;
             sendCommand(payload, "Billing Cycle Dates ESP32 માં સેવ થઈ ગઈ છે!");
         }
 
           function resetAnalyticsCloud() {
             if(confirm("તમામ Real-Time Analytics ડેટા (0.0) રીસેટ કરવો છે?")) {
+                isEditingBilling = false;
                 document.getElementById("c_start_date").value = "";
                 document.getElementById("c_end_date").value = "";
                 sendCommand("RESET_ANALYTICS", "Real-Time Analytics Data 0.0 થઈ ગયું છે!");
@@ -728,6 +734,7 @@
 
         function saveCurrentBillCloud() {
             if(confirm("ચાલુ બિલ લાસ્ટ મંથમાં સેવ કરીને નવી સાયકલ શરૂ કરવી છે?")) {
+              isEditingBilling = false; // નેક્સ્ટ સાયકલની નવી ઓટોમેટિક તારીખો સ્ક્રીન પર દેખાય તે માટે
                 sendCommand("SAVE_CURRENT_BILL", "Current Bill Saved to Last Month & Next Cycle Started!");
             }
         }
@@ -947,6 +954,7 @@
             if(document.getElementById("custDevPass")) document.getElementById("custDevPass").value = "";
             if (liveRef) { liveRef.off(); liveRef = null; }
             localStorage.removeItem("my_device_sn");
+              isEditingBilling = false; // ક્લિયર કરતાં જ એડિટિંગ લોક પણ ખુલી જશે
             // તમામ ડેશબોર્ડ પેરામીટર્સ 0.0 કરવા
             document.getElementById("disp_top_sn").innerText = "Not Connected (Enter Below)";
             document.getElementById("disp_top_sn").style.borderColor = "#ffd600";
@@ -1053,6 +1061,7 @@
 
             if(!rawSN) { alert("કૃપા કરીને Device Serial Number દાખલ કરો!"); return; }
             if(!pass) { alert("કૃપા કરીને Device Password દાખલ કરો!"); return; }
+            isEditingBilling = false; // નવું ડિવાઇસ સેવ થાય ત્યારે ફ્લેગ રીસેટ થશે
 
             var sn = rawSN.toUpperCase();
             if (!sn.startsWith("SN:")) {
