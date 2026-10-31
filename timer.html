@@ -606,9 +606,9 @@ Date              : 29-Jul-2026(Released on this Date)</pre>
 <!-- ભાગ ૧૩: સંપૂર્ણ જાવાસ્ક્રિપ્ટ લોજિક (ALL JAVASCRIPT CODE) -->
 <!-- ======================================================== -->
 <script>
-const uiDetailsPassword = "1234";
-const warrantyPassword = "1234";
-const powerSettingsPassword = "1234"; 
+const uiDetailsPassword = "EasyTech@Timer**2025";
+const warrantyPassword = "12345678";
+const powerSettingsPassword = "EasyTech@Power**2025"; 
 const firebaseConfig = {
    apiKey: "AIzaSyBntGgRZdhKhLAalvhVf_zNrpx78VNgDFY",
   databaseURL: "https://timer-relay-al5m-501-default-rtdb.asia-southeast1.firebasedatabase.app/"
@@ -759,6 +759,41 @@ function startLiveSync(sn) {
       const nextStateBox = document.querySelector(".card:nth-of-type(2) p strong");
       if(nextStateBox) {
         nextStateBox.innerHTML = data.nextState ? "<span class='on'>ON</span>" : "<span class='off'>OFF</span>";
+      }
+    }
+     // ૭. 7-Day Auto Learning ડેટા ESP32 Firebase માંથી લાઈવ અપડેટ કરવો
+    if(data.ldrOn && data.ldrOff) {
+      let liveRows = "";
+      for(let i = 0; i < 7; i++) {
+        let tOn = data.ldrOn[i] || 0;
+        let tOff = data.ldrOff[i] || 0;
+        let dateStr = "No Data", onStr = "--:--", offStr = "--:--";
+
+        if(tOn > 1672531200) {
+          let d = new Date(tOn * 1000);
+          dateStr = d.toLocaleDateString();
+          onStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        if(tOff > 1672531200) {
+          let d = new Date(tOff * 1000);
+          if(dateStr === "No Data") dateStr = d.toLocaleDateString();
+          offStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        let bg = (i % 2 === 0) ? "#f9f9f9" : "#ffffff";
+        liveRows += `<tr style='background-color:${bg};'>
+          <td style='padding:8px; border:1px solid #ddd;'>${dateStr}</td>
+          <td style='padding:8px; border:1px solid #ddd; color:#2e7d32; font-weight:bold;'>${onStr}</td>
+          <td style='padding:8px; border:1px solid #ddd; color:#c62828; font-weight:bold;'>${offStr}</td>
+        </tr>`;
+      }
+      const tableElem = document.querySelector(".card:nth-of-type(4) table");
+      if(tableElem) {
+        tableElem.innerHTML = `<tr style='background-color:#795548; color:white; text-align:left;'>
+          <th style='padding:8px; border:1px solid #ddd;'>Date</th>
+          <th style='padding:8px; border:1px solid #ddd;'>Sunset (ON)</th>
+          <th style='padding:8px; border:1px solid #ddd;'>Sunrise (OFF)</th>
+        </tr>` + liveRows;
       }
     }
   });
