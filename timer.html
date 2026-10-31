@@ -108,6 +108,22 @@
 <!-- ======================================================== -->
 <!-- ભાગ ૧: મુખ્ય ડેશબોર્ડ (MAIN DASHBOARD HEADER & CLOCK) -->
 <!-- ======================================================== -->
+
+<!-- નવી ઇમેજ મુજબનું Shubh Electronic બ્રાન્ડિંગ બોક્સ -->
+<div style="text-align:center; padding:18px; background:linear-gradient(135deg,#1f2937,#111827); color:white; border-radius:12px; margin-bottom:15px; box-shadow:0 4px 15px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
+  <div style="display:flex; justify-content:center; align-items:center; gap:10px;">
+    <span style="font-size:2.2em; filter: drop-shadow(0 0 8px rgba(255,140,0,0.8));">⚡</span>
+    <span style="font-size:2.3em; font-weight:bold; color:#ffffff; font-family:'Segoe UI',sans-serif; letter-spacing:1px;">Shubh</span>
+  </div>
+  <div style="font-size:1.1em; font-weight:bold; letter-spacing:4px; color:#38bdf8; margin-top:-2px;">ELECTRONIC</div>
+  <div style="margin-top:10px; font-size:1em; color:#e2e8f0; font-weight:600; display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.08); padding:6px 14px; border-radius:20px; border:1px solid rgba(255,255,255,0.1);">
+    <span>📞</span>
+    <span style="color:#00ffff;">Customer Care Number:</span>
+    <span>📱</span>
+    <span style="color:#facc15; font-size:1.1em; letter-spacing:1px;">8460 24 24 25</span>
+  </div>
+</div>
+
 <div class="header">
   <h1>Shakti Prime Globle Technologis</h1>
   <div style="font-size:1.4em; font-weight:bold; margin-top:5px; letter-spacing: 1px;">Timer Setting</div>
@@ -118,38 +134,7 @@
   </div>
 </div>
 
-<div class="current-time">Wednesday, 28/10/2026 09:15:30 PM</div>
-
-<div style="text-align: center; margin: 15px 0;">
-  <div style='padding:10px; background-color:#fff3e0; border:1px solid #ffcc80; border-radius:8px; margin-bottom:15px;'>
-    <strong>AP Mode Active.</strong> Connect to 'Tulsi-Van-Setup' WiFi.<br>IP Address: <strong>192.168.4.1</strong>
-  </div>
-  
-  <form action="/synctime" method="POST" id="timeform" style="display:inline-block;">
-    <input type="hidden" name="time" id="time_val">
-    <button type="submit" class="btn-refresh" onclick="document.getElementById('time_val').value = Math.floor(Date.now() / 1000);">Sync Time</button>
-  </form>
-  
-  <form action="/toggleformat" method="POST" style="display: inline;">
-    <button type="submit" class="btn-refresh">Switch to 24H</button>
-  </form>
-  
-  <form action="/togglerefresh" method="POST" style="display: inline;">
-    <button type="submit" class="btn-refresh">Auto Refresh ON</button>
-  </form>
-  
-  <button id="edit-details-btn" class="btn-edit">Edit Details</button>
-
-  <div id="edit-details-form">
-    <form action="/saveuidetails" method="POST">
-      <label for="fname">Farm Name:</label>
-      <input type="text" id="fname" name="farmName" value="Tulsi-Van Farm"><br>
-      <label for="divId">Division ID:</label>
-      <input type="text" id="divId" name="divisionId" value="DIV-01"><br>
-      <button type="submit">Save Details</button>
-    </form>
-  </div>
-</div>
+<div class="current-time">Wednesday, 28/10/2026 09:15:30 PM</div>  
 
 <!-- ======================================================== -->
 <!-- ભાગ ૨: રીલે કંટ્રોલ પેનલ (RELAY CONTROL PANEL) -->
@@ -184,9 +169,7 @@
     <button class='btn btn-reset' type='button' onclick='resetCloudTimer()'>RESET TIMER</button>
   </div>
   
-  <form action='/emergency' method='POST'>
-    <button class='btn btn-emergency' type='submit'>EMERGENCY STOP</button>
-  </form>
+  <button class='btn btn-emergency' type='button' onclick='sendCloudRelayCmd(2)'>EMERGENCY STOP</button>
 </div>
 
 <!-- ======================================================== -->
@@ -219,10 +202,10 @@
     <tr style='background-color:#ffffff;'><td style='padding:8px; border: 1px solid #ddd;'>22/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:23 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:30 AM</td></tr>
     <tr style='background-color:#f9f9f9;'><td style='padding:8px; border: 1px solid #ddd;'>21/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:24 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:29 AM</td></tr>
   </table>
-
-  <form action='/clearldrreport' method='POST' style='margin-top: 15px;' onsubmit="return confirm('Are you sure you want to clear 7-Day Auto Learning Report?');">
-    <button type='submit' style='background-color:#d32f2f; color:white; padding:12px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold;'>CLEAR 7-DAY REPORT DATA</button>
-  </form>
+ 
+  <div style="margin-top: 15px;">
+    <button type="button" onclick="triggerClearLdrReport()" style="background-color:#d32f2f; color:white; padding:12px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold;">CLEAR 7-DAY REPORT DATA (CLOUD)</button>
+  </div>
 
   <div style='background:#efebe9; padding:12px; border-left:5px solid #795548; border-radius:8px; margin-top:15px; font-size:1em;'>
     <strong>1) 7-Day Sensor Average:</strong><br>
@@ -293,7 +276,7 @@
 </div>
 
 <div style="margin-top:10px;">
-  <button onclick="confirmRestart()" style="width:100%; background-color:#e74c3c; color:white; padding:12px; font-size:1em; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">RESTART ESP32</button>
+  <button type="button" onclick="triggerCloudRestart()" style="width:100%; background-color:#e74c3c; color:white; padding:12px; font-size:1em; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">RESTART ESP32 (CLOUD)</button>
 </div>
 
 <!-- ======================================================== -->
@@ -385,13 +368,13 @@
 
   <!-- અઠવાડિક શેડ્યુલ સેટિંગ્સ -->
   <div id="weekly-form" class="card">
-    <h3>Weekly Schedule Settings</h3>
-    <form action="/saveweekly" method="POST">
+    <h3>Weekly Schedule Settings</h3> 
+    <form onsubmit="event.preventDefault();">
       <label>ON Time (HH:MM):</label>
       <input type="time" name="onTime" class="settings-input" value="18:30">
       <label>OFF Time (HH:MM):</label>
       <input type="time" name="offTime" class="settings-input" value="06:00">
-      <button type="submit" class="settings-btn" style="background:#4CAF50; color:white;">Save Weekly Time</button>
+      <button type="button" onclick="sendCloudTimerSettings()" class="settings-btn" style="background:#4CAF50; color:white;">Save Weekly Time to Device</button>
     </form>
     <div style="margin-top: 10px;">
       <form action='/savedays' method='POST' style='display:inline-block'><input type='hidden' name='day' value='0'><button type='submit' class='day-btn active'>Sun</button></form>
@@ -408,7 +391,7 @@
   <div id="date-form" class="card" style="display:none;">
     <h3>One-Time Date Schedule Settings</h3>
     <form action="/savedate" method="POST">
-      <label>Start Date:</label><input type="date" name="startDate" class="settings-input" value="2026-10-28">
+      <label>Start Date:</label><input type="date" name="startDate" class="settings-input" value="2026-10-28"> 
       <label>Start Time:</label><input type="time" name="startTime" class="settings-input" value="18:30">
       <label>End Date:</label><input type="date" name="endDate" class="settings-input" value="2026-10-29">
       <label>End Time:</label><input type="time" name="endTime" class="settings-input" value="06:00">
@@ -418,9 +401,9 @@
 
   <!-- LDR અને સિસ્ટમ મોડ સેટિંગ્સ -->
   <div class="card">
-    <h3>LDR & Mode Settings</h3>
-    <form action="/saveldr" method="POST">
-      <label for="ldrMode"><b>Select System Mode:</b></label> 
+    <h3>LDR & Mode Settings</h3> 
+    <form onsubmit="event.preventDefault();">
+      <label for="ldrMode"><b>Select System Mode:</b></label>
       <select name="ldrMode" id="ldrMode" class="settings-select">
         <option value="1">Mode 1: Only Timer</option>
         <option value="2">Mode 2: Only LDR Sensor (Based)</option>
@@ -456,9 +439,9 @@
           <tr><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">11 (Nov)</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:55 AM</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:05 PM</td></tr>
           <tr><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">12 (Dec)</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">07:15 AM</td><td style="padding: 6px; border: 1px solid #ccc; text-align: center;">06:05 PM</td></tr>
         </table>
-      </details>
+      </details> 
 
-      <button type="submit" style="background-color:#009688; color:white; padding:12px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold; margin-top:10px;">Save LDR Settings</button>
+      <button type="button" onclick="sendCloudLdrSettings()" style="background-color:#009688; color:white; padding:12px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold; margin-top:10px;">Save LDR Settings to Device</button>
     </form>
   </div>
 
@@ -530,7 +513,7 @@
       <label for='uiPwd'><b>UI Details (Farm/Div) Password:</b></label>
       <input type='password' name='uiPwd' id='uiPwd' value='1234' class="settings-input">
 
-      <button type='submit' style='background-color:#607D8B; color:white; padding:12px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold; margin-top:15px;'>Save All Power & Security Settings</button>
+      <button type='button' onclick='sendCloudPowerSettings()' style='background-color:#607D8B; color:white; padding:12px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold; margin-top:15px;'>Save All Power & Security Settings to Device</button>
     </form>
   </div>
 
@@ -547,16 +530,25 @@
   </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- ભાગ ૧૧: સંપૂર્ણ વોરંટી મેનેજમેન્ટ સેક્શન (handleWarranty FORM & MANAGEMENT) -->
+  <!-- ========================================================================= -->
+<!-- ભાગ ૧૧: સંપૂર્ણ વોરંટી મેનેજમેન્ટ સેક્શન (PASSWORD PROTECTED) -->
 <!-- ========================================================================= -->
 <div id="warranty-management-section">
   <div style="background:#9C27B0; color:white; padding:12px; border-radius:8px; text-align:center; margin-bottom:15px; font-size:1.3em; font-weight:bold;">
     🛡️ WARRANTY / GUARANTEE MANAGEMENT
   </div>
 
-  <div class="card">
-    <h2 id="formTitle">Add / Edit Warranty / Guarantee</h2>
+  <!-- ૧. પાસવર્ડ અનલોક સેક્શન (ડિફોલ્ટ ઓપન રહેશે - પાસવર્ડ *** દેખાશે) -->
+  <div id="warranty-password-section" class="card">
+    <h3>Warranty Management Unlock</h3>
+    <p>This section is password protected (Default: <b>1234</b>).</p>
+    <input type="password" id="warranty_input_password" placeholder="Enter Password" class="settings-input">
+    <button onclick="checkWarrantyPassword()" class="settings-btn" style="background:#9C27B0; color:white;">Unlock Warranty Settings</button>
+  </div>
+
+  <!-- ૨. વોરંટી એડિટ ફોર્મ (ડિફોલ્ટ HIDE રહેશે - પાસવર્ડ નાખ્યા પછી જ ખુલશે) -->
+  <div id="warranty-form-section" class="card" style="display:none;">
+    <h3><button class="lock-btn" onclick="hideWarrantySettings()">Lock</button>Add / Edit Warranty / Guarantee</h3>
     <div style="margin: 15px 0;">
       <label for="purchaseDate">Purchase Date:</label>
       <input type="date" id="purchaseDate" class="settings-input" value="2026-01-01">
@@ -787,9 +779,11 @@ function sendCloudLdrSettings() {
   const modeVal = parseInt(document.getElementById("ldrMode").value);
   const darkVal = parseInt(document.getElementById("ldrDark").value);
   const lightVal = parseInt(document.getElementById("ldrLight").value);
+  const hybridVal = document.getElementById("useHybridLdr").checked ? 1 : 0;
   db.ref("devices/" + activeSerial + "/setModeCmd").set(modeVal);
   db.ref("devices/" + activeSerial + "/setLdrDarkCmd").set(darkVal);
   db.ref("devices/" + activeSerial + "/setLdrLightCmd").set(lightVal);
+  db.ref("devices/" + activeSerial + "/setHybridLdrCmd").set(hybridVal);
   alert("LDR સેટિંગ્સ ESP32 પર અપડેટ થઈ ગઈ!");
 }
 
@@ -1044,6 +1038,21 @@ function hidePowerSettings() {
   document.getElementById('power_password').value = '';
 }
 
+function checkWarrantyPassword() {
+  if (document.getElementById('warranty_input_password').value === warrantyPassword) {
+    document.getElementById('warranty-password-section').style.display = 'none';
+    document.getElementById('warranty-form-section').style.display = 'block';
+  } else {
+    alert('Incorrect Password! (Default: 1234)');
+  }
+}
+
+function hideWarrantySettings() {
+  document.getElementById('warranty-form-section').style.display = 'none';
+  document.getElementById('warranty-password-section').style.display = 'block';
+  document.getElementById('warranty_input_password').value = '';
+}
+
 function saveWarrantyDataDirect() {
   const purchaseDate = document.getElementById("purchaseDate").value;
   const duration = parseInt(document.getElementById("duration").value);
@@ -1058,6 +1067,7 @@ function saveWarrantyDataDirect() {
   localStorage.setItem("type", type);
   localStorage.setItem("warranty_visible", "true"); 
   renderWarrantyCard();
+  hideWarrantySettings(); // સેવ થયા પછી ફોર્મ આપમેળે પાછું લોક થઈ જશે
   alert("Warranty Details Saved Successfully!");
 }
 </script>
