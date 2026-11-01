@@ -422,6 +422,14 @@
           <input type="number" id="calI" step="0.01" value="20.00" style="flex:1;padding:6px;background:#252632;color:#00e676;border:1px solid #00e676;border-radius:6px;text-align:center;font-weight:bold;">
           <button type="button" onclick="saveCalibCloud('I', 'calI')" style="padding:6px 14px;background:#00e676;color:#000;font-weight:bold;border:none;border-radius:6px;cursor:pointer;">SAVE CT</button>
         </div>
+        <!-- મોટર લોક ચેકબોક્સ (Lock ON હોય તો મોટર ચાલુ થશે નહીં) -->
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#1a1b24;padding:12px;border-radius:8px;border:1.5px solid #ff1744;margin-top:14px;">
+          <div>
+            <div style="color:#ff5252;font-size:14px;font-weight:bold;letter-spacing:0.5px;">🔒 MOTOR LOCK (મોટર લોક કરો)</div>
+            <div style="font-size:11px;color:#aaa;margin-top:2px;">ચેક (ON) હશે તો મોટર ક્યાંયથી પણ ચાલુ થશે નહીં</div>
+          </div>
+          <input type="checkbox" id="motorLockCheck" onchange="saveMotorLockCloud()" style="width:22px;height:22px;cursor:pointer;accent-color:#ff1744;">
+       </div>
       </div>
     </div>
 
@@ -883,6 +891,10 @@ async function renderDeviceTable() {
       if (data.cal_b && document.activeElement !== document.getElementById('calB')) document.getElementById('calB').value = parseFloat(data.cal_b).toFixed(2);
       if (data.cal_i && document.activeElement !== document.getElementById('calI')) document.getElementById('calI').value = parseFloat(data.cal_i).toFixed(2);
 
+    if (data.motor_lock !== undefined && document.getElementById('motorLockCheck')) {
+        document.getElementById('motorLockCheck').checked = (data.motor_lock === true || data.motor_lock === "true");
+      }
+
     } catch (err) {
       var cStatus = document.getElementById('cloudStatus');
       if (cStatus) cStatus.innerHTML = "🔴 CLOUD NETWORK ERROR (કનેક્શન મળતું નથી)";
@@ -929,6 +941,12 @@ async function renderDeviceTable() {
 
     var statusEl = document.getElementById('motorStatus');
     var isAlreadyStopped = statusEl && statusEl.innerText.includes('STOPPED');
+     // જો મોટર લોક હોય અને યુઝર START કરવાનો પ્રયત્ન કરે તો રોકી દેવું
+    var lockBox = document.getElementById('motorLockCheck');
+    if (state && lockBox && lockBox.checked) {
+      alert("🔒 મોટર લોક કરેલી છે! મોટર ચાલુ થઈ શકશે નહીં.\n(પહેલાં કેલિબ્રેશન સેક્શનમાંથી મોટર અનલોક કરો)");
+      return;
+    }
     var isAlreadyRunning = statusEl && statusEl.innerText.includes('RUNNING');
 
     // જો મોટર પહેલેથી જ બંધ હોય અને કોઈ OFF કરવાનો પ્રયત્ન કરે
@@ -1092,6 +1110,25 @@ async function renderDeviceTable() {
     renderDeviceTable();
     startSimulation();
   });
+   // --- મોટર લોક સેટિંગ્સ Firebase અને ESP32 માં સેવ કરવું ---
+  async function saveMotorLockCloud() {
+    if (!activeSerial) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
+    var isLocked = document.getElementById('motorLockCheck').checked;
+    try {
+      await fetch(FIREBASE_URL + "/devices/" + activeSerial + "/cmd.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "SET_MOTOR_LOCK", locked: isLocked, timeStamp: Date.now() })
+      });
+      if (isLocked) {
+        alert("🔒 મોટર સફળતાપૂર્વક લોક થઈ ગઈ છે! હવે મોટર ચાલુ થશે નહીં.");
+      } else {
+        alert("🔓 મોટર અનલોક થઈ ગઈ છે! હવે સામાન્ય રીતે મોટર ચાલુ કરી શકાશે.");
+      }
+    } catch (e) {
+      alert("❌ મોટર લોક સેટિંગ્સ સેવ કરવામાં ભૂલ આવી!");
+    }
+  }
 
      // --- વોઈસ કમાન્ડ નામ Firebase અને ESP32 માં સેવ કરવું ---
   async function saveVoiceNameCloud() {
