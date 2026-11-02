@@ -163,6 +163,11 @@
       <div id="lastActionDisplay" style="font-size:14px;color:#ffd600;font-weight:800;margin-top:4px;letter-spacing:0.5px;">STANDBY</div>
     </div>
 
+     <!-- 📶 GSM SIM CARD લાઈવ ચેતવણી / સ્ટેટસ બોક્સ -->
+    <div id="simStatusBox" style="background:#131d27;border:1.5px solid #555;border-radius:8px;padding:8px 12px;max-width:500px;margin:6px auto 14px auto;text-align:center;font-size:13px;font-weight:bold;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+      <span id="simStatusText" style="color:#aaa;">⏳ Checking GSM SIM Status...</span>
+    </div>
+
      <!-- 🎤 VOICE CONTROL MIC BUTTON & MULTI-LANGUAGE TRIGGER SETTING -->
     <div style="max-width:500px;margin:10px auto 15px auto;width:100%;text-align:center;">
       <button type="button" onclick="startVoiceControl()" id="micBtn" style="width:100%;padding:14px;font-size:16px;font-weight:800;color:#fff;background:linear-gradient(135deg, #00bcd4, #2196f3);border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 15px rgba(0,188,212,0.4);display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px;">
@@ -817,6 +822,21 @@ async function renderDeviceTable() {
       // 📌 છેલ્લે મોટર કોણે/કેવી રીતે ચાલુ કે બંધ કરી તે સ્ક્રીન પર અપડેટ કરવું
       if (data.last_action && document.getElementById('lastActionDisplay')) {
         document.getElementById('lastActionDisplay').innerText = data.last_action;
+      }
+
+       // 📶 GSM SIM Card સ્ટેટસ લાઈવ અપડેટ (લીલો / લાલ એલર્ટ)
+      var sBox = document.getElementById('simStatusBox');
+      var sText = document.getElementById('simStatusText');
+      if (sBox && sText && data.sim_status) {
+        if (data.sim_status === "READY") {
+          sText.innerHTML = "🟢 GSM: SIM READY (Signal OK)";
+          sText.style.color = "#00e676";
+          sBox.style.borderColor = "#00e676";
+        } else {
+          sText.innerHTML = "⚠️ GSM ALERT: NO SIM CARD INSERTED (સીમકાર્ડ નાખેલું નથી)";
+          sText.style.color = "#ff2b2b";
+          sBox.style.borderColor = "#ff2b2b";
+        }
       }
 
    // ૫. સિસ્ટમ ફોલ્ટ લાઈવ અપડેટ (ફેઝ કટ, હાઈ/લો વોલ્ટેજ, ડ્રાય રન વગેરે)
