@@ -146,7 +146,7 @@
  
      <div style="background:#131d27;border:1.5px solid #00bcd4;border-radius:10px;padding:8px 12px;max-width:500px;margin:10px auto 4px auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;box-shadow:0 4px 12px rgba(0,188,212,0.2);">
       <span style="font-size:12px;color:#00bcd4;font-weight:bold;white-space:nowrap;">👤 તમારું નામ/મોબાઈલ:</span>
-      <input type="text" id="userDeviceName" placeholder="દા.ત. યોગેશભાઈ (મોબાઈલ 1)" style="flex:1;padding:7px 10px;background:#252632;color:#ffd600;border:1px solid #00bcd4;border-radius:6px;font-size:13px;font-weight:bold;outline:none;">
+      <input type="text" id="userDeviceName" placeholder="દા.ત. યોગેશભાઈ (મોબાઈલ 1)" oninput="localStorage.setItem('my_mobile_name', this.value.trim())" style="flex:1;padding:7px 10px;background:#252632;color:#ffd600;border:1px solid #00bcd4;border-radius:6px;font-size:13px;font-weight:bold;outline:none;">
       <button type="button" onclick="saveUserDeviceName()" style="padding:7px 14px;background:#00bcd4;color:#000;font-weight:800;font-size:12px;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,188,212,0.4);">💾 Save</button>
     </div>
 
@@ -972,9 +972,9 @@ async function renderDeviceTable() {
     }
   }); 
  
- // મોબાઈલ ઓળખ/નામ LocalStorage માં સેવ અને લોડ કરવું
+ // મોબાઈલ ઓળખ/નામ LocalStorage માં સેવ અને લોડ કરવું (વોઇસ કમાન્ડ માટે સ્માર્ટ ફંક્શન)
   function saveUserDeviceName() {
-    var val = document.getElementById('userDeviceName').value.trim();
+    var val = document.getElementById('userDeviceName') ? document.getElementById('userDeviceName').value.trim() : '';
     if (!val) {
       alert("⚠️ કૃપા કરીને તમારું નામ અથવા મોબાઈલ નંબર લખો!");
       return;
@@ -982,8 +982,21 @@ async function renderDeviceTable() {
     localStorage.setItem('my_mobile_name', val);
     alert("✅ નામ સફળતાપૂર્વક સેવ થઈ ગયું: '" + val + "'\nહવે મોટર ચાલુ કે બંધ કરશો ત્યારે આ નામ બધે દેખાશે!");
   }
+
   function getUserName() {
-    return localStorage.getItem('my_mobile_name') || 'Mobile User';
+    // ૧. પહેલા સીધું સ્ક્રીન પરના ખાનામાંથી લાઈવ નામ વાંચશે
+    var nameInput = document.getElementById('userDeviceName');
+    if (nameInput && nameInput.value.trim() !== '') {
+      var liveName = nameInput.value.trim();
+      localStorage.setItem('my_mobile_name', liveName); // ઓટોમેટિક બેકગ્રાઉન્ડ સેવ
+      return liveName;
+    }
+    // ૨. જો ખાનું ખાલી હોય તો મોબાઈલની સેવ થયેલી મેમરીમાંથી વાંચશે
+    var storedName = localStorage.getItem('my_mobile_name');
+    if (storedName && storedName.trim() !== '') {
+      return storedName.trim();
+    }
+    return 'User';
   }
 
   // --- બટન અને વોઇસ કમાન્ડ વડે મોટર START / STOP કરવાનો ક્લાઉડ કમાન્ડ ---
