@@ -151,6 +151,18 @@
     </div>
     <div id="motorStatus" style="text-align:center;font-size:14px;color:#00e676;font-weight:600;margin-bottom:10px;">STATUS: RUNNING (ચાલુ છે)</div>
 
+    <!-- 📌 છેલ્લે મોટર કેવી રીતે ચાલુ/બંધ થઈ તેનું લાઈવ ડિસ્પ્લે બોક્સ -->
+    <div id="lastActionBox" style="background:#131d27;border:1.5px solid #00bcd4;border-radius:10px;padding:10px;max-width:500px;margin:0 auto 12px auto;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.4);">
+      <div style="font-size:11px;color:#00bcd4;font-weight:bold;letter-spacing:1px;">📌 LAST TRIGGER SOURCE (છેલ્લે કેવી રીતે ઓપરેટ થયું)</div>
+      <div id="lastActionText" style="font-size:14px;color:#ffd600;font-weight:800;margin-top:4px;">STANDBY (ડેટા આવી રહ્યો છે...)</div>
+    </div>
+
+    <!-- 📱 આ મોબાઈલનું નામ સેટ કરવા માટેનું બોક્સ (૫ અલગ અલગ ફોન ઓળખવા માટે) -->
+    <div style="max-width:500px;margin:0 auto 12px auto;display:flex;align-items:center;justify-content:space-between;background:#171821;border:1px solid #333;border-radius:8px;padding:8px 12px;">
+      <span style="font-size:12px;color:#cfd8dc;font-weight:bold;">📱 આ મોબાઇલનું નામ:</span>
+      <input type="text" id="phoneNickname" placeholder="દા.ત. વાડી ફોન / યોગેશ" onchange="localStorage.setItem('phone_nick', this.value)" style="width:160px;padding:5px 8px;background:#252632;color:#ffd600;border:1px solid #00bcd4;border-radius:6px;font-size:12px;text-align:center;font-weight:bold;">
+    </div>
+
      <!-- 🎤 VOICE CONTROL MIC BUTTON & MULTI-LANGUAGE TRIGGER SETTING -->
     <div style="max-width:500px;margin:10px auto 15px auto;width:100%;text-align:center;">
       <button type="button" onclick="startVoiceControl()" id="micBtn" style="width:100%;padding:14px;font-size:16px;font-weight:800;color:#fff;background:linear-gradient(135deg, #00bcd4, #2196f3);border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 15px rgba(0,188,212,0.4);display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px;">
@@ -802,6 +814,11 @@ async function renderDeviceTable() {
       statusDiv.style.color = isRunning ? '#00e676' : '#ff5252';
       statusDiv.innerText = isRunning ? 'STATUS: RUNNING (ચાલુ છે)' : 'STATUS: STOPPED (બંધ છે)'; 
 
+      // 📌 છેલ્લે મોટર કોણે/કેવી રીતે ચાલુ કે બંધ કરી તે સ્ક્રીન પર અપડેટ કરવું
+      if (data.last_action && document.getElementById('lastActionText')) {
+        document.getElementById('lastActionText').innerText = data.last_action;
+      }
+
    // ૫. સિસ્ટમ ફોલ્ટ લાઈવ અપડેટ (ફેઝ કટ, હાઈ/લો વોલ્ટેજ, ડ્રાય રન વગેરે)
       var fText = document.getElementById('sysFaultText');
       var fBox = document.getElementById('sysFaultBox');
@@ -961,19 +978,28 @@ async function renderDeviceTable() {
       return;
     }
 
-    var cmd = state ? "START" : "STOP";
+    var cmd = state ? "START" : "STOP"; 
+    // આ મોબાઈલનું સેવ કરેલું નામ મેળવવું
+    var myNick = localStorage.getItem('phone_nick') || 'Mobile';
+    var isVoiceCmd = (window.isTriggeredByVoice === true);
+    window.isTriggeredByVoice = false; // રીસેટ
+
     try {
       await fetch(FIREBASE_URL + "/devices/" + activeSerial + "/cmd.json", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: cmd, time: Date.now() })
+        body: JSON.stringify({ 
+          action: cmd, 
+          by: myNick, 
+          src: isVoiceCmd ? "VOICE" : "BUTTON", 
+          time: Date.now() 
+        })
       });
-      alert("✅ " + cmd + " કમાન્ડ સફળતાપૂર્વક મોકલાઈ ગયો!");
+      alert("✅ " + cmd + " કમાન્ડ મોકલાઈ ગયો! (મોબાઇલ: " + myNick + ")");
     } catch (e) {
       alert("❌ ક્લાઉડ કમાન્ડ મોકલવામાં ભૂલ આવી!");
     }
   }
-
    // --- વોલ્ટેજ સેટિંગ્સ Firebase માં સેવ કરવાનું ફંક્શન ---
   async function saveVoltCloud() {
     if (!activeSerial) { alert("પહેલા ડિવાઇસ પસંદ કરો!"); return; }
@@ -1109,6 +1135,10 @@ async function renderDeviceTable() {
     populateDropdown();
     renderDeviceTable();
     startSimulation();
+    // મોબાઈલનું નામ ઇનપુટ બોક્સમાં લોડ કરવું
+    var savedNick = localStorage.getItem('phone_nick') || 'મોબાઇલ-૧';
+    var nickBox = document.getElementById('phoneNickname');
+    if (nickBox) nickBox.value = savedNick;
   });
    // --- મોટર લોક સેટિંગ્સ Firebase અને ESP32 માં સેવ કરવું ---
   async function saveMotorLockCloud() {
@@ -1213,10 +1243,12 @@ async function renderDeviceTable() {
 
       // --- મોટર START શરત ---
       if ((isNameSpoken && isOnSpoken) || (!triggerName && isOnSpoken) || (isOnSpoken && !isOffSpoken && (cleanSpeech.includes('ચાલુ') || cleanSpeech.includes('શરૂ') || cleanSpeech.includes('चालू')))) {
+      window.isTriggeredByVoice = true; // વોઇસ કમાન્ડ ઓળખવા માટે
         setMotor(true);
       } 
       // --- મોટર STOP શરત ---
       else if ((isNameSpoken && isOffSpoken) || (!triggerName && isOffSpoken) || (isOffSpoken && !isOnSpoken && (cleanSpeech.includes('બંધ') || cleanSpeech.includes('बंद')))) {
+        window.isTriggeredByVoice = true; // વોઇસ કમાન્ડ ઓળખવા માટે
         setMotor(false);
       } else {
         alert("❓ સમજાણું નહીં: \"" + speechResult + "\"\nકૃપા કરીને સ્પષ્ટ બોલો (જેમ કે: '" + triggerName + " on' અથવા '" + (triggerName === 'motor' ? 'મોટર' : triggerName) + " ચાલુ').");
