@@ -632,17 +632,31 @@ async function renderDeviceTable() {
     activeSerial = sel.value;
     localStorage.setItem('active_serial', activeSerial);
     fetchFirebaseData();
-  }
+  } /////////
 
-  // --- ૧. નવું ડિવાઇસ Serial Number અને પાસવર્ડથી ચકાસીને એડ કરવું ---
+ // --- ૧. નવું ડિવાઇસ Serial Number અને પાસવર્ડથી ચકાસીને એડ કરવું ---
   async function saveNewDevice() {
     var s = document.getElementById('inputSerial').value.trim().toUpperCase();
     var n = document.getElementById('inputName').value.trim();
     var p = document.getElementById('inputPass').value.trim();
+    var userEl = document.getElementById('userDeviceName');
+    var u = userEl ? userEl.value.trim() : '';
 
-    if (!s) { alert("કૃપા કરીને Serial Key દાખલ કરો!"); return; }
-    if (!n) n = s; 
-    if (!p) { alert("કૃપા કરીને ડિવાઇસ પાસવર્ડ દાખલ કરો (૪ કે ૮ આંકડા)!"); return; }
+    if (!s) { alert("⚠️ કૃપા કરીને Serial Key દાખલ કરો!"); return; }
+    if (!n) { alert("⚠️ કૃપા કરીને લોકેશનનું નામ દાખલ કરો (દા.ત. વાડી મોટર)!"); return; }
+    if (!p) { alert("⚠️ કૃપા કરીને ડિવાઇસ પાસવર્ડ દાખલ કરો (૪ કે ૮ આંકડા)!"); return; }
+
+    // 👤 જો 'તમારું નામ/મોબાઈલ' ખાલી હશે તો એરર આવશે અને લાલ બોર્ડર થઈ જશે
+    if (!u) {
+      alert("❌ ભૂલ: કૃપા કરીને નીચે '👤 તમારું નામ/મોબાઈલ' વાળા ખાનામાં તમારું નામ અથવા નંબર નાખો!\nનામ નાખ્યા વગર ડિવાઇસ એડ થશે નહીં.");
+      if (userEl) {
+        userEl.style.border = "2px solid #ff1744";
+        userEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        userEl.focus();
+      }
+      return;
+    }
+    if (userEl) userEl.style.border = "1.5px solid #00bcd4";
 
     // Firebase માંથી ચકાસણી કરશે કે આ Serial Key નો સાચો પાસવર્ડ શું છે
     try {
@@ -663,19 +677,38 @@ async function renderDeviceTable() {
       if (deviceList[i].serial === s) {
         deviceList[i].name = n;
         deviceList[i].pass = p;
+        deviceList[i].userName = u;
         found = true;
         break;
       }
     }
     if (!found) {
-      deviceList.push({ serial: s, name: n, pass: p });
+      deviceList.push({ serial: s, name: n, pass: p, userName: u });
     }
     activeSerial = s;
+    localStorage.setItem('my_mobile_name', u);
     saveToStorage();
+
+    // ESP32 ની Preferences (કાયમી મેમરી) માં સેવ કરવા Firebase દ્વારા કમાન્ડ મોકલવો
+    try {
+      await fetch(FIREBASE_URL + "/devices/" + s + "/cmd.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "SET_USER_NAME", uname: u, timeStamp: Date.now() })
+      });
+      await fetch(FIREBASE_URL + "/devices/" + s + ".json", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_name: u })
+      });
+    } catch (err) {
+      console.log("Firebase user name update error:", err);
+    }
+
     document.getElementById('inputSerial').value = '';
     document.getElementById('inputName').value = '';
     document.getElementById('inputPass').value = '';
-    alert("✅ પાસવર્ડ સાચો છે! ડિવાઇસ સફળતાપૂર્વક કનેક્ટ થઈ ગયું.");
+    alert("✅ પાસવર્ડ અને તમારું નામ સાચું છે! ડિવાઇસ સફળતાપૂર્વક કનેક્ટ થઈ ગયું.");
     fetchFirebaseData();
   }
 
