@@ -865,6 +865,43 @@ async function renderDeviceTable() {
       var uvLimit = parseFloat(data.uv_limit || 300.0);
       var hasThreePhase = (vry >= uvLimit && vyb >= uvLimit && vbr >= uvLimit && (!data.fault || data.fault.indexOf("CUT") < 0));
 
+      // 🔔 3-Phase પાવર આવે ત્યારે મોબાઈલ પોપઅપ નોટિફિકેશન અને એલાર્મ સાઉન્ડ લોજિક
+      window.lastPowerState = (window.lastPowerState !== undefined) ? window.lastPowerState : null;
+
+      function trigger3PhaseAlarm() {
+        // ૧. એલાર્મ સાઉન્ડ વગાડવો (કોઈ બહારની MP3 ફાઇલ વગર બ્રાઉઝર ઓડિયો દ્વારા)
+        try {
+          var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          var notes = [587.33, 880, 1174.66]; // D5, A5, D6 મસ્ત ક્લિયર એલર્ટ ટોન
+          notes.forEach(function(freq, idx) {
+            var osc = audioCtx.createOscillator();
+            var gain = audioCtx.createGain();
+            osc.frequency.value = freq;
+            osc.type = "sine";
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime + (idx * 0.18));
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + (idx * 0.18) + 0.35);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(audioCtx.currentTime + (idx * 0.18));
+            osc.stop(audioCtx.currentTime + (idx * 0.18) + 0.35);
+          });
+        } catch(e) {}
+
+        // ૨. મોબાઈલ સ્ક્રીન પર પોપઅપ નોટિફિકેશન દર્શાવવું
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("⚡ Shubh Electronic Alert!", {
+            body: "વાડીએ ૩-ફેઝ પાવર આવી ગયો છે! મોટર ચાલુ કરી શકો છો.",
+            icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23ffcc00' d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>"
+          });
+        }
+      }
+
+      // જ્યારે પાવર સિંગલ ફેઝમાંથી બદલાઈને ૩-ફેઝ હાજર થાય ત્યારે જ ૧ વાર એલર્ટ આપશે
+      if (window.lastPowerState !== null && window.lastPowerState === false && hasThreePhase === true) {
+        trigger3PhaseAlarm();
+      }
+      window.lastPowerState = hasThreePhase;
+
       if (boxEl && tTitle && tDesc) {
         if (hasThreePhase) {
           boxEl.style.borderColor = "#00e676";
@@ -1236,6 +1273,10 @@ async function renderDeviceTable() {
     populateDropdown();
     renderDeviceTable();
     startSimulation();
+    // પેજ ખુલતા જ નોટિફિકેશન પરમિશન માગશે
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
      var savedName = localStorage.getItem('my_mobile_name');
     var nameInput = document.getElementById('userDeviceName');
     if (savedName && nameInput) {
