@@ -150,6 +150,12 @@
       <button type="button" onclick="saveUserDeviceName()" style="padding:7px 14px;background:#00bcd4;color:#000;font-weight:800;font-size:12px;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,188,212,0.4);">💾 Save</button>
     </div>
 
+       <!-- ⚡ 3-PHASE VS SINGLE PHASE પાવર સ્ટેટસ બોક્સ -->
+    <div id="threePhaseBox" style="background:rgba(0,230,118,0.12);border:2px solid #00e676;border-radius:8px;padding:10px 14px;max-width:500px;margin:8px auto 10px auto;width:100%;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);">
+      <div id="threePhaseTitle" style="color:#00e676;font-size:14px;font-weight:900;letter-spacing:0.5px;">⚡ 3-PHASE POWER AVAILABLE (૩-ફેઝ પાવર છે)</div>
+      <div id="threePhaseDesc" style="color:#a5d6a7;font-size:12px;font-weight:bold;margin-top:3px;">✅ મોટર ચાલુ થઈ શકે છે (Motor Can Start)</div>
+    </div>
+
     <!-- START / STOP બટન -->
     <div style="display:flex;gap:15px;max-width:500px;margin:10px auto;width:100%;justify-content:center;">
       <button type="button" onclick="setMotor(true, 'WEB')" style="flex:1;padding:16px;font-size:18px;font-weight:700;color:#fff;background:#00c853;border:none;border-radius:12px;cursor:pointer;">🟢 START (ON)</button>
@@ -851,6 +857,31 @@ async function renderDeviceTable() {
       var statusDiv = document.getElementById('motorStatus');
       statusDiv.style.color = isRunning ? '#00e676' : '#ff5252';
       statusDiv.innerText = isRunning ? 'STATUS: RUNNING (ચાલુ છે)' : 'STATUS: STOPPED (બંધ છે)'; 
+
+      // ⚡ 3-Phase vs Single Phase પાવર ડિટેક્શન લાઈવ અપડેટ
+      var boxEl = document.getElementById('threePhaseBox');
+      var tTitle = document.getElementById('threePhaseTitle');
+      var tDesc = document.getElementById('threePhaseDesc');
+      var uvLimit = parseFloat(data.uv_limit || 300.0);
+      var hasThreePhase = (vry >= uvLimit && vyb >= uvLimit && vbr >= uvLimit && (!data.fault || data.fault.indexOf("CUT") < 0));
+
+      if (boxEl && tTitle && tDesc) {
+        if (hasThreePhase) {
+          boxEl.style.borderColor = "#00e676";
+          boxEl.style.background = "rgba(0, 230, 118, 0.12)";
+          tTitle.innerHTML = "⚡ 3-PHASE POWER AVAILABLE (૩-ફેઝ પાવર છે)";
+          tTitle.style.color = "#00e676";
+          tDesc.innerHTML = "✅ મોટર ચાલુ થઈ શકે છે (Motor Can Start)";
+          tDesc.style.color = "#a5d6a7";
+        } else {
+          boxEl.style.borderColor = "#ff1744";
+          boxEl.style.background = "rgba(255, 23, 68, 0.15)";
+          tTitle.innerHTML = "⚠️ SINGLE PHASE / POWER FAULT (સિંગલ ફેઝ પાવર છે)";
+          tTitle.style.color = "#ff1744";
+          tDesc.innerHTML = "🚫 3-ફેઝ મોટર સિંગલ ફેઝ પાવરમાં ચાલુ થશે નહીં!";
+          tDesc.style.color = "#ffcdd2";
+        }
+      }
 
       // 📌 છેલ્લે મોટર કોણે/કેવી રીતે ચાલુ કે બંધ કરી તે સ્ક્રીન પર અપડેટ કરવું
       if (data.last_action && document.getElementById('lastActionDisplay')) {
