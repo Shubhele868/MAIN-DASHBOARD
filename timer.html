@@ -193,14 +193,10 @@
       <th style='padding:8px; border: 1px solid #ddd;'>Date</th>
       <th style='padding:8px; border: 1px solid #ddd;'>Sunset (ON)</th>
       <th style='padding:8px; border: 1px solid #ddd;'>Sunrise (OFF)</th>
-    </tr>
-    <tr style='background-color:#f9f9f9;'><td style='padding:8px; border: 1px solid #ddd;'>27/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:18 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:34 AM</td></tr>
-    <tr style='background-color:#ffffff;'><td style='padding:8px; border: 1px solid #ddd;'>26/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:19 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:33 AM</td></tr>
-    <tr style='background-color:#f9f9f9;'><td style='padding:8px; border: 1px solid #ddd;'>25/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:20 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:32 AM</td></tr>
-    <tr style='background-color:#ffffff;'><td style='padding:8px; border: 1px solid #ddd;'>24/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:21 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:31 AM</td></tr>
-    <tr style='background-color:#f9f9f9;'><td style='padding:8px; border: 1px solid #ddd;'>23/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:22 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:30 AM</td></tr>
-    <tr style='background-color:#ffffff;'><td style='padding:8px; border: 1px solid #ddd;'>22/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:23 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:30 AM</td></tr>
-    <tr style='background-color:#f9f9f9;'><td style='padding:8px; border: 1px solid #ddd;'>21/10/2026</td><td style='padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;'>06:24 PM</td><td style='padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;'>06:29 AM</td></tr>
+    </tr> 
+    <tbody id="ldrReportTbody">
+      <tr><td colspan="3" style="text-align:center; padding:10px; color:#888;">Connecting to Device Data...</td></tr>
+    </tbody>
   </table>
  
   <div style="margin-top: 15px;">
@@ -294,22 +290,22 @@
 <!-- ======================================================== -->
 <div class='card'>
   <h2>Manual Time & Date Setup</h2>
-  <p style='color:#666;'><small>Note: This setting works in both WiFi and AP Mode.</small></p>
-  <form action='/savemanualtime' method='POST'>
+  <p style='color:#666;'><small>Note: This setting works in both WiFi and AP Mode.</small></p>  
+  <form onsubmit="event.preventDefault(); sendCloudManualTime();">
     <div style='display:flex; gap:5px; margin-bottom:10px;'>
-      <input type='number' name='d' placeholder='DD' min='1' max='31' value="28" required style='width:30%; padding:10px; border:1px solid #ccc; border-radius:4px;'>
-      <input type='number' name='mo' placeholder='MM' min='1' max='12' value="10" required style='width:30%; padding:10px; border:1px solid #ccc; border-radius:4px;'>
-      <input type='number' name='y' placeholder='YYYY' min='2025' max='2099' value="2026" required style='width:40%; padding:10px; border:1px solid #ccc; border-radius:4px;'>
+      <input type='number' id='man_d' placeholder='DD' min='1' max='31' value="28" required style='width:30%; padding:10px; border:1px solid #ccc; border-radius:4px;'>
+      <input type='number' id='man_mo' placeholder='MM' min='1' max='12' value="10" required style='width:30%; padding:10px; border:1px solid #ccc; border-radius:4px;'>
+      <input type='number' id='man_y' placeholder='YYYY' min='2025' max='2099' value="2026" required style='width:40%; padding:10px; border:1px solid #ccc; border-radius:4px;'>
     </div>
     <div style='display:flex; gap:5px; align-items:center;'>
-      <input type='number' name='h' placeholder='HH' min='1' max='12' value="9" required style='width:18%; padding:10px; border:1px solid #ccc; border-radius:4px;'> :
-      <input type='number' name='mi' placeholder='MM' min='0' max='59' value="15" required style='width:18%; padding:10px; border:1px solid #ccc; border-radius:4px;'> :
-      <input type='number' name='s' placeholder='SS' min='0' max='59' value="30" required style='width:18%; padding:10px; border:1px solid #ccc; border-radius:4px;'>
-      <select name='ap' style='width:20%; padding:10px; border-radius:5px; background:#fff; border:1px solid #ccc;'>
+      <input type='number' id='man_h' placeholder='HH' min='1' max='12' value="9" required style='width:18%; padding:10px; border:1px solid #ccc; border-radius:4px;'> :
+      <input type='number' id='man_mi' placeholder='MM' min='0' max='59' value="15" required style='width:18%; padding:10px; border:1px solid #ccc; border-radius:4px;'> :
+      <input type='number' id='man_s' placeholder='SS' min='0' max='59' value="30" required style='width:18%; padding:10px; border:1px solid #ccc; border-radius:4px;'>
+      <select id='man_ap' style='width:20%; padding:10px; border-radius:5px; background:#fff; border:1px solid #ccc;'>
         <option value='AM'>AM</option>
         <option value='PM' selected>PM</option>
       </select>
-      <select name='dow' style='width:26%; padding:10px; border-radius:5px; background:#fff; border:1px solid #ccc;'>
+      <select id='man_dow' style='width:26%; padding:10px; border-radius:5px; background:#fff; border:1px solid #ccc;'>
         <option value='0'>Sunday</option>
         <option value='1'>Monday</option>
         <option value='2'>Tuesday</option>
@@ -319,7 +315,7 @@
         <option value='6'>Saturday</option>
       </select>
     </div>
-    <button type='submit' style='width:100%; background-color:#2c3e50; color:white; padding:14px; font-size:1em; border:none; border-radius:5px; cursor:pointer; margin-top:15px; font-weight:bold;'>UPDATE RTC TIME</button>
+    <button type='submit' style='width:100%; background-color:#2c3e50; color:white; padding:14px; font-size:1em; border:none; border-radius:5px; cursor:pointer; margin-top:15px; font-weight:bold;'>UPDATE RTC TIME (VIA CLOUD)</button>
   </form>
 </div>
 
@@ -339,11 +335,7 @@
   </form>
 </div>
 
-<!-- વાઇફાઇ રીસેટ બટન -->
-<a href="/wifireset" onclick="return confirm('Are you sure you want to reset WiFi credentials? System will reboot and enter Setup Mode (QR Code).');" style="width:100%; text-decoration: none;">
-  <button id="wifiResetBtn" style="width:100%; margin-top: 5px; margin-bottom: 25px; background-color: #f39c12; padding: 12px; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer;">WiFi Reset & Setup (QR)</button>
-</a>
-
+<button type="button" onclick="sendCloudWifiReset()" id="wifiResetBtn" style="width:100%; margin-top: 5px; margin-bottom: 25px; background-color: #f39c12; padding: 12px; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer;">WiFi Reset & Setup (QR) - Cloud</button>
 <!-- ========================================================================= -->
 <!-- ભાગ ૧૦: સંપૂર્ણ સેટિંગ્સ પેજ (COMPLETE SETTINGS SECTION - handleSettings) -->
 <!-- ========================================================================= -->
@@ -605,13 +597,20 @@ Date              : 29-Jul-2026(Released on this Date)</pre>
 <!-- ======================================================== -->
 <!-- ભાગ ૧૩: સંપૂર્ણ જાવાસ્ક્રિપ્ટ લોજિક (ALL JAVASCRIPT CODE) -->
 <!-- ======================================================== -->
-<script>
+<script>  
+// ૧. ESP32 સાથે ૧૦૦% મેચ થતા સાચા સિક્યોરિટી પાસવર્ડ્સ
 const uiDetailsPassword = "EasyTech@Timer**2025";
 const warrantyPassword = "12345678";
 const powerSettingsPassword = "EasyTech@Power**2025"; 
+
 const firebaseConfig = {
-   apiKey: "AIzaSyBntGgRZdhKhLAalvhVf_zNrpx78VNgDFY",
-  databaseURL: "https://timer-relay-al5m-501-default-rtdb.asia-southeast1.firebasedatabase.app/"
+  apiKey: "AIzaSyBntGgRZdhKhLAalvhVf_zNrpx78VNgDFY",
+  authDomain: "timer-relay-al5m-501.firebaseapp.com",
+  databaseURL: "https://timer-relay-al5m-501-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "timer-relay-al5m-501",
+  storageBucket: "timer-relay-al5m-501.firebasestorage.app",
+  messagingSenderId: "185989361281",
+  appId: "1:185989361281:web:64c4584cf64135e9fd2780"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -753,7 +752,7 @@ function startLiveSync(sn) {
     if(data.nextSwitchTime !== undefined && data.nextSwitchTime > 0) {
       const nextDate = new Date(data.nextSwitchTime * 1000);
       const nextBox = document.querySelector(".card:nth-of-type(2) div[style*='margin-top: 10px']");
-      if(nextBox) {
+      if(nextBox) {   
         nextBox.innerHTML = "Next Switch on: <strong>" + nextDate.toLocaleTimeString() + "</strong><br><small>" + nextDate.toLocaleDateString() + "</small>";
       }
       const nextStateBox = document.querySelector(".card:nth-of-type(2) p strong");
@@ -761,42 +760,71 @@ function startLiveSync(sn) {
         nextStateBox.innerHTML = data.nextState ? "<span class='on'>ON</span>" : "<span class='off'>OFF</span>";
       }
     }
-     // ૭. 7-Day Auto Learning ડેટા ESP32 Firebase માંથી લાઈવ અપડેટ કરવો
-    if(data.ldrOn && data.ldrOff) {
-      let liveRows = "";
-      for(let i = 0; i < 7; i++) {
-        let tOn = data.ldrOn[i] || 0;
-        let tOff = data.ldrOff[i] || 0;
-        let dateStr = "No Data", onStr = "--:--", offStr = "--:--";
 
-        if(tOn > 1672531200) {
-          let d = new Date(tOn * 1000);
-          dateStr = d.toLocaleDateString();
-          onStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    // ૭. ૭-દિવસ ઓટો-લર્નિંગ રિપોર્ટ લાઈવ Firebase માંથી ટેબલમાં રેન્ડર કરવો
+    const tbody = document.getElementById("ldrReportTbody");
+    if(tbody && (data.ldrOn || data.ldrOff)) {
+      tbody.innerHTML = "";
+      for(let i = 0; i < 7; i++) {
+        let onSec = data.ldrOn ? data.ldrOn[i] : 0;
+        let offSec = data.ldrOff ? data.ldrOff[i] : 0;
+        let dateStr = "No Data";
+        let onStr = "--:--";
+        let offStr = "--:--";
+
+        if(onSec && onSec > 1672531200) {
+          let dtOn = new Date(onSec * 1000);
+          dateStr = dtOn.toLocaleDateString();
+          onStr = dtOn.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         }
-        if(tOff > 1672531200) {
-          let d = new Date(tOff * 1000);
-          if(dateStr === "No Data") dateStr = d.toLocaleDateString();
-          offStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        if(offSec && offSec > 1672531200) {
+          let dtOff = new Date(offSec * 1000);
+          if(dateStr === "No Data") dateStr = dtOff.toLocaleDateString();
+          offStr = dtOff.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         }
 
         let bg = (i % 2 === 0) ? "#f9f9f9" : "#ffffff";
-        liveRows += `<tr style='background-color:${bg};'>
-          <td style='padding:8px; border:1px solid #ddd;'>${dateStr}</td>
-          <td style='padding:8px; border:1px solid #ddd; color:#2e7d32; font-weight:bold;'>${onStr}</td>
-          <td style='padding:8px; border:1px solid #ddd; color:#c62828; font-weight:bold;'>${offStr}</td>
-        </tr>`;
-      }
-      const tableElem = document.querySelector(".card:nth-of-type(4) table");
-      if(tableElem) {
-        tableElem.innerHTML = `<tr style='background-color:#795548; color:white; text-align:left;'>
-          <th style='padding:8px; border:1px solid #ddd;'>Date</th>
-          <th style='padding:8px; border:1px solid #ddd;'>Sunset (ON)</th>
-          <th style='padding:8px; border:1px solid #ddd;'>Sunrise (OFF)</th>
-        </tr>` + liveRows;
+        tbody.innerHTML += `
+          <tr style="background-color:${bg};">
+            <td style="padding:8px; border: 1px solid #ddd;">${dateStr}</td>
+            <td style="padding:8px; border: 1px solid #ddd; color:#2e7d32; font-weight:bold;">${onStr}</td>
+            <td style="padding:8px; border: 1px solid #ddd; color:#c62828; font-weight:bold;">${offStr}</td>
+          </tr>
+        `;
       }
     }
   });
+}
+
+// ગીથબ ક્લાઉડ મારફતે RTC મેન્યુઅલ ટાઈમ સિંક કરવો
+function sendCloudManualTime() {
+  if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
+  let y = document.getElementById("man_y").value;
+  let mo = String(document.getElementById("man_mo").value).padStart(2, '0');
+  let d = String(document.getElementById("man_d").value).padStart(2, '0');
+  let h = parseInt(document.getElementById("man_h").value);
+  let mi = String(document.getElementById("man_mi").value).padStart(2, '0');
+  let s = String(document.getElementById("man_s").value).padStart(2, '0');
+  let ap = document.getElementById("man_ap").value;
+
+  if (ap === "PM" && h < 12) h += 12;
+  else if (ap === "AM" && h == 12) h = 0;
+  let hStr = String(h).padStart(2, '0');
+
+  let fullTimeCmd = `${y}-${mo}-${d}-${hStr}-${mi}-${s}`;
+  db.ref("devices/" + activeSerial + "/setManualTimeCmd").set(fullTimeCmd).then(() => {
+    alert("તારીખ અને સમય ESP32 પર મોકલી દેવાયો છે!");
+  });
+}
+
+// ગીથબ ક્લાઉડ મારફતે વાઇફાઇ રીસેટ કમાન્ડ મોકલવો
+function sendCloudWifiReset() {
+  if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
+  if(confirm("શું તમે વાઇફાઇ ક્રેડેન્શિયલ્સ રીસેટ કરવા માંગો છો? સિસ્ટમ રીબૂટ થશે.")) {
+    db.ref("devices/" + activeSerial + "/wifiResetCmd").set(1).then(() => {
+      alert("WiFi રીસેટ કમાન્ડ મોકલાઈ ગયો!");
+    });
+  }
 }
 
 // ગીથબ વેબ પેજના તમામ ફોર્મ બટનો માટે ક્લાઉડ ફંક્શન્સ:
