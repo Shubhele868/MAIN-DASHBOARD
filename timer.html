@@ -128,39 +128,38 @@
   <h1>Shakti Prime Globle Technologis</h1>
   <div style="font-size:1.4em; font-weight:bold; margin-top:5px; letter-spacing: 1px;">Timer Setting</div>
   <div style="font-size:1.1em; font-weight:bold; margin-top:5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">Model No: AL4M-401</div>
-  <div class="sub-header">
-    <div class="farm-name" id="farmNameVal">Tulsi-Van Farm</div>
-    <div class="division-id" id="divisionIdVal">DIV-01</div>
+  <div class="sub-header">    
+   <div class="farm-name" id="farmNameVal">Connecting...</div>
+    <div class="division-id" id="divisionIdVal">--</div>
   </div>
 </div>
 
-<div class="current-time">Wednesday, 28/10/2026 09:15:30 PM</div>  
+<div class="current-time" id="liveRtcClock">Connecting to Device...</div>  
 
-<!-- ======================================================== -->
-<!-- ભાગ ૨: રીલે કંટ્રોલ પેનલ (RELAY CONTROL PANEL) -->
-<!-- ======================================================== -->
+<!-- ભાગ ૨: રીલે કંટ્રોલ પેનલ -->
 <div class="card">
   <h2>RELAY CONTROL PANEL</h2>
   <div class="status">
     <p>
-      <span class="status-dot" style="color:#4CAF50;">&bull;</span> 
+      <span class="status-dot" id="liveStatusDot" style="color:#95a5a6;">&bull;</span> 
       <strong>Relay Status:</strong> 
-      <span class='on'>ON Timer <span style='animation: blink 1.2s linear infinite; font-weight: bold;'>(HYBRID ASTRO)</span></span>
+      <span id="liveRelayStatusText" class='off'>WAITING DATA...</span>
     </p>
   </div>
 
-  <div class='bypass-active' style='margin-bottom:10px;'>OC Protection Bypass Active: 0s remaining</div>
+  <!-- બાયપાસ એક્ટિવ હોય ત્યારે જ આ લાઈન દેખાશે -->
+  <div id="liveBypassBox" class='bypass-active' style='display:none; margin-bottom:10px;'></div>
 
-  <div class="power-info">
-    <strong>Live Current: </strong>2.45 A  |  <span class='on'>Protection: ENABLED</span>
+  <div class="power-info" id="livePowerInfo">
+    <strong>Live Current: </strong>0.00 A  |  <span class='on'>Protection: --</span>
   </div>
 
   <div style="margin-top: 10px;">
-    Next Change in: <strong>03h 45m 12s</strong><br>
-    <small>on 28/10/2026, 11:00:00 PM</small>
+    Next Change in: <strong id="liveCountdownText">00:00:00</strong><br>
+    <small id="liveNextSwitchDetail">No Schedule Set</small>
   </div>
   
-  <p>Next State: <strong><span class='off'>OFF</span></strong></p>
+  <p>Next State: <strong><span id="liveNextStateText" class='off'>OFF</span></strong></p>
   
   <div class='controls'>
     <button class='btn btn-on' type='button' onclick='sendCloudRelayCmd(1)'>MANUAL ON</button>
@@ -172,21 +171,17 @@
   <button class='btn btn-emergency' type='button' onclick='sendCloudRelayCmd(2)'>EMERGENCY STOP</button>
 </div>
 
-<!-- ======================================================== -->
 <!-- ભાગ ૩: સિસ્ટમ મોડ અને સેન્સર સ્ટેટસ -->
-<!-- ======================================================== -->
 <div class='card'>
   <h2>System Mode & Sensor Status</h2>
-  <p><strong>Active System Mode:</strong> <span style='color:#2196F3; font-weight:bold;'>Mode 5: Astronomical Hybrid Solar Calendar</span></p>
+  <p><strong>Active System Mode:</strong> <span id="liveActiveModeDisplay" style='color:#2196F3; font-weight:bold;'>Mode 1: Only Timer</span></p>
   <div style='background:#efebe9; padding:15px; border-left:5px solid #795548; border-radius:8px; margin-top:10px; font-size:1.1em; color:#4e342e;'>
-    <strong>Sunlight Intensity:</strong> <span style='font-weight:bold; color:#2e7d32;'>42%</span> (Raw value: 1720)
+    <strong>Sunlight Intensity:</strong> <span id="liveLdrPercent" style='font-weight:bold; color:#2e7d32;'>0%</span> (Raw value: <span id="liveLdrRaw">0</span>)
   </div>
 </div>
 
-<!-- ======================================================== -->
-<!-- ભાગ ૪: 7-દિવસ ઓટો લર્નિંગ રિપોર્ટ (MODE 4 REPORT) -->
-<!-- ======================================================== -->
-<div class='card'>
+<!-- ભાગ ૪: 7-દિવસ ઓટો લર્નિંગ રિપોર્ટ (માત્ર Mode 4 માં જ દેખાશે) -->
+<div class='card' id="cardMode4" style="display:none;">
   <h3>7-Day Auto-Learning Report</h3>
   <table style='width:100%; border-collapse: collapse; margin-top:10px; font-size:0.95em;'>
     <tr style='background-color:#795548; color:white; text-align:left;'>
@@ -195,53 +190,22 @@
       <th style='padding:8px; border: 1px solid #ddd;'>Sunrise (OFF)</th>
     </tr> 
     <tbody id="ldrReportTbody">
-      <tr><td colspan="3" style="text-align:center; padding:10px; color:#888;">Connecting to Device Data...</td></tr>
+      <tr><td colspan="3" style="text-align:center; padding:10px; color:#888;">No Data Recorded</td></tr>
     </tbody>
   </table>
  
   <div style="margin-top: 15px;">
     <button type="button" onclick="triggerClearLdrReport()" style="background-color:#d32f2f; color:white; padding:12px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold;">CLEAR 7-DAY REPORT DATA (CLOUD)</button>
   </div>
-
-  <div style='background:#efebe9; padding:12px; border-left:5px solid #795548; border-radius:8px; margin-top:15px; font-size:1em;'>
-    <strong>1) 7-Day Sensor Average:</strong><br>
-    ON Time: <span style='color:#2e7d32; font-weight:bold;'>06:21 PM</span> | OFF Time: <span style='color:#c62828; font-weight:bold;'>06:31 AM</span>
-  </div>
-
-  <div style='background:#fffde7; padding:12px; border-left:5px solid #fbc02d; border-radius:8px; margin-top:10px; font-size:1em;'>
-    <strong>2) Astronomical Solar Calendar (This Month):</strong><br>
-    ON Time (Sunset): <span style='color:#2e7d32; font-weight:bold;'>06:20 PM</span> | OFF Time (Sunrise): <span style='color:#c62828; font-weight:bold;'>06:35 AM</span>
-  </div>
-
-  <div style='background:#e1f5fe; padding:12px; border-left:5px solid #0288d1; border-radius:8px; margin-top:10px; font-size:1.05em; border:1px solid #b3e5fc;'>
-    <strong>3) Final Calculated Active Time (Target Set Time):</strong><br>
-    Final ON Time: <span style='color:#2e7d32; font-weight:bold;'>06:20 PM</span><br>
-    Final OFF Time: <span style='color:#c62828; font-weight:bold;'>06:33 AM</span><br>
-    <small style='color:#555;'>Operating Mode: <b>Hybrid Mode (Sensor + Calendar Avg)</b></small>
-  </div>
 </div>
 
-<!-- ======================================================== -->
-<!-- ભાગ ૫: ૧૨ મહિનાનું સંપૂર્ણ સોલર કેલેન્ડર (MODE 5 CALENDAR) -->
-<!-- ======================================================== -->
-<div class='card'>
+<!-- ભાગ ૫: એસ્ટ્રોનોમિકલ સોલર કેલેન્ડર (માત્ર Mode 5 માં જ દેખાશે) -->
+<div class='card' id="cardMode5" style="display:none;">
   <h3>Astronomical Solar Calendar (Mode 5)</h3>
-  <p><strong>Current Month:</strong> 10 (Wed)</p>
-  <div style='background:#efebe9; padding:15px; border-left:5px solid #009688; border-radius:8px; margin-bottom:15px;'>
-    <strong>This Month Astronomical Target:</strong><br>
-    Astro Sunset (ON): <span style='color:#2e7d32; font-weight:bold;'>06:20 PM</span><br>
-    Astro Sunrise (OFF): <span style='color:#c62828; font-weight:bold;'>06:35 AM</span><br>
-    <small style='color:#555;'>Operation: <b>Hybrid (7-Day Avg + Monthly Calendar Avg)</b></small>
-  </div>
-
   <details style='background: #eceff1; border: 1px solid #b0bec5; border-radius: 5px; padding: 10px; text-align: left;' open>
     <summary style='font-weight: bold; cursor: pointer; color: #37474f; outline: none; padding: 5px;'>View Complete 12-Month Solar Calendar</summary>
     <table style='width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.9em; background: #ffffff;'>
-      <tr style='background: #607d8b; color: white;'>
-        <th style='padding: 6px; border: 1px solid #ccc; text-align: center;'>Month</th>
-        <th style='padding: 6px; border: 1px solid #ccc; text-align: center;'>Sunrise (OFF)</th>
-        <th style='padding: 6px; border: 1px solid #ccc; text-align: center;'>Sunset (ON)</th>
-      </tr>
+      <tr style='background: #607d8b; color: white;'><th style='padding: 6px; border: 1px solid #ccc; text-align: center;'>Month</th><th style='padding: 6px; border: 1px solid #ccc; text-align: center;'>Sunrise (OFF)</th><th style='padding: 6px; border: 1px solid #ccc; text-align: center;'>Sunset (ON)</th></tr>
       <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>1 (Jan)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>07:15 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:15 PM</td></tr>
       <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>2 (Feb)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>07:05 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:35 PM</td></tr>
       <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>3 (Mar)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:45 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:50 PM</td></tr>
@@ -251,21 +215,19 @@
       <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>7 (Jul)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:00 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>07:30 PM</td></tr>
       <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>8 (Aug)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:15 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>07:10 PM</td></tr>
       <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>9 (Sep)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:25 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:45 PM</td></tr>
-      <tr style='background-color:#e1f5fe; font-weight:bold;'><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>10 (Oct)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:35 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:20 PM</td></tr>
+      <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>10 (Oct)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:35 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:20 PM</td></tr>
       <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>11 (Nov)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:55 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:05 PM</td></tr>
       <tr><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>12 (Dec)</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>07:15 AM</td><td style='padding: 6px; border: 1px solid #ccc; text-align: center;'>06:05 PM</td></tr>
     </table>
   </details>
 </div>
 
-<!-- ======================================================== -->
-<!-- ભાગ ૬: ચાલુ શેડ્યુલ (CURRENT SCHEDULE) -->
-<!-- ======================================================== -->
+<!-- ભાગ ૬: ચાલુ શેડ્યુલ -->
 <div class='card'>
   <h2>CURRENT SCHEDULE</h2>
-  <p><strong>Current Mode:</strong> Weekly Recurring Schedule</p>
-  <div class='schedule-item'><strong>ON Time:</strong> 06:30 PM</div>
-  <div class='schedule-item'><strong>OFF Time:</strong> 06:00 AM</div>
+  <p><strong>Current Mode:</strong> <span id="liveScheduleModeType">Weekly Recurring Schedule</span></p>
+  <div class='schedule-item'><strong>ON Time:</strong> <span id="dispOnTime">--:--</span></div>
+  <div class='schedule-item'><strong>OFF Time:</strong> <span id="dispOffTime">--:--</span></div>
   <div style="margin-top:15px;">
     <a href='#settings-section'><button style="width:100%; background-color:#607D8B; color:white; padding:12px; font-size:1em; border:none; border-radius:5px; cursor:pointer;">CHANGE SETTINGS</button></a>
   </div>
@@ -676,25 +638,36 @@ function connectDevice(sn, name, pass) {
 function startLiveSync(sn) {
   liveListenerRef = db.ref("devices/" + sn);
   liveListenerRef.on("value", (snapshot) => {
-    const data = snapshot.val();
-    if(!data) return;
+    const data = snapshot.val();  
+   if(!data) return;
 
-    // ૧. લાઈવ RTC ઘડિયાળ અને તારીખ અપડેટ
+    // ૧. લાઈવ RTC ઘડિયાળ
     if(data.rtcTimeStr) {
-      const clockElem = document.querySelector(".current-time");
+      const clockElem = document.getElementById("liveRtcClock");
       if(clockElem) clockElem.innerText = data.rtcTimeStr;
     }
 
-    // ૨. લાઈવ કરંટ & ઓવર કરંટ પ્રોટેક્શન
+    // ૨. લાઈવ કરંટ & પ્રોટેક્શન
     if(data.current !== undefined) {
-      const pInfo = document.querySelector(".power-info");
+      const pInfo = document.getElementById("livePowerInfo");
       const protText = data.protEnabled ? "<span class='on'>Protection: ENABLED</span>" : "<span class='bypassed'>Protection: DISABLED</span>";
       if(pInfo) pInfo.innerHTML = "<strong>Live Current: </strong>" + Number(data.current).toFixed(2) + " A  |  " + protText;
     }
 
-    // ૩. રીલે સ્ટેટસ & સિસ્ટમ મોડ
-    const rDot = document.querySelector(".status-dot");
-    const rText = document.querySelector(".status strong + span");
+    // ૩. OC Bypass બોક્સ - માત્ર જ્યારે એક્ટિવ હોય ત્યારે જ દેખાશે
+    const bypassBox = document.getElementById("liveBypassBox");
+    if(bypassBox) {
+      if(data.isBypassActive && data.bypassRemaining > 0) {
+        bypassBox.style.display = "block";
+        bypassBox.innerText = "OC Protection Bypass Active: " + data.bypassRemaining + "s remaining";
+      } else {
+        bypassBox.style.display = "none";
+      }
+    }
+
+    // ૪. રીલે સ્ટેટસ અને મોડ લેબલ
+    const rDot = document.getElementById("liveStatusDot");
+    const rText = document.getElementById("liveRelayStatusText");
     if(rDot && rText && data.relayStatus !== undefined) {
       let modeName = "(TIMER)";
       if(data.mode === 2) modeName = "(LDR)";
@@ -725,52 +698,98 @@ function startLiveSync(sn) {
       }
     }
 
-    // ૪. LDR સૂર્યપ્રકાશ (Light Intensity %)
+    // ૫. લાઈવ LDR Intensity અને Raw Value
     if(data.ldrValue !== undefined) {
-      let ldrPercent = Math.round((data.ldrValue / 4095) * 100);
-      if(ldrPercent < 0) ldrPercent = 0;
-      if(ldrPercent > 100) ldrPercent = 100;
-      const ldrBox = document.querySelector(".card:nth-of-type(3) div");
-      if(ldrBox) {
-        ldrBox.innerHTML = "<strong>Sunlight Intensity:</strong> <span style='font-weight:bold; color:#2e7d32;'>" + ldrPercent + "%</span> (Raw value: " + data.ldrValue + ")";
-      }
+      const pct = data.ldrPercent !== undefined ? data.ldrPercent : Math.round((data.ldrValue / 4095) * 100);
+      const ldrPctElem = document.getElementById("liveLdrPercent");
+      const ldrRawElem = document.getElementById("liveLdrRaw");
+      if(ldrPctElem) ldrPctElem.innerText = pct + "%";
+      if(ldrRawElem) ldrRawElem.innerText = data.ldrValue;
     }
 
-    // ૫. શેડ્યુલ ટાઈમર ડિસ્પ્લે (ON & OFF Time)
+    // ૬. સિસ્ટમ મોડ ડિસ્પ્લે અને કાર્ડ્સ વિઝિબિલિટી (ખોટા મોડ ન દેખાય તે માટે)
+    if(data.mode !== undefined) {
+      let modeStr = "Mode 1: Only Timer";
+      if(data.mode === 2) modeStr = "Mode 2: Only LDR (Sensor Based)";
+      else if(data.mode === 3) modeStr = "Mode 3: LDR + Timer (Combined)";
+      else if(data.mode === 4) modeStr = "Mode 4: 7-Day Auto-Learning";
+      else if(data.mode === 5) modeStr = "Mode 5: Astronomical Hybrid Solar Calendar";
+      
+      const modeDisp = document.getElementById("liveActiveModeDisplay");
+      if(modeDisp) modeDisp.innerText = modeStr;
+
+      const c4 = document.getElementById("cardMode4");
+      const c5 = document.getElementById("cardMode5");
+      if(c4) c4.style.display = (data.mode === 4) ? "block" : "none";
+      if(c5) c5.style.display = (data.mode === 5) ? "block" : "none";
+
+      const selMode = document.getElementById("ldrMode");
+      if(selMode) selMode.value = data.mode;
+    }
+
+    // ૭. લાઈવ ON/OFF સમય અને ઇનપુટ બોક્સ સાથે સિંક
+    const pad = (n) => (n < 10 ? '0' : '') + n;
     if(data.onHour !== undefined && data.offHour !== undefined) {
-      const pad = (n) => (n < 10 ? '0' : '') + n;
       const onStr = pad(data.onHour) + ":" + pad(data.onMinute);
       const offStr = pad(data.offHour) + ":" + pad(data.offMinute);
-      const schItems = document.querySelectorAll(".schedule-item");
-      if(schItems.length >= 2) {
-        schItems[0].innerHTML = "<strong>ON Time:</strong> " + onStr;
-        schItems[1].innerHTML = "<strong>OFF Time:</strong> " + offStr;
-      }
+      
+      const dOn = document.getElementById("dispOnTime");
+      const dOff = document.getElementById("dispOffTime");
+      if(dOn) dOn.innerText = onStr;
+      if(dOff) dOff.innerText = offStr;
+
+      const inpOn = document.querySelector("input[name='onTime']");
+      const inpOff = document.querySelector("input[name='offTime']");
+      if(inpOn && !inpOn.matches(':focus')) inpOn.value = onStr;
+      if(inpOff && !inpOff.matches(':focus')) inpOff.value = offStr;
     }
 
-    // ૬. નેક્સ્ટ સ્વિચિંગ કાઉન્ટડાઉન
-    if(data.nextSwitchTime !== undefined && data.nextSwitchTime > 0) {
+    // ૮. શેડ્યુલ મોડ સિંક (Weekly vs One-Time Date)
+    if(data.dateMode !== undefined) {
+      const modeType = document.getElementById("liveScheduleModeType");
+      if(modeType) {
+        modeType.innerText = data.dateMode ? "One-Time Date Schedule" : "Weekly Recurring Schedule";
+      }
+      const wRadio = document.getElementById("weeklyMode");
+      const dRadio = document.getElementById("dateMode");
+      if(wRadio && !data.dateMode) wRadio.checked = true;
+      if(dRadio && data.dateMode) dRadio.checked = true;
+      toggleModeDisplay();
+    }
+
+    // ૯. નેક્સ્ટ સ્વિચિંગ કાઉન્ટડાઉન (ESP32 સાથે ૧૦૦% સરખું સિંક)
+    const cdText = document.getElementById("liveCountdownText");
+    const cdDetail = document.getElementById("liveNextSwitchDetail");
+    const cdState = document.getElementById("liveNextStateText");
+
+    if(!data.nextSwitchTime || data.nextSwitchTime === 0) {
+      if(cdText) cdText.innerText = "00:00:00";
+      if(cdDetail) cdDetail.innerText = "No Schedule Set";
+      if(cdState) cdState.innerHTML = "<span class='off'>OFF</span>";
+    } else {
       const nextDate = new Date(data.nextSwitchTime * 1000);
-      const nextBox = document.querySelector(".card:nth-of-type(2) div[style*='margin-top: 10px']");
-      if(nextBox) {   
-        nextBox.innerHTML = "Next Switch on: <strong>" + nextDate.toLocaleTimeString() + "</strong><br><small>" + nextDate.toLocaleDateString() + "</small>";
-      }
-      const nextStateBox = document.querySelector(".card:nth-of-type(2) p strong");
-      if(nextStateBox) {
-        nextStateBox.innerHTML = data.nextState ? "<span class='on'>ON</span>" : "<span class='off'>OFF</span>";
-      }
+      let remSec = data.remainingSec !== undefined ? data.remainingSec : Math.max(0, data.nextSwitchTime - Math.floor(Date.now() / 1000));
+
+      let d = Math.floor(remSec / 86400);
+      let remAfterD = remSec % 86400;
+      let h = Math.floor(remAfterD / 3600);
+      let m = Math.floor((remAfterD % 3600) / 60);
+      let s = remAfterD % 60;
+      
+      let cdStr = (d > 0 ? d + "d " : "") + pad(h) + ":" + pad(m) + ":" + pad(s);
+      if(cdText) cdText.innerText = cdStr;
+      if(cdDetail) cdDetail.innerText = "on " + nextDate.toLocaleDateString() + ", " + nextDate.toLocaleTimeString();
+      if(cdState) cdState.innerHTML = data.nextState ? "<span class='on'>ON</span>" : "<span class='off'>OFF</span>";
     }
 
-    // ૭. ૭-દિવસ ઓટો-લર્નિંગ રિપોર્ટ લાઈવ Firebase માંથી ટેબલમાં રેન્ડર કરવો
+    // ૧૦. ૭-દિવસ લર્નિંગ ટેબલ
     const tbody = document.getElementById("ldrReportTbody");
     if(tbody && (data.ldrOn || data.ldrOff)) {
       tbody.innerHTML = "";
       for(let i = 0; i < 7; i++) {
         let onSec = data.ldrOn ? data.ldrOn[i] : 0;
         let offSec = data.ldrOff ? data.ldrOff[i] : 0;
-        let dateStr = "No Data";
-        let onStr = "--:--";
-        let offStr = "--:--";
+        let dateStr = "No Data", onStr = "--:--", offStr = "--:--";
 
         if(onSec && onSec > 1672531200) {
           let dtOn = new Date(onSec * 1000);
@@ -812,7 +831,7 @@ function sendCloudManualTime() {
   let hStr = String(h).padStart(2, '0');
 
   let fullTimeCmd = `${y}-${mo}-${d}-${hStr}-${mi}-${s}`;
-  db.ref("devices/" + activeSerial + "/setManualTimeCmd").set(fullTimeCmd).then(() => {
+  db.ref("devices/" + activeSerial + "/commands/setManualTimeCmd").set(fullTimeCmd).then(() => {
     alert("તારીખ અને સમય ESP32 પર મોકલી દેવાયો છે!");
   });
 }
@@ -821,19 +840,19 @@ function sendCloudManualTime() {
 function sendCloudWifiReset() {
   if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
   if(confirm("શું તમે વાઇફાઇ ક્રેડેન્શિયલ્સ રીસેટ કરવા માંગો છો? સિસ્ટમ રીબૂટ થશે.")) {
-    db.ref("devices/" + activeSerial + "/wifiResetCmd").set(1).then(() => {
+    db.ref("devices/" + activeSerial + "/commands/wifiResetCmd").set(1).then(() => {
       alert("WiFi રીસેટ કમાન્ડ મોકલાઈ ગયો!");
     });
   }
 }
 
-// ગીથબ વેબ પેજના તમામ ફોર્મ બટનો માટે ક્લાઉડ ફંક્શન્સ:
+// ગીથબ વેબ પેજના તમામ ફોર્મ બટનો માટે ક્લાઉડ ફંક્શન્સ (Single Commands Node)
 function sendCloudTimerSettings() {
   if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
   const onTime = document.querySelector("input[name='onTime']").value;
   const offTime = document.querySelector("input[name='offTime']").value;
   if(!onTime || !offTime) { alert("સમય પસંદ કરો!"); return; }
-  db.ref("devices/" + activeSerial + "/setTimerCmd").set(onTime + "-" + offTime);
+  db.ref("devices/" + activeSerial + "/commands/setTimerCmd").set(onTime + "-" + offTime);
   alert("શેડ્યુલ ટાઈમ ESP32 પર અપડેટ થઈ ગયો!");
 }
 
@@ -843,10 +862,13 @@ function sendCloudLdrSettings() {
   const darkVal = parseInt(document.getElementById("ldrDark").value);
   const lightVal = parseInt(document.getElementById("ldrLight").value);
   const hybridVal = document.getElementById("useHybridLdr").checked ? 1 : 0;
-  db.ref("devices/" + activeSerial + "/setModeCmd").set(modeVal);
-  db.ref("devices/" + activeSerial + "/setLdrDarkCmd").set(darkVal);
-  db.ref("devices/" + activeSerial + "/setLdrLightCmd").set(lightVal);
-  db.ref("devices/" + activeSerial + "/setHybridLdrCmd").set(hybridVal);
+  
+  db.ref("devices/" + activeSerial + "/commands").update({
+    setModeCmd: modeVal,
+    setLdrDarkCmd: darkVal,
+    setLdrLightCmd: lightVal,
+    setHybridLdrCmd: hybridVal
+  });
   alert("LDR સેટિંગ્સ ESP32 પર અપડેટ થઈ ગઈ!");
 }
 
@@ -854,23 +876,26 @@ function sendCloudPowerSettings() {
   if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
   const ocVal = parseFloat(document.getElementById("oc").value);
   const protVal = document.getElementById("protOn").checked ? 1 : 0;
-  db.ref("devices/" + activeSerial + "/setOcLimitCmd").set(ocVal);
-  db.ref("devices/" + activeSerial + "/setProtEnCmd").set(protVal);
+  
+  db.ref("devices/" + activeSerial + "/commands").update({
+    setOcLimitCmd: ocVal,
+    setProtEnCmd: protVal
+  });
   alert("પાવર પ્રોટેક્શન સેટિંગ્સ અપડેટ થઈ ગઈ!");
 }
 
 function triggerCloudRestart() {
   if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
   if(confirm("શું તમે ESP32 રીસ્ટાર્ટ કરવા માંગો છો?")) {
-    db.ref("devices/" + activeSerial + "/restartCmd").set(1);
-    alert("રીસ્ટાર્ટ કમાન્ડ મોકલાઈ ગયો! 5 સેકન્ડમાં ESP32 રીબૂટ થશે.");
+    db.ref("devices/" + activeSerial + "/commands/restartCmd").set(1);
+    alert("રીસ્ટાર્ટ કમાન્ડ મોકલાઈ ગયો! ESP32 રીબૂટ થશે.");
   }
 }
 
 function triggerClearLdrReport() {
   if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
   if(confirm("શું તમે 7-ડે ઓટો લર્નિંગ ડેટા ક્લીયર કરવા માંગો છો?")) {
-    db.ref("devices/" + activeSerial + "/clearLdrCmd").set(1);
+    db.ref("devices/" + activeSerial + "/commands/clearLdrCmd").set(1);
     alert("ડેટા ક્લીયર કમાન્ડ મોકલાઈ ગયો!");
   }
 }
@@ -917,7 +942,7 @@ function sendCloudRelayCmd(cmdVal) {
     alert("પહેલાં Serial No અને Password નાખીને Add/Connect કરો!");
     return;
   }
-  db.ref("devices/" + activeSerial + "/remoteRelayCmd").set(cmdVal).then(() => {
+  db.ref("devices/" + activeSerial + "/commands/remoteRelayCmd").set(cmdVal).then(() => {
     alert("કમાન્ડ સફળતાપૂર્વક મોકલાયો!");
   });
 }
@@ -928,7 +953,7 @@ function resetCloudTimer() {
     return;
   }
   if(confirm("શું તમે ખરેખર ટાઈમર રીસેટ કરવા માંગો છો?")) {
-    db.ref("devices/" + activeSerial + "/resetTimerCmd").set(1);
+    db.ref("devices/" + activeSerial + "/commands/resetTimerCmd").set(1);
     alert("રીસેટ કમાન્ડ મોકલાઈ ગયો!");
   }
 }
