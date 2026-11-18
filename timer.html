@@ -605,9 +605,9 @@ Date              : 29-Jul-2026(Released on this Date)</pre>
 <!-- ======================================================== -->
 <script>  
 // ૧. ESP32 સાથે ૧૦૦% મેચ થતા સાચા સિક્યોરિટી પાસવર્ડ્સ
-const uiDetailsPassword = "EasyTech@Timer**2025";
-const warrantyPassword = "12345678";
-const powerSettingsPassword = "EasyTech@Power**2025"; 
+let uiDetailsPassword = "EasyTech@Timer**2025";
+let warrantyPassword = "12345678";
+let powerSettingsPassword = "EasyTech@Power**2025"; 
 
 const firebaseConfig = {
   apiKey: "AIzaSyBntGgRZdhKhLAalvhVf_zNrpx78VNgDFY",
@@ -852,6 +852,25 @@ function startLiveSync(sn) {
     if(data.enM3 !== undefined) document.getElementById("enM3").checked = !!data.enM3;
     if(data.enM4 !== undefined) document.getElementById("enM4").checked = !!data.enM4;
     if(data.enM5 !== undefined) document.getElementById("enM5").checked = !!data.enM5;
+     if(data.powerPwd) {
+      powerSettingsPassword = data.powerPwd;
+      const elP = document.getElementById("powerPwd");
+      if(elP && !elP.matches(':focus')) elP.value = data.powerPwd;
+    }
+    if(data.warrantyPwd) {
+      warrantyPassword = data.warrantyPwd;
+      const elW = document.getElementById("warrantyPwd");
+      if(elW && !elW.matches(':focus')) elW.value = data.warrantyPwd;
+    }
+    if(data.uiPwd) {
+      uiDetailsPassword = data.uiPwd;
+      const elU = document.getElementById("uiPwd");
+      if(elU && !elU.matches(':focus')) elU.value = data.uiPwd;
+    }
+    if(data.wifiSsid !== undefined) {
+      const elS = document.getElementById("cloudWifiSsid");
+      if(elS && !elS.matches(':focus')) elS.value = data.wifiSsid;
+    }
 
    // ૧૦. શેડ્યુલ મોડ સિંક (Weekly vs One-Time Date)
     if(data.dateMode !== undefined) {
@@ -1210,7 +1229,8 @@ function sendCloudPowerSettings() {
     setEnM2Cmd: document.getElementById("enM2").checked ? 1 : 0,
     setEnM3Cmd: document.getElementById("enM3").checked ? 1 : 0,
     setEnM4Cmd: document.getElementById("enM4").checked ? 1 : 0,
-    setEnM5Cmd: document.getElementById("enM5").checked ? 1 : 0
+     setEnM5Cmd: document.getElementById("enM5").checked ? 1 : 0,
+    setPwdsCmd: document.getElementById("powerPwd").value + "|" + document.getElementById("warrantyPwd").value + "|" + document.getElementById("uiPwd").value
   });
   alert("પાવર પ્રોટેક્શન અને તમામ મોડ સેટિંગ્સ અપડેટ થઈ ગઈ!");
 }
