@@ -1033,6 +1033,23 @@ function startLiveSync(sn) {
     document.getElementById("m4FinalOn").innerText = (cntOn > 0) ? fmtHM12(finOnH, finOnM) : "--:--";
     document.getElementById("m4FinalOff").innerText = (cntOff > 0) ? fmtHM12(finOffH, finOffM) : "--:--";
     document.getElementById("m4HybridStatus").innerHTML = "Operating Mode: " + (data.useHybridLdr ? "<b>Hybrid Mode (Sensor + Calendar Avg)</b>" : "<b>Sensor Only Mode</b>");
+    // ૧૩. વોરંટી ડેટા ESP32/Firebase થી લાઈવ સિંક કરવો
+    if(data.wPurchase !== undefined) {
+      if(data.wPurchase !== "") {
+        localStorage.setItem("purchaseDate", data.wPurchase);
+        localStorage.setItem("expiryDate", data.wExpiry || data.wPurchase);
+        localStorage.setItem("type", data.wType || "Warranty");
+        const inpPur = document.getElementById("purchaseDate");
+        const inpType = document.getElementById("warrantyType");
+        if(inpPur && !inpPur.matches(':focus')) inpPur.value = data.wPurchase;
+        if(inpType && !inpType.matches(':focus') && data.wType) inpType.value = data.wType;
+      } else {
+        localStorage.removeItem("purchaseDate");
+        localStorage.removeItem("expiryDate");
+        localStorage.removeItem("type");
+      }
+      loadWarrantyStatus();
+    }
   });
 }
 
@@ -1326,15 +1343,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }));
 
   // વોરંટી ડિફોલ્ટ લોડિંગ
-  if (!localStorage.getItem("purchaseDate")) {
-    const pd = new Date("2026-01-01");
-    const ed = new Date("2027-01-01");
-    localStorage.setItem("purchaseDate", pd.toString());
-    localStorage.setItem("expiryDate", ed.toString());
-    localStorage.setItem("type", "Warranty");
+  if (localStorage.getItem("warranty_visible") === null) {
     localStorage.setItem("warranty_visible", "true");
   }
-
   loadWarrantyStatus();
 });
 
@@ -1357,10 +1368,12 @@ function loadWarrantyStatus() {
   }
 }
 
-function renderWarrantyCard() {
-  const displayArea = document.getElementById('warranty-display-area');
-  const pd = new Date(localStorage.getItem("purchaseDate"));
-  const ed = new Date(localStorage.getItem("expiryDate"));
+function renderWarrantyCard() { 
+  const displayArea = document.getElementById('warranty-display-area'); 
+  const pRaw = localStorage.getItem("purchaseDate");
+  const eRaw = localStorage.getItem("expiryDate");
+  const pd = /^\d{4}-\d{2}-\d{2}$/.test(pRaw) ? new Date(pRaw + "T00:00:00") : new Date(pRaw);
+  const ed = /^\d{4}-\d{2}-\d{2}$/.test(eRaw) ? new Date(eRaw + "T00:00:00") : new Date(eRaw);
   const type = localStorage.getItem("type");
   const today = new Date();
   let daysLeft = Math.ceil((ed - today) / (1000 * 60 * 60 * 24));
@@ -1463,14 +1476,19 @@ function saveWarrantyDataDirect() {
   const duration = parseInt(document.getElementById("duration").value);
   const durationType = document.getElementById("durationType").value;
   const type = document.getElementById("warrantyType").value;
-  if (!purchaseDate || !duration || isNaN(duration)) { alert("Please fill all fields correctly."); return; }
-  const date = new Date(purchaseDate);
+  if (!purchaseDate || !duration || isNaN(duration)) { alert("Please fill all fields correctly."); return; } 
+  const date = new Date(purchaseDate + "T00:00:00");
   let expiry = new Date(date);
   if (durationType === "months") { expiry.setMonth(expiry.getMonth() + duration); } else { expiry.setFullYear(expiry.getFullYear() + duration); }
-  localStorage.setItem("purchaseDate", date.toString());
-  localStorage.setItem("expiryDate", expiry.toString());
+  const pad2 = (n) => (n < 10 ? "0" : "") + n;
+  const eStr = expiry.getFullYear() + "-" + pad2(expiry.getMonth() + 1) + "-" + pad2(expiry.getDate());
+  localStorage.setItem("purchaseDate", purchaseDate);
+  localStorage.setItem("expiryDate", eStr);
   localStorage.setItem("type", type);
-  localStorage.setItem("warranty_visible", "true"); 
+  localStorage.setItem("warranty_visible", "true");
+  if (activeSerial) {
+    db.ref("devices/" + activeSerial + "/commands/setWarrantyCmd").set(purchaseDate + "|" + eStr + "|" + type);
+  }
   renderWarrantyCard();
   hideWarrantySettings(); // સેવ થયા પછી ફોર્મ આપમેળે પાછું લોક થઈ જશે
   alert("Warranty Details Saved Successfully!");
