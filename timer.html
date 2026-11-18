@@ -210,11 +210,35 @@
   <div style="margin-top: 15px;">
     <button type="button" onclick="triggerClearLdrReport()" style="background-color:#d32f2f; color:white; padding:12px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold;">CLEAR 7-DAY REPORT DATA (CLOUD)</button>
   </div>
+  <div id="mode4SummaryBoxes" style="margin-top: 15px;">
+    <div style="background:#efebe9; padding:12px; border-left:5px solid #795548; border-radius:8px; margin-top:15px; font-size:1em;">
+      <strong>1) 7-Day Sensor Average:</strong><br>
+      ON Time: <span id="m4RawOn" style="color:#2e7d32; font-weight:bold;">--:--</span> |
+      OFF Time: <span id="m4RawOff" style="color:#c62828; font-weight:bold;">--:--</span>
+    </div>
+    <div style="background:#fffde7; padding:12px; border-left:5px solid #fbc02d; border-radius:8px; margin-top:10px; font-size:1em;">
+      <strong>2) Astronomical Solar Calendar (This Month):</strong><br>
+      ON Time (Sunset): <span id="m4CalOn" style="color:#2e7d32; font-weight:bold;">--:--</span> |
+      OFF Time (Sunrise): <span id="m4CalOff" style="color:#c62828; font-weight:bold;">--:--</span>
+    </div>
+    <div style="background:#e1f5fe; padding:12px; border-left:5px solid #0288d1; border-radius:8px; margin-top:10px; font-size:1.05em; border:1px solid #b3e5fc;">
+      <strong>3) Final Calculated Active Time (Target Set Time):</strong><br>
+      Final ON Time: <span id="m4FinalOn" style="color:#2e7d32; font-weight:bold;">--:--</span><br>
+      Final OFF Time: <span id="m4FinalOff" style="color:#c62828; font-weight:bold;">--:--</span><br>
+      <small id="m4HybridStatus" style="color:#555;">Operating Mode: <b>Sensor Only Mode</b></small>
+    </div>
+  </div>
 </div>
 
 <!-- ભાગ ૫: એસ્ટ્રોનોમિકલ સોલર કેલેન્ડર (માત્ર Mode 5 માં જ દેખાશે) -->
 <div class='card' id="cardMode5" style="display:none;">
-  <h3>Astronomical Solar Calendar (Mode 5)</h3>
+  <h3>Astronomical Solar Calendar (Mode 5)</h3>  
+  <div style="background:#efebe9; padding:15px; border-left:5px solid #009688; border-radius:8px; margin-bottom:15px;">
+    <strong>This Month Astronomical Target (<span id="m5MonthName">--</span>):</strong><br>
+    Astro Sunset (ON): <span id="m5TargetOn" style="color:#2e7d32; font-weight:bold;">--:--</span><br>
+    Astro Sunrise (OFF): <span id="m5TargetOff" style="color:#c62828; font-weight:bold;">--:--</span><br>
+    <small id="m5OpMode" style="color:#555;">Operation: <b>Pure Astronomical Calendar</b></small>
+  </div>
   <details style='background: #eceff1; border: 1px solid #b0bec5; border-radius: 5px; padding: 10px; text-align: left;' open>
     <summary style='font-weight: bold; cursor: pointer; color: #37474f; outline: none; padding: 5px;'>View Complete 12-Month Solar Calendar</summary>
     <table style='width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.9em; background: #ffffff;'>
@@ -239,8 +263,14 @@
 <div class='card'>
   <h2>CURRENT SCHEDULE</h2>
   <p><strong>Current Mode:</strong> <span id="liveScheduleModeType">Weekly Recurring Schedule</span></p>
-  <div class='schedule-item'><strong>ON Time:</strong> <span id="dispOnTime">--:--</span></div>
-  <div class='schedule-item'><strong>OFF Time:</strong> <span id="dispOffTime">--:--</span></div>
+   <div id="weeklyScheduleDisp">
+    <div class='schedule-item'><strong>ON Time:</strong> <span id="dispOnTime">--:--</span></div>
+    <div class='schedule-item'><strong>OFF Time:</strong> <span id="dispOffTime">--:--</span></div>
+  </div>
+  <div id="dateScheduleDisp" style="display:none;">
+    <div class='schedule-item'><strong>Start:</strong> <span id="dispStartDate">--/--/----</span> at <span id="dispStartTime">--:--</span></div>
+    <div class='schedule-item'><strong>End:</strong> <span id="dispEndDate">--/--/----</span> at <span id="dispEndTime">--:--</span></div>
+    </div>
   <div style="margin-top:15px;">
     <a href='#settings-section'><button style="width:100%; background-color:#607D8B; color:white; padding:12px; font-size:1em; border:none; border-radius:5px; cursor:pointer;">CHANGE SETTINGS</button></a>
   </div>
@@ -298,15 +328,15 @@
 <!-- ભાગ ૯: ડિવાઇસ ઍક્સેસ (DEVICE ACCESS - AP PASSWORD) -->
 <!-- ======================================================== -->
 <div class='card'>
-  <h3>Device Access</h3>
-  <form action="/changeappass" method="POST" id="apPassForm">
+  <h3>Device Access</h3> 
+   <form onsubmit="event.preventDefault(); sendCloudApPassword();" id="apPassForm">
     <h4>Change Access Point Password</h4>
     <p>Leave new password blank for an open network. This password is used when the device cannot connect to WiFi. Minimum 8 characters.</p>
     <label for="oldApPass">Old Password:</label>
     <input type="password" id="oldApPass" name="oldApPass" style="width:calc(100% - 18px); padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;"><br>
     <label for="newApPass">New Password:</label>
     <input type="password" id="newApPass" name="newApPass" style="width:calc(100% - 18px); padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;"><br>
-    <button type="submit" style='background-color:#8e44ad; color:white; width:100%; padding:10px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;'>Change AP Password</button>
+    <button type="submit" style='background-color:#8e44ad; color:white; width:100%; padding:10px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;'>Change AP Password (Cloud)</button>
   </form>
 </div>
 
@@ -415,7 +445,7 @@
   <!-- પાવર અને સિક્યોરિટી સેટિંગ્સ પાસવર્ડ અનલોક -->
   <div id="power-password-section" class="card">
     <h3>Power & Security Settings</h3>
-    <p>This section is password protected (Default: <b>1234</b>).</p>
+    <p>This section is password protected.</p>
     <input type="password" id="power_password" placeholder="Enter Password" class="settings-input">
     <button onclick="checkPowerPassword()" class="settings-btn" style="background:#2196F3; color:white;">Unlock Settings</button>
   </div>
@@ -507,7 +537,7 @@
   <!-- ૧. પાસવર્ડ અનલોક સેક્શન (ડિફોલ્ટ ઓપન રહેશે - પાસવર્ડ *** દેખાશે) -->
   <div id="warranty-password-section" class="card">
     <h3>Warranty Management Unlock</h3>
-    <p>This section is password protected (Default: <b>1234</b>).</p>
+     <p>This section is password protected.</p>
     <input type="password" id="warranty_input_password" placeholder="Enter Password" class="settings-input">
     <button onclick="checkWarrantyPassword()" class="settings-btn" style="background:#9C27B0; color:white;">Unlock Warranty Settings</button>
   </div>
@@ -635,7 +665,7 @@ function connectDevice(sn, name, pass) {
     if(farmElem) farmElem.innerText = name ? name : (data.placeName || "Tulsi-Van Farm");
 
     if(name && name !== data.placeName) {
-      db.ref("devices/" + sn + "/placeName").set(name);
+      db.ref("devices/" + sn + "/commands/setUiDetailsCmd").set(name + "|" + (data.divisionId || "Division: 03"));
     }
 
     if(liveListenerRef) liveListenerRef.off();
@@ -785,8 +815,34 @@ function startLiveSync(sn) {
       if(rOn) rOn.checked = !!data.protEnabled;
       if(rOff) rOff.checked = !data.protEnabled;
     }
+    if(data.ocBypassSec !== undefined) {
+      const inpBy = document.getElementById("ocBypass");
+      if(inpBy && !inpBy.matches(':focus')) inpBy.value = data.ocBypassSec;
+    }
+    if(data.currentCal !== undefined) {
+      const inpCal = document.getElementById("ccal");
+      if(inpCal && !inpCal.matches(':focus')) inpCal.value = Number(data.currentCal).toFixed(1);
+    }
+    if(data.adcOffset !== undefined) {
+      const inpOff = document.getElementById("offset");
+      if(inpOff && !inpOff.matches(':focus')) inpOff.value = Number(data.adcOffset).toFixed(1);
+    }
+    if(data.maxBtnOc !== undefined) {
+      const inpMax = document.getElementById("maxBtnOc");
+      if(inpMax && !inpMax.matches(':focus')) inpMax.value = Number(data.maxBtnOc).toFixed(1);
+    }
+    if(data.btnOcLock !== undefined) {
+      const bOn = document.getElementById("btnLockOn");
+      const bOff = document.getElementById("btnLockOff");
+      if(bOn) bOn.checked = !!data.btnOcLock;
+      if(bOff) bOff.checked = !data.btnOcLock;
+    }
+    if(data.enM1 !== undefined) document.getElementById("enM1").checked = !!data.enM1;
+    if(data.enM2 !== undefined) document.getElementById("enM2").checked = !!data.enM2;
+    if(data.enM3 !== undefined) document.getElementById("enM3").checked = !!data.enM3;
+    if(data.enM4 !== undefined) document.getElementById("enM4").checked = !!data.enM4;
+    if(data.enM5 !== undefined) document.getElementById("enM5").checked = !!data.enM5;
 
-    // ૧૦. શેડ્યુલ મોડ સિંક (Weekly vs One-Time Date)
    // ૧૦. શેડ્યુલ મોડ સિંક (Weekly vs One-Time Date)
     if(data.dateMode !== undefined) {
       const modeType = document.getElementById("liveScheduleModeType");
@@ -798,6 +854,10 @@ function startLiveSync(sn) {
       if(wRadio && !data.dateMode) wRadio.checked = true;
       if(dRadio && data.dateMode) dRadio.checked = true;
       toggleModeDisplay();
+      const wDisp = document.getElementById("weeklyScheduleDisp");
+      const dDisp = document.getElementById("dateScheduleDisp");
+      if(wDisp) wDisp.style.display = data.dateMode ? "none" : "block";
+      if(dDisp) dDisp.style.display = data.dateMode ? "block" : "none";
     }
 
     // ૧૦.૧ અઠવાડિયાના ૭ દિવસોના બટન્સનું લાઈવ સ્ટેટસ
@@ -823,10 +883,40 @@ function startLiveSync(sn) {
       if(inpEt && !inpEt.matches(':focus')) inpEt.value = data.eTime;
     }
 
+    if(data.sDate && data.sTime && data.eDate && data.eTime) {
+      const format12 = (t) => {
+        const [hh, mm] = t.split(":").map(Number);
+        const ampm = hh >= 12 ? "PM" : "AM";
+        const h12 = (hh % 12) || 12;
+        return String(h12).padStart(2, '0') + ":" + String(mm).padStart(2, '0') + " " + ampm;
+      };
+      const fmtD = (d) => d.split("-").reverse().join("/");
+      document.getElementById("dispStartDate").innerText = fmtD(data.sDate);
+      document.getElementById("dispStartTime").innerText = format12(data.sTime);
+      document.getElementById("dispEndDate").innerText = fmtD(data.eDate);
+      document.getElementById("dispEndTime").innerText = format12(data.eTime);
+    }
+
     // ૧૦.૩ Farm Name & Division ID સિંક
     if(data.placeName) {
       const fn = document.getElementById("fname");
       if(fn && !fn.matches(':focus')) fn.value = data.placeName;
+    }   
+     if(data.placeName) {
+      const fVal = document.getElementById("farmNameVal");
+      if(fVal) fVal.innerText = data.placeName;
+    }
+    if(data.divisionId) {
+      const dVal = document.getElementById("divisionIdVal");
+      if(dVal) dVal.innerText = data.divisionId + " | " + sn;
+    }
+    const mSel = document.getElementById("ldrMode");
+    if(mSel) {
+      if(data.enM1 !== undefined) mSel.querySelector("option[value='1']").style.display = data.enM1 ? "" : "none";
+      if(data.enM2 !== undefined) mSel.querySelector("option[value='2']").style.display = data.enM2 ? "" : "none";
+      if(data.enM3 !== undefined) mSel.querySelector("option[value='3']").style.display = data.enM3 ? "" : "none";
+      if(data.enM4 !== undefined) mSel.querySelector("option[value='4']").style.display = data.enM4 ? "" : "none";
+      if(data.enM5 !== undefined) mSel.querySelector("option[value='5']").style.display = data.enM5 ? "" : "none";
     }
     if(data.divisionId) {
       const di = document.getElementById("divId");
@@ -854,7 +944,7 @@ function startLiveSync(sn) {
       
       let cdStr = (d > 0 ? d + "d " : "") + pad(h) + ":" + pad(m) + ":" + pad(s);
       if(cdText) cdText.innerText = cdStr;
-      if(cdDetail) cdDetail.innerText = "on " + nextDate.toLocaleDateString() + ", " + nextDate.toLocaleTimeString();
+      if(cdDetail) cdDetail.innerText = "on " + nextDate.toLocaleDateString('en-IN', {timeZone: 'UTC'}) + ", " + nextDate.toLocaleTimeString('en-IN', {timeZone: 'UTC'});
       if(cdState) cdState.innerHTML = data.nextState ? "<span class='on'>ON</span>" : "<span class='off'>OFF</span>";
     }
 
@@ -869,13 +959,17 @@ function startLiveSync(sn) {
 
         if(onSec && onSec > 1672531200) {
           let dtOn = new Date(onSec * 1000);
-          dateStr = dtOn.toLocaleDateString();
-          onStr = dtOn.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          if(dtOn.getUTCHours() >= 12) {
+            dateStr = dtOn.toLocaleDateString('en-IN', {timeZone: 'UTC'});
+            onStr = dtOn.toLocaleTimeString('en-IN', {timeZone: 'UTC', hour: '2-digit', minute:'2-digit'});
+          }
         }
         if(offSec && offSec > 1672531200) {
           let dtOff = new Date(offSec * 1000);
-          if(dateStr === "No Data") dateStr = dtOff.toLocaleDateString();
-          offStr = dtOff.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          if(dtOff.getUTCHours() < 12) {
+            if(dateStr === "No Data") dateStr = dtOff.toLocaleDateString('en-IN', {timeZone: 'UTC'});
+            offStr = dtOff.toLocaleTimeString('en-IN', {timeZone: 'UTC', hour: '2-digit', minute:'2-digit'});
+          }
         }
 
         let bg = (i % 2 === 0) ? "#f9f9f9" : "#ffffff";
@@ -888,6 +982,57 @@ function startLiveSync(sn) {
         `;
       }
     }
+     // Mode 4 Average/Calendar અને Mode 5 ચાલુ મહિનાનો ટાર્ગેટ અપડેટ
+    const calSunRH = [7, 7, 6, 6, 5, 5, 6, 6, 6, 6, 6, 7];
+    const calSunRM = [15, 5, 45, 15, 55, 50, 0, 15, 25, 35, 55, 15];
+    const calSunSH = [18, 18, 18, 19, 19, 19, 19, 19, 18, 18, 18, 18];
+    const calSunSM = [15, 35, 50, 5, 20, 30, 30, 10, 45, 20, 5, 5];
+    const mNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const mIdx = new Date().getMonth();
+    const fmtHM12 = (h, m) => {
+      const isPM = h >= 12;
+      const h12 = (h % 12) || 12;
+      return pad(h12) + ":" + pad(m) + (isPM ? " PM" : " AM");
+    };
+
+    const calOnH = calSunSH[mIdx], calOnM = calSunSM[mIdx];
+    const calOffH = calSunRH[mIdx], calOffM = calSunRM[mIdx];
+    document.getElementById("m4CalOn").innerText = fmtHM12(calOnH, calOnM);
+    document.getElementById("m4CalOff").innerText = fmtHM12(calOffH, calOffM);
+    document.getElementById("m5MonthName").innerText = (mIdx + 1) + " (" + mNames[mIdx] + ")";
+    document.getElementById("m5TargetOn").innerText = fmtHM12(calOnH, calOnM);
+    document.getElementById("m5TargetOff").innerText = fmtHM12(calOffH, calOffM);
+    document.getElementById("m5OpMode").innerHTML = "Operation: " + (data.useHybridLdr ? "<b>Hybrid (7-Day Avg + Monthly Calendar Avg)</b>" : "<b>Pure Astronomical Calendar</b>");
+
+    let sumOn = 0, cntOn = 0, sumOff = 0, cntOff = 0;
+    for(let i = 0; i < 7; i++) {
+      let onSec = data.ldrOn ? data.ldrOn[i] : 0;
+      let offSec = data.ldrOff ? data.ldrOff[i] : 0;
+      if(onSec > 1672531200 && onSec < 3000000000) {
+        let dt = new Date(onSec * 1000);
+        sumOn += dt.getUTCHours() * 3600 + dt.getUTCMinutes() * 60;
+        cntOn++;
+      }
+      if(offSec > 1672531200 && offSec < 3000000000) {
+        let dt = new Date(offSec * 1000);
+        sumOff += dt.getUTCHours() * 3600 + dt.getUTCMinutes() * 60;
+        cntOff++;
+      }
+    }
+    let rawOnH = 0, rawOnM = 0, rawOffH = 0, rawOffM = 0;
+    if(cntOn > 0) { let a = Math.floor(sumOn / cntOn); rawOnH = Math.floor(a / 3600) % 24; rawOnM = Math.floor(a / 60) % 60; }
+    if(cntOff > 0) { let a = Math.floor(sumOff / cntOff); rawOffH = Math.floor(a / 3600) % 24; rawOffM = Math.floor(a / 60) % 60; }
+
+    let finOnH = rawOnH, finOnM = rawOnM, finOffH = rawOffH, finOffM = rawOffM;
+    if(data.useHybridLdr) {
+      if(cntOn > 0) { let t = Math.floor(((rawOnH*3600+rawOnM*60) + (calOnH*3600+calOnM*60)) / 2); finOnH = Math.floor(t/3600)%24; finOnM = Math.floor(t/60)%60; }
+      if(cntOff > 0) { let t = Math.floor(((rawOffH*3600+rawOffM*60) + (calOffH*3600+calOffM*60)) / 2); finOffH = Math.floor(t/3600)%24; finOffM = Math.floor(t/60)%60; }
+    }
+    document.getElementById("m4RawOn").innerText = (cntOn > 0) ? fmtHM12(rawOnH, rawOnM) : "--:--";
+    document.getElementById("m4RawOff").innerText = (cntOff > 0) ? fmtHM12(rawOffH, rawOffM) : "--:--";
+    document.getElementById("m4FinalOn").innerText = (cntOn > 0) ? fmtHM12(finOnH, finOnM) : "--:--";
+    document.getElementById("m4FinalOff").innerText = (cntOff > 0) ? fmtHM12(finOffH, finOffM) : "--:--";
+    document.getElementById("m4HybridStatus").innerHTML = "Operating Mode: " + (data.useHybridLdr ? "<b>Hybrid Mode (Sensor + Calendar Avg)</b>" : "<b>Sensor Only Mode</b>");
   });
 }
 
@@ -1014,12 +1159,46 @@ function sendCloudPowerSettings() {
   if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
   const ocVal = parseFloat(document.getElementById("oc").value);
   const protVal = document.getElementById("protOn").checked ? 1 : 0;
-  
+  const ocBypassVal = parseInt(document.getElementById("ocBypass").value);
+  const ccalVal = parseFloat(document.getElementById("ccal").value);
+  const offsetVal = parseFloat(document.getElementById("offset").value);  
+   const maxBtnOcVal = parseFloat(document.getElementById("maxBtnOc").value);
+  if(isNaN(ocVal) || isNaN(ocBypassVal) || isNaN(ccalVal) || isNaN(offsetVal) || isNaN(maxBtnOcVal)) {
+    alert("કૃપા કરીને બધા પાવર સેટિંગ્સમાં સાચા આંકડા ભરો!");
+    return;
+  }
+  const btnLockVal = document.getElementById("btnLockOn").checked ? 1 : 0;
+
   db.ref("devices/" + activeSerial + "/commands").update({
     setOcLimitCmd: ocVal,
-    setProtEnCmd: protVal
+    setProtEnCmd: protVal,
+    setOcBypassCmd: ocBypassVal,
+    setCurrCalCmd: ccalVal,
+    setAdcOffCmd: offsetVal,
+    setMaxBtnOcCmd: maxBtnOcVal,
+    setBtnOcLockCmd: btnLockVal,
+    setEnM1Cmd: document.getElementById("enM1").checked ? 1 : 0,
+    setEnM2Cmd: document.getElementById("enM2").checked ? 1 : 0,
+    setEnM3Cmd: document.getElementById("enM3").checked ? 1 : 0,
+    setEnM4Cmd: document.getElementById("enM4").checked ? 1 : 0,
+    setEnM5Cmd: document.getElementById("enM5").checked ? 1 : 0
   });
-  alert("પાવર પ્રોટેક્શન સેટિંગ્સ અપડેટ થઈ ગઈ!");
+  alert("પાવર પ્રોટેક્શન અને તમામ મોડ સેટિંગ્સ અપડેટ થઈ ગઈ!");
+}
+
+function sendCloudApPassword() {
+  if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
+  const oldP = document.getElementById("oldApPass").value;
+  const newP = document.getElementById("newApPass").value;
+  if(newP.length > 0 && newP.length < 8) {
+    alert("નવો પાસવર્ડ ખાલી રાખો અથવા ઓછામાં ઓછા 8 અક્ષરનો નાખો!");
+    return;
+  }
+  db.ref("devices/" + activeSerial + "/commands/setApPassCmd").set(oldP + "|" + newP).then(() => {
+    document.getElementById("oldApPass").value = "";
+    document.getElementById("newApPass").value = "";
+    alert("AP પાસવર્ડ બદલવાનો કમાન્ડ ESP32 પર મોકલાઈ ગયો!");
+  });
 }
 
 function triggerCloudRestart() {
@@ -1115,12 +1294,12 @@ document.addEventListener('DOMContentLoaded', function() {
   
   if(editButton) {
     editButton.onclick = function() {
-      const modalContent = document.getElementById('modal-content-inner');
-      modalContent.innerHTML = `<h3>Enter Password</h3><p>Please enter the password to edit details (Default: 1234):</p><input type="password" id="details-password-input" class="modal-input" required><button id="details-password-submit" class="modal-button">Submit</button>`;
+      const modalContent = document.getElementById('modal-content-inner');  
+      modalContent.innerHTML = `<h3>Enter Password</h3><p>Please enter the password to edit details:</p><input type="password" id="details-password-input" class="modal-input" required><button id="details-password-submit" class="modal-button">Submit</button>`;
       modal.style.display = 'block';
       document.getElementById('details-password-input').focus();
       document.getElementById('details-password-submit').onclick = function() {
-        const passInput = document.getElementById('details-password-input');
+        const passInput = document.getElementById('details-password-input'); 
         if (passInput.value === uiDetailsPassword) {
             modal.style.display = 'none';
             document.getElementById('edit-details-form').style.display = 'block';
@@ -1218,8 +1397,8 @@ function showPasswordModal(title, paragraph, buttonText, callback) {
 }
 
 function promptAndShow() {
-  showPasswordModal('Enter Password', 'Enter password to show details (Default: 1234):', 'Show', function(pass) {
-    if (pass === warrantyPassword || pass === "1234") {
+  showPasswordModal('Enter Password', 'Enter password to show details:', 'Show', function(pass) {
+    if (pass === warrantyPassword) {
       localStorage.setItem("warranty_visible", "true");
       renderWarrantyCard();
       document.getElementById('password-modal').style.display = 'none';
@@ -1230,8 +1409,8 @@ function promptAndShow() {
 }
 
 function promptAndHide() {
-  showPasswordModal('Enter Password', 'Enter password to hide details (Default: 1234):', 'Hide', function(pass) {
-    if (pass === warrantyPassword || pass === "1234") {
+  showPasswordModal('Enter Password', 'Enter password to hide details:', 'Hide', function(pass) {
+    if (pass === warrantyPassword) {
       localStorage.setItem("warranty_visible", "false");
       renderShowButton();
       document.getElementById('password-modal').style.display = 'none';
@@ -1249,11 +1428,11 @@ function confirmRestart() {
 
 function checkPowerPassword() {
   const val = document.getElementById('power_password').value;
-  if (val === powerSettingsPassword || val === "1234") {
+  if (val === powerSettingsPassword) {
     document.getElementById('power-password-section').style.display = 'none';
     document.getElementById('power-settings-section').style.display = 'block';
   } else {
-    alert('Incorrect Password! (Default: 1234)');
+    alert('Incorrect Password!');
   }
 }
 
@@ -1265,11 +1444,11 @@ function hidePowerSettings() {
 
 function checkWarrantyPassword() {
   const val = document.getElementById('warranty_input_password').value;
-  if (val === warrantyPassword || val === "1234") {
+  if (val === warrantyPassword) {
     document.getElementById('warranty-password-section').style.display = 'none';
     document.getElementById('warranty-form-section').style.display = 'block';
   } else {
-    alert('Incorrect Password! (Default: 1234)');
+    alert('Incorrect Password!');
   }
 }
 
