@@ -125,7 +125,6 @@
 </div>
 
 <div class="header">
-  <h1>Shakti Prime Globle Technologis</h1>
   <div style="font-size:1.4em; font-weight:bold; margin-top:5px; letter-spacing: 1px;">Timer Setting</div>
   <div style="font-size:1.1em; font-weight:bold; margin-top:5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">Model No: AL4M-401</div>
  <div class="sub-header">    
@@ -577,7 +576,6 @@
 <!-- ભાગ ૧૨: ફૂટર અને ફર્મવેર ઇન્ફોર્મેશન (FOOTER & FIRMWARE) -->
 <!-- ======================================================== -->
 <div class="footer-card">
-  <h3>ShaktiPrime-Globle Technologis</h3>
   <p>Email: info.shaktiprime@gmail.com</p>
   <p>Contact: 9979227523</p>
 </div>
@@ -624,7 +622,7 @@ const db = firebase.database();
 let activeSerial = "";
 let liveListenerRef = null;
 
-// ૧. ADD & CONNECT DEVICE LOGIC
+ // ૧. ADD & CONNECT DEVICE LOGIC
 function addAndConnectDevice() {
   const sn = document.getElementById("devSerial").value.trim().toUpperCase();
   const name = document.getElementById("devName").value.trim();
@@ -634,11 +632,11 @@ function addAndConnectDevice() {
     alert("કૃપા કરીને Serial Number અને Password બંને નાખો!");
     return;
   }
-  connectDevice(sn, name, pass);
+  connectDevice(sn, name, pass, true);
 }
 
 // ૨. CONNECT & SYNC LOGIC
-function connectDevice(sn, name, pass) {
+function connectDevice(sn, name, pass, isManualAdd = false) {
   document.getElementById("activeDevTag").innerText = "કનેક્ટ થઈ રહ્યું છે: " + sn + "...";
 
   db.ref("devices/" + sn).once("value").then((snapshot) => {
@@ -655,18 +653,20 @@ function connectDevice(sn, name, pass) {
       return;
     }
 
+    const finalName = (isManualAdd && name) ? name : (data.placeName || name || "Tulsi-Van Farm");
     activeSerial = sn;
     localStorage.setItem("spgt_sn", sn);
-    localStorage.setItem("spgt_name", name);
+    localStorage.setItem("spgt_name", finalName);
     localStorage.setItem("spgt_pass", pass);
 
-    document.getElementById("activeDevTag").innerText = "કનેક્ટેડ: " + sn + (name ? " (" + name + ")" : "");
+    document.getElementById("devName").value = finalName;
+    document.getElementById("activeDevTag").innerText = "કનેક્ટેડ: " + sn + " (" + finalName + ")";
     const divElem = document.getElementById("divisionIdVal");
     const farmElem = document.getElementById("farmNameVal");
-    if(divElem) divElem.innerText = "Serial: " + sn;
-    if(farmElem) farmElem.innerText = name ? name : (data.placeName || "Tulsi-Van Farm");
+    if(divElem) divElem.innerText = (data.divisionId || "Division: 03") + " | " + sn;
+    if(farmElem) farmElem.innerText = finalName;
 
-    if(name && name !== data.placeName) {
+    if(isManualAdd && name && name !== data.placeName) {
       db.ref("devices/" + sn + "/commands/setUiDetailsCmd").set(name + "|" + (data.divisionId || "Division: 03"));
     }
 
@@ -927,18 +927,25 @@ function startLiveSync(sn) {
       document.getElementById("dispEndTime").innerText = format12(data.eTime);
     }
 
-    // ૧૦.૩ Farm Name & Division ID સિંક
-    if(data.placeName) {
-      const fn = document.getElementById("fname");
-      if(fn && !fn.matches(':focus')) fn.value = data.placeName;
-    }   
-     if(data.placeName) {
-      const fVal = document.getElementById("farmNameVal");
-      if(fVal) fVal.innerText = data.placeName;
-    }
-    if(data.divisionId) {
-      const dVal = document.getElementById("divisionIdVal");
-      if(dVal) dVal.innerText = data.divisionId + " | " + sn;
+    // ૧૦.૩ Farm Name & Division ID સિંક (જ્યારે કમાન્ડ પેન્ડિંગ ન હોય ત્યારે જ અપડેટ કરવું)
+    if(!data.commands || !data.commands.setUiDetailsCmd) {
+      if(data.placeName) {
+        const fn = document.getElementById("fname");
+        if(fn && !fn.matches(':focus')) fn.value = data.placeName;
+        const fVal = document.getElementById("farmNameVal");
+        if(fVal) fVal.innerText = data.placeName;
+        const dn = document.getElementById("devName");
+        if(dn && !dn.matches(':focus')) dn.value = data.placeName;
+        localStorage.setItem("spgt_name", data.placeName);
+        const tag = document.getElementById("activeDevTag");
+        if(tag) tag.innerText = "કનેક્ટેડ: " + sn + " (" + data.placeName + ")";
+      }
+      if(data.divisionId) {
+        const dVal = document.getElementById("divisionIdVal");
+        if(dVal) dVal.innerText = data.divisionId + " | " + sn;
+        const di = document.getElementById("divId");
+        if(di && !di.matches(':focus')) di.value = data.divisionId;
+      }
     }
     const mSel = document.getElementById("ldrMode");
     if(mSel) {
@@ -947,10 +954,6 @@ function startLiveSync(sn) {
       if(data.enM3 !== undefined) mSel.querySelector("option[value='3']").style.display = data.enM3 ? "" : "none";
       if(data.enM4 !== undefined) mSel.querySelector("option[value='4']").style.display = data.enM4 ? "" : "none";
       if(data.enM5 !== undefined) mSel.querySelector("option[value='5']").style.display = data.enM5 ? "" : "none";
-    }
-    if(data.divisionId) {
-      const di = document.getElementById("divId");
-      if(di && !di.matches(':focus')) di.value = data.divisionId;
     }
 
     // ૧૧. નેક્સ્ટ સ્વિચિંગ કાઉન્ટડાઉન (ESP32 સાથે ૧૦૦% સરખું સિંક)
@@ -1166,6 +1169,16 @@ function sendCloudUiDetails() {
   const fname = document.getElementById("fname").value.trim();
   const divid = document.getElementById("divId").value.trim();
   if(!fname || !divid) { alert("વિગતો ભરો!"); return; }
+
+  localStorage.setItem("spgt_name", fname);
+  const dn = document.getElementById("devName");
+  if(dn) dn.value = fname;
+  const fVal = document.getElementById("farmNameVal");
+  if(fVal) fVal.innerText = fname;
+  const dVal = document.getElementById("divisionIdVal");
+  if(dVal) dVal.innerText = divid + " | " + activeSerial;
+  const tag = document.getElementById("activeDevTag");
+  if(tag) tag.innerText = "કનેક્ટેડ: " + activeSerial + " (" + fname + ")";
   
   db.ref("devices/" + activeSerial + "/commands/setUiDetailsCmd").set(fname + "|" + divid).then(() => {
     document.getElementById("edit-details-form").style.display = "none";
