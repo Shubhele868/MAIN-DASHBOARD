@@ -136,7 +136,9 @@
 
 <div class="current-time" id="liveRtcClock">Connecting to Device...</div>
 
-<div style="text-align: center; margin: 10px 0;">
+<div style="text-align: center; margin: 10px 0;">  
+  <button type="button" id="btnToggleFormat" onclick="sendCloudToggleFormat()" class="btn-refresh" style="font-weight: bold; border-radius: 8px; padding: 10px 18px;">Switch to 24H</button>
+  <button type="button" id="btnToggleRefresh" onclick="sendCloudToggleRefresh()" class="btn-refresh" style="font-weight: bold; border-radius: 8px; padding: 10px 18px;">Auto Refresh ON</button>
   <button id="edit-details-btn" class="btn-edit" style="background: #2c3e50; font-weight: bold; border-radius: 8px; padding: 10px 18px;">✏️ Edit Farm & Division Details</button>
 </div>
 
@@ -682,7 +684,14 @@ function startLiveSync(sn) {
   liveListenerRef.on("value", (snapshot) => {
     const data = snapshot.val();  
     if(!data) return;
-
+    const is12h = (data.use12h !== undefined) ? !!data.use12h : true;
+    const btnFmt = document.getElementById("btnToggleFormat");
+    if(btnFmt) btnFmt.innerText = is12h ? "Switch to 24H" : "Switch to 12H";
+    const btnRef = document.getElementById("btnToggleRefresh");
+    if(btnRef && data.autoRef !== undefined) {
+      btnRef.innerText = data.autoRef ? "Auto Refresh ON" : "Auto Refresh OFF";
+      btnRef.style.background = data.autoRef ? "#27ae60" : "#7f8c8d";
+    }
     // ૧. લાઈવ RTC ઘડિયાળ
     if(data.rtcTimeStr) {
       const clockElem = document.getElementById("liveRtcClock");
@@ -773,6 +782,7 @@ function startLiveSync(sn) {
     const pad = (n) => (n < 10 ? '0' : '') + n;
     if(data.onHour !== undefined && data.offHour !== undefined) {
       const formatTime12 = (h, m) => {
+        if(!is12h) return pad(h) + ":" + pad(m);
         let isPM = h >= 12;
         let h12 = h % 12;
         if(h12 === 0) h12 = 12;
@@ -886,6 +896,7 @@ function startLiveSync(sn) {
     if(data.sDate && data.sTime && data.eDate && data.eTime) {
       const format12 = (t) => {
         const [hh, mm] = t.split(":").map(Number);
+        if(!is12h) return String(hh).padStart(2, '0') + ":" + String(mm).padStart(2, '0');
         const ampm = hh >= 12 ? "PM" : "AM";
         const h12 = (hh % 12) || 12;
         return String(h12).padStart(2, '0') + ":" + String(mm).padStart(2, '0') + " " + ampm;
@@ -944,7 +955,7 @@ function startLiveSync(sn) {
       
       let cdStr = (d > 0 ? d + "d " : "") + pad(h) + ":" + pad(m) + ":" + pad(s);
       if(cdText) cdText.innerText = cdStr;
-      if(cdDetail) cdDetail.innerText = "on " + nextDate.toLocaleDateString('en-IN', {timeZone: 'UTC'}) + ", " + nextDate.toLocaleTimeString('en-IN', {timeZone: 'UTC'});
+      if(cdDetail) cdDetail.innerText = "on " + nextDate.toLocaleDateString('en-IN', {timeZone: 'UTC'}) + ", " + nextDate.toLocaleTimeString('en-IN', {timeZone: 'UTC', hour12: is12h});
       if(cdState) cdState.innerHTML = data.nextState ? "<span class='on'>ON</span>" : "<span class='off'>OFF</span>";
     }
 
@@ -960,15 +971,15 @@ function startLiveSync(sn) {
         if(onSec && onSec > 1672531200) {
           let dtOn = new Date(onSec * 1000);
           if(dtOn.getUTCHours() >= 12) {
-            dateStr = dtOn.toLocaleDateString('en-IN', {timeZone: 'UTC'});
-            onStr = dtOn.toLocaleTimeString('en-IN', {timeZone: 'UTC', hour: '2-digit', minute:'2-digit'});
+            dateStr = dtOn.toLocaleDateString('en-IN', {timeZone: 'UTC'});  
+            onStr = dtOn.toLocaleTimeString('en-IN', {timeZone: 'UTC', hour: '2-digit', minute:'2-digit', hour12: is12h});
           }
         }
         if(offSec && offSec > 1672531200) {
           let dtOff = new Date(offSec * 1000);
           if(dtOff.getUTCHours() < 12) {
             if(dateStr === "No Data") dateStr = dtOff.toLocaleDateString('en-IN', {timeZone: 'UTC'});
-            offStr = dtOff.toLocaleTimeString('en-IN', {timeZone: 'UTC', hour: '2-digit', minute:'2-digit'});
+            offStr = dtOff.toLocaleTimeString('en-IN', {timeZone: 'UTC', hour: '2-digit', minute:'2-digit', hour12: is12h});
           }
         }
 
@@ -990,6 +1001,7 @@ function startLiveSync(sn) {
     const mNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const mIdx = new Date().getMonth();
     const fmtHM12 = (h, m) => {
+      if(!is12h) return pad(h) + ":" + pad(m);
       const isPM = h >= 12;
       const h12 = (h % 12) || 12;
       return pad(h12) + ":" + pad(m) + (isPM ? " PM" : " AM");
@@ -1290,6 +1302,16 @@ function resetCloudTimer() {
     db.ref("devices/" + activeSerial + "/commands/resetTimerCmd").set(1);
     alert("રીસેટ કમાન્ડ મોકલાઈ ગયો!");
   }
+}
+
+function sendCloudToggleFormat() {
+  if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
+  db.ref("devices/" + activeSerial + "/commands/toggleFormatCmd").set(1);
+}
+
+function sendCloudToggleRefresh() {
+  if(!activeSerial) { alert("પહેલાં Device Connect કરો!"); return; }
+  db.ref("devices/" + activeSerial + "/commands/toggleRefreshCmd").set(1);
 }
 
 document.addEventListener('DOMContentLoaded', function() {  
