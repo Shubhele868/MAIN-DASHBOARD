@@ -102,6 +102,14 @@
     <button type="button" onclick="deleteActiveDevice()" style="background: #e74c3c; color: white; padding: 10px 18px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">DELETE</button>
   </div>
   <div id="activeDevTag" style="margin-top: 10px; font-size: 0.9em; color: #f1c40f; font-weight: bold;">કોઈ ડિવાઇસ કનેક્ટેડ નથી (ડેટા જોવા માટે Serial No અને Pass નાખી Add કરો)</div>
+  <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.18);">
+    <div style="font-size: 0.95em; color: #50e3c2; font-weight: bold; margin-bottom: 8px;">&#128274; Change Device Password (કનેક્ટેડ ડિવાઇસનો પાસવર્ડ બદલો)</div>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+      <input type="password" id="oldFbPass" placeholder="Old Password (જૂનો પાસવર્ડ)" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 0.95em; flex: 1 1 160px; box-sizing: border-box;">
+      <input type="password" id="newFbPass" placeholder="New Password (નવો પાસવર્ડ)" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 0.95em; flex: 1 1 160px; box-sizing: border-box;">
+      <button type="button" onclick="changeDeviceFbPassword()" style="background: #f39c12; color: white; padding: 10px 18px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">SAVE PASSWORD</button>
+    </div>
+  </div>
 </div>
 
   <div style="background: linear-gradient(135deg, #07131e, #0b1c2c); color: white; padding: 18px; border-radius: 14px; margin-bottom: 20px; border: 1px solid #0ea5e9; box-shadow: 0 0 18px rgba(14, 165, 233, 0.2);">
@@ -837,6 +845,56 @@ function addAndConnectDevice() {
     return;
   }
   connectDevice(sn, name, pass, true);
+}
+
+// ૧.૧ CHANGE DEVICE FIREBASE PASSWORD LOGIC (SAVES IN ESP32 PREFERENCES)
+function changeDeviceFbPassword() {
+  if(!activeSerial) {
+    alert("પહેલાં Serial Number અને Password નાખીને Device Connect કરો!");
+    return;
+  }
+  const oldP = document.getElementById("oldFbPass").value.trim();
+  const newP = document.getElementById("newFbPass").value.trim();
+
+  if(!oldP || !newP) {
+    alert("કૃપા કરીને Old Password અને New Password બંને નાખો!");
+    return;
+  }
+  if(newP.length < 4) {
+    alert("નવો પાસવર્ડ ઓછામાં ઓછા 4 અક્ષરનો રાખો!");
+    return;
+  }
+  if(oldP.includes("|") || newP.includes("|")) {
+    alert("પાસવર્ડમાં '|' અક્ષરનો ઉપયોગ કરશો નહીં!");
+    return;
+  }
+
+  const snapData = rowSnapshots[activeSerial] || null;
+  if(!isDeviceOnline(snapData)) {
+    alert("ડિવાઇસ અત્યારે OFFLINE છે! પાસવર્ડ બદલવા માટે ESP32 WiFi થી ઓનલાઈન હોવું જરૂરી છે.");
+    return;
+  }
+
+  const currentPass = (snapData && snapData.pass) ? snapData.pass : (localStorage.getItem("spgt_pass") || "");
+  if(oldP !== currentPass) {
+    alert("જૂનો પાસવર્ડ (Old Password) ખોટો છે!");
+    return;
+  }
+
+  db.ref("devices/" + activeSerial + "/commands/setFbPassCmd").set(oldP + "|" + newP).then(() => {
+    localStorage.setItem("spgt_pass", newP);
+    const idx = savedDevices.findIndex(d => d.sn === activeSerial);
+    if(idx !== -1) {
+      savedDevices[idx].pass = newP;
+      saveSavedDevicesList();
+    }
+    document.getElementById("devPass").value = newP;
+    document.getElementById("oldFbPass").value = "";
+    document.getElementById("newFbPass").value = "";
+    alert("નવો પાસવર્ડ ESP32 (Preferences) માં કાયમી સેવ થઈ ગયો છે! હવે જૂના પાસવર્ડથી આ ડિવાઇસ Add થશે નહીં.");
+  }).catch((err) => {
+    alert("પાસવર્ડ સેવ કરવામાં એરર: " + err.message);
+  });
 }
 
 // ૨. CONNECT & SYNC LOGIC
